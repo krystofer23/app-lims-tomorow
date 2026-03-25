@@ -23,8 +23,11 @@ return new class extends Migration
             $table->string('age')->nullable();
             $table->string('birthdate')->nullable();
 
-            $table->string('email')->unique();
-            $table->string('password');
+            $table->string('email')->unique()->nullable();
+            $table->string('password')->nullable();
+
+            $table->boolean('is_professional')->default(false);
+            $table->string('signature')->nullable();
 
             $table->boolean('active')->default(true);
             

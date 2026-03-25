@@ -13,7 +13,7 @@ class UnitsMeasurementApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $data = UnitsMeasurement::get();
+            $data = UnitsMeasurement::paginate(50);
 
             return $this->sendResponse($data, 'Enviando unidades de medida');
         } catch (Exception $e) {

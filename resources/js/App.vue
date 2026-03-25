@@ -12,6 +12,8 @@ const central = computed(() => isCentralHost())
         integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    <CentralLayout v-if="central" />
-    <TenantLayout v-else />
+    <body style="background-color: #f1f2f3;" class="min-h-screen">
+        <CentralLayout v-if="central" />
+        <TenantLayout v-else />
+    </body>
 </template>

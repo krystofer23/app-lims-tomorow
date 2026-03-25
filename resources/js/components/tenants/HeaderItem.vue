@@ -2,7 +2,6 @@
     <header ref="headerRef"
         class="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <!-- TOP -->
             <div class="flex h-16 items-center justify-between gap-3">
                 <!-- Brand -->
                 <a href="#" class="group flex items-center gap-3 min-w-0">
@@ -67,19 +66,19 @@
                 </div>
             </div>
 
-            <!-- DESKTOP NAV -->
             <nav class="hidden md:flex items-center justify-between pb-3">
                 <div class="flex items-center gap-1">
                     <a href="#" class="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                        <i class="fa-solid fa-house me-1"></i>
                         Inicio
                     </a>
 
-                    <!-- MENUS (nivel 1) -->
                     <div v-for="menu in menus" :key="menu.key" class="relative">
                         <button v-if="menu.items?.length" type="button"
                             class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 active:scale-[.98] transition"
                             :aria-expanded="openTop === menu.key ? 'true' : 'false'" @click="toggleTop(menu.key)"
                             @keydown.esc="closeAll">
+                            <i :class="menu.icon" class="mt-1"></i>
                             {{ menu.label }}
                             <svg class="h-4 w-4 text-slate-500 transition"
                                 :class="openTop === menu.key ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none"
@@ -88,15 +87,12 @@
                             </svg>
                         </button>
 
-                        <!-- DROPDOWN (nivel 1) -->
                         <Transition name="menu-pop">
                             <div v-if="menu.items?.length && openTop === menu.key"
                                 class="absolute left-0 top-full z-50 mt-2" @keydown.esc="closeAll">
-                                <!-- MEGA -->
                                 <div v-if="menu.variant === 'mega'"
                                     class="w-[560px] rounded-3xl border border-slate-200 bg-white p-3 shadow-xl">
                                     <div class="grid grid-cols-2 gap-2">
-                                        <!-- ITEM (nivel 1) -->
                                         <div v-for="item in menu.items" :key="item.key" class="relative"
                                             @mouseenter="openSub = item.key" @mouseleave="openSub = null">
                                             <button type="button"
@@ -112,7 +108,6 @@
                                                             <p class="text-sm font-medium text-slate-900 truncate">{{
                                                                 item.title }}</p>
 
-                                                            <!-- indicator si tiene children -->
                                                             <svg v-if="item.children?.length"
                                                                 class="h-4 w-4 text-slate-400 group-hover:text-slate-600 transition"
                                                                 viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -166,7 +161,6 @@
                                     </div>
                                 </div>
 
-                                <!-- LIST normal -->
                                 <div v-else class="w-80 rounded-3xl border border-slate-200 bg-white p-2 shadow-xl">
                                     <div v-for="item in menu.items" :key="item.key" class="relative"
                                         @mouseenter="openSub = item.key" @mouseleave="openSub = null">
@@ -192,7 +186,6 @@
                                             </div>
                                         </button>
 
-                                        <!-- SUBMENU nivel 2 (list) -->
                                         <Transition name="submenu-pop">
                                             <div v-if="item.children?.length && openSub === item.key"
                                                 class="absolute left-full top-0 ml-2 w-80 rounded-3xl border border-slate-200 bg-white p-2 shadow-xl">
@@ -201,7 +194,7 @@
                                                     {{ item.subtitle || "Opciones" }}
                                                 </p>
 
-                                                <a v-for="child in item.children" :key="child.key" href="#"
+                                                <button v-for="child in item.children" :key="child.key"
                                                     class="flex items-start gap-3 rounded-2xl px-3 py-3 hover:bg-slate-50 transition"
                                                     @click.prevent="go(child)">
                                                     <span class="mt-0.5 grid h-9 w-9 place-items-center rounded-2xl"
@@ -209,11 +202,12 @@
                                                         <i :class="child.icon"></i>
                                                     </span>
                                                     <div class="min-w-0">
-                                                        <p class="text-sm font-extrabold text-slate-900 truncate">{{
-                                                            child.title }}</p>
+                                                        <p class="text-sm font-extrabold text-slate-900 truncate">
+                                                            {{ child.title }}
+                                                        </p>
                                                         <p class="text-xs text-slate-600">{{ child.desc }}</p>
                                                     </div>
-                                                </a>
+                                                </button>
                                             </div>
                                         </Transition>
                                     </div>
@@ -223,7 +217,6 @@
                     </div>
                 </div>
 
-                <!-- PROFILE -->
                 <div class="hidden lg:flex items-center gap-2">
                     <div class="relative">
                         <button
@@ -289,6 +282,7 @@
                     <div class="mt-3 space-y-2">
                         <a href="#" class="block rounded-2xl px-4 py-3 text-sm font-bold text-slate-900 bg-slate-100"
                             @click.prevent="closeAllAndMobile">
+                            <i class="fa-solid fa-house"></i>
                             Inicio
                         </a>
 
@@ -334,7 +328,6 @@
                                             </span>
                                         </button>
 
-                                        <!-- nivel 2 -->
                                         <Transition name="accordion">
                                             <div v-if="item.children?.length && isMobileSubOpen(menu.key, item.key)"
                                                 class="pl-3 pr-1 pb-2">
@@ -351,7 +344,7 @@
                                                                 class="block font-extrabold text-slate-900 truncate">{{
                                                                     child.title }}</span>
                                                             <span class="block text-xs text-slate-600">{{ child.desc
-                                                            }}</span>
+                                                                }}</span>
                                                         </span>
                                                     </span>
                                                 </a>
@@ -383,8 +376,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
-// Si tienes vue-router, descomenta estas 2 líneas para cerrar al cambiar ruta:
-// import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 
 const q = ref("");
 const searchRef = ref(null);
@@ -392,14 +384,12 @@ const searchRef = ref(null);
 const headerRef = ref(null);
 
 const mobileOpen = ref(false);
-const openTop = ref(null); // menu principal abierto (nivel 1)
-const openSub = ref(null); // submenu abierto (nivel 2) en desktop
+const openTop = ref(null);
+const openSub = ref(null);
 
-// Mobile accordion nivel 1 (menús principales)
 const mobileAcc = reactive({});
 
-// Mobile accordion nivel 2 (subitems dentro de cada menu)
-const mobileSubs = reactive({}); // { [menuKey]: { [itemKey]: true/false } }
+const mobileSubs = reactive({});
 
 function focusSearch() {
     searchRef.value?.focus?.();
@@ -438,7 +428,6 @@ function isMobileSubOpen(menuKey, itemKey) {
 }
 
 function toggleMobileSub(menuKey, itemKey) {
-    // si no tiene children, navega directo
     const menu = menus.value.find((m) => m.key === menuKey);
     const item = menu?.items?.find((i) => i.key === itemKey);
 
@@ -451,32 +440,25 @@ function toggleMobileSub(menuKey, itemKey) {
     mobileSubs[menuKey][itemKey] = !mobileSubs[menuKey][itemKey];
 }
 
-function go(item, closeMobile = false) {
-    // Aquí conectas con router o link real:
-    // if (item?.to) router.push(item.to);
+const router = useRouter()
 
-    // demo:
-    // console.log("go:", item);
+function go(item, closeMobile = false) {
+    router.push(item.key)
 
     closeAll();
     if (closeMobile) mobileOpen.value = false;
 }
 
-// Cerrar con Escape
 function onKeydown(e) {
     if (e.key === "Escape") closeAllAndMobile();
 }
 
-// Cerrar al click fuera (REAL, sin overlay)
 function onPointerDown(e) {
     const el = headerRef.value;
     if (!el) return;
     const target = e.target;
     if (target && !el.contains(target)) {
         closeAll();
-        // ojo: no cierro el mobile al click fuera porque en mobile a veces se siente agresivo,
-        // pero si lo quieres, descomenta:
-        // mobileOpen.value = false;
     }
 }
 
@@ -495,6 +477,7 @@ const menus = computed(() => {
         {
             key: "admision",
             label: "Admisión",
+            icon: "fa-solid fa-laptop-medical",
             variant: "mega",
             footerText: "Accede rápido a los módulos principales de admisión.",
             items: [
@@ -533,6 +516,7 @@ const menus = computed(() => {
         {
             key: "settings",
             label: "Configuración",
+            icon: "fa-solid fa-gear",
             variant: "mega",
             footerText: "Configura usuarios, roles, y catálogos del sistema.",
             items: [
@@ -595,7 +579,7 @@ const menus = computed(() => {
                             icon: "fa-solid fa-note-sticky",
                         },
                         {
-                            key: "unit-measurement",
+                            key: "units-measurement",
                             title: "Unidades de medida",
                             desc: "Modulo de unidad de medida",
                             iconBg: "bg-sky-50 text-sky-700",
@@ -633,6 +617,20 @@ const menus = computed(() => {
                             desc: "Modulo de ambientes",
                             iconBg: "bg-sky-50 text-sky-700",
                             icon: "fa-solid fa-solar-panel",
+                        },
+                        {
+                            key: "services",
+                            title: "Servicios",
+                            desc: "Modulo de servicios",
+                            iconBg: "bg-red-50 text-red-700",
+                            icon: "fa-solid fa-clipboard-list",
+                        },
+                        {
+                            key: "logistic-cats",
+                            title: "Gastos Logisticos",
+                            desc: "Modulo de gastos logisticos",
+                            iconBg: "bg-green-50 text-green-700",
+                            icon: "fa-solid fa-coins",
                         },
                     ],
                 },

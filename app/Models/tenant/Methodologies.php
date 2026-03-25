@@ -2,9 +2,23 @@
 
 namespace App\Models\tenant;
 
+use App\Casts\LocalTimezone;
+use App\Models\TenantModel;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Methodologies extends Model
+class Methodologies extends TenantModel
 {
-    protected $connection = 'tenant';
+    use SoftDeletes;
+
+    protected $table = 'methodologies';
+
+    protected $fillable = [
+        'description',
+        'info',
+    ];
+
+    protected $casts = [
+        'created_at' => LocalTimezone::class
+    ];
 }

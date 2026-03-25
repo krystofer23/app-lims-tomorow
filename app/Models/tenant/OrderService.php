@@ -4,7 +4,7 @@ namespace App\Models\tenant;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Companies extends Model
+class OrderService extends Model
 {
-    protected $connection = 'tenant';
+    //
 }

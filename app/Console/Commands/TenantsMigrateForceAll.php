@@ -12,6 +12,8 @@ class TenantsMigrateForceAll extends Command
         {--tenants= : Lista de tenant IDs separados por coma (opcional)}
         {--pretend : Muestra el SQL sin ejecutar}
         {--step : Ejecuta migraciones con --step}
+        {--seed : Ejecuta también los seeders del tenant}
+        {--seeder= : Seeder específico a ejecutar (opcional)}
         {--debug : Muestra data cruda cuando no encuentra DB}';
 
     protected $description = 'Migra tenants forzando la DB en la conexión tenant (lee DB desde tenants.data JSON).';
@@ -22,7 +24,10 @@ class TenantsMigrateForceAll extends Command
         $ids = $filter !== '' ? array_values(array_filter(array_map('trim', explode(',', $filter)))) : [];
 
         $q = DB::table('tenants')->select(['id', 'data'])->orderBy('id');
-        if (!empty($ids)) $q->whereIn('id', $ids);
+
+        if (!empty($ids)) {
+            $q->whereIn('id', $ids);
+        }
 
         $tenants = $q->get();
 
@@ -36,16 +41,23 @@ class TenantsMigrateForceAll extends Command
             '--path' => 'database/migrations/tenant',
             '--force' => true,
         ];
-        if ($this->option('pretend')) $baseArgs['--pretend'] = true;
-        if ($this->option('step')) $baseArgs['--step'] = true;
+
+        if ($this->option('pretend')) {
+            $baseArgs['--pretend'] = true;
+        }
+
+        if ($this->option('step')) {
+            $baseArgs['--step'] = true;
+        }
+
+        $shouldSeed = (bool) $this->option('seed');
+        $specificSeeder = trim((string) $this->option('seeder'));
 
         foreach ($tenants as $t) {
             $tenantId = (string) $t->id;
 
-            // data cruda desde DB
             $raw = $t->data;
 
-            // Normaliza a array
             $data = [];
             if (is_string($raw) && $raw !== '') {
                 $data = json_decode($raw, true) ?: [];
@@ -55,7 +67,6 @@ class TenantsMigrateForceAll extends Command
                 $data = (array) $raw;
             }
 
-            // Intentos de key (por si cambiaste nombre)
             $dbName =
                 (string) ($data['tenancy_db_name'] ?? '') ?:
                 (string) ($data['database'] ?? '') ?:
@@ -68,7 +79,7 @@ class TenantsMigrateForceAll extends Command
                 $this->error($msg);
 
                 if ($this->option('debug')) {
-                    $this->line("  raw data: " . (is_string($raw) ? $raw : json_encode($raw)));
+                    $this->line('  raw data: ' . (is_string($raw) ? $raw : json_encode($raw)));
                 }
 
                 $this->newLine();
@@ -77,26 +88,46 @@ class TenantsMigrateForceAll extends Command
 
             $this->info("Tenant: {$tenantId} | DB: {$dbName}");
 
-            // 1) Forzar DB en conexión tenant
             DB::purge('tenant');
             config(['database.connections.tenant.database' => $dbName]);
 
             try {
                 DB::reconnect('tenant');
                 DB::connection('tenant')->select('SELECT 1');
-                $this->line("  ✅ Conexión OK");
+                $this->line('  ✅ Conexión OK');
             } catch (\Throwable $e) {
                 $this->error("  ❌ No conecta a DB {$dbName}: {$e->getMessage()}");
                 $this->newLine();
                 continue;
             }
 
-            // 2) Ejecutar migraciones tenant
             try {
                 Artisan::call('migrate', $baseArgs, $this->output);
-                $this->line("  ✅ Migrado");
+                $this->line('  ✅ Migrado');
             } catch (\Throwable $e) {
                 $this->error("  ❌ Falló migrate: {$e->getMessage()}");
+                $this->newLine();
+                continue;
+            }
+
+            if ($shouldSeed) {
+                try {
+                    $seedArgs = [
+                        '--database' => 'tenant',
+                        '--class' => $specificSeeder !== ''
+                            ? $specificSeeder
+                            : 'Database\\Seeders\\Tenant\\TenantSeeder',
+                        '--force' => true,
+                    ];
+
+                    Artisan::call('db:seed', $seedArgs, $this->output);
+
+                    $this->line(
+                        "  ✅ Seeder ejecutado: {$seedArgs['--class']}"
+                    );
+                } catch (\Throwable $e) {
+                    $this->error("  ❌ Falló seed: {$e->getMessage()}");
+                }
             }
 
             $this->newLine();
