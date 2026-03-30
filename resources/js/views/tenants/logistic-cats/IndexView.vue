@@ -105,6 +105,131 @@
             </div>
         </div>
     </div>
+
+    <el-dialog v-model="state" @close="handleClose" :close-on-click-modal="false"
+        class="!p-0 overflow-hidden !rounded-xl" width="640px">
+        <template #header>
+            <div class="px-6 pt-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-50 ring-1 ring-emerald-100">
+                                <i class="fa-solid fa-ruler-combined text-emerald-500"></i>
+                            </div>
+
+                            <div class="min-w-0">
+                                <h3 class="text-base font-semibold text-slate-900 leading-5">
+                                    {{ formData.id ? 'Actualizar gasto logistico' : 'Registrar gasto logistico' }}
+                                </h3>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    Completa los campos y guarda los cambios.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 h-px w-full bg-gradient-to-r from-emerald-400 via-emerald-300 to-emerald-400">
+                </div>
+            </div>
+        </template>
+
+        <div class="px-6 pb-6 pt-5">
+            <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900">Detalle del gatos logistico</h3>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Completa los campos obligatorios para registrar el servicio.
+                    </p>
+                </div>
+
+                <div
+                    class="inline-flex items-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 shadow-sm">
+                    <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                    Campos obligatorios
+                </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-4">
+                <div
+                    class="col-span-12 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
+                    hover:border-slate-300 hover:shadow-md focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-100">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <label class="block text-sm font-semibold text-slate-900">Servicio</label>
+                            <p class="mt-0.5 text-xs text-slate-500">
+                                Describe el servicio de forma clara.
+                            </p>
+                        </div>
+
+                        <span
+                            class="shrink-0 inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-red-100">
+                            <i class="fa-solid fa-asterisk text-[9px] text-red-500"></i>
+                            Obligatorio
+                        </span>
+                    </div>
+
+                    <el-input v-model="formData.description" type="textarea" :autosize="{ minRows: 3, maxRows: 8 }"
+                        placeholder="-" class="mt-3" />
+                </div>
+
+                <div
+                    class="col-span-12 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
+                    hover:border-slate-300 hover:shadow-md focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-100">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <label class="block text-sm font-semibold text-slate-900">Precio</label>
+                            <p class="mt-0.5 text-xs text-slate-500">
+                                Ingresa el precio
+                            </p>
+                        </div>
+
+                        <span
+                            class="shrink-0 inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 ring-1 ring-red-100">
+                            <i class="fa-solid fa-asterisk text-[9px] text-red-500"></i>
+                            Obligatorio
+                        </span>
+                    </div>
+
+                    <el-input v-model="formData.unit_price" inputmode="decimal" placeholder="-" class="mt-3">
+                        <template #prefix>
+                            <i class="fa-solid fa-hashtag text-slate-400"></i>
+                        </template>
+                    </el-input>
+                </div>
+            </div>
+        </div>
+
+        <template #footer>
+            <div class="px-6 pb-6">
+                <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <el-button class="!rounded-xl !m-0" @click="handleClose">
+                        Cerrar
+                    </el-button>
+
+                    <el-button type="primary"
+                        class="!rounded-xl !bg-emerald-400 !border-emerald-400 hover:!bg-emerald-500 hover:!border-emerald-500"
+                        @click="onSubmit()" :loading="loadingSubmit">
+                        <i class="fa-solid fa-cloud-arrow-up me-2"></i>
+                        {{ formData.id ? 'Guardar cambios' : 'Guardar' }}
+                    </el-button>
+                </div>
+
+                <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+                    <span class="inline-flex items-center gap-2">
+                        <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                        Los campos se guardan al confirmar.
+                    </span>
+
+                    <span class="inline-flex items-center gap-2">
+                        <i class="fa-regular fa-keyboard text-emerald-500"></i>
+                        Tip: usa Enter para saltar líneas
+                    </span>
+                </div>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 
 <script setup>

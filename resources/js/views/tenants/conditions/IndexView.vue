@@ -40,7 +40,7 @@
                     <el-table-column label="Condición" min-width="280">
                         <template #default="{ row }">
                             <div class="flex items-center gap-3">
-                                {{ row?.description }}
+                                {{ row?.description ?? '-' }}
                             </div>
                         </template>
                     </el-table-column>
@@ -48,7 +48,7 @@
                     <el-table-column label="Información" min-width="280">
                         <template #default="{ row }">
                             <div class="flex items-center gap-3">
-                                {{ row?.info }}
+                                {{ row?.info ?? '-' }}
                             </div>
                         </template>
                     </el-table-column>

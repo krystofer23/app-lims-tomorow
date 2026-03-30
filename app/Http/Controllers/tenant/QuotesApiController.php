@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\tenant;
 
+use App\Exports\QuoteExport;
 use App\Http\Controllers\Controller;
 use App\Models\tenant\ItemsQuotes;
+use App\Models\tenant\LogisticCats;
 use App\Models\tenant\Matriz;
 use App\Models\tenant\Quotes;
 use App\Models\tenant\Services;
@@ -12,10 +14,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class QuotesApiController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
             $data = Quotes::query()
@@ -56,7 +59,7 @@ class QuotesApiController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $userId = Auth::id();
+            $userId = Auth::guard('api')->id();
 
             if (!$userId) {
                 return $this->sendError('No hay un usuario autenticado');
@@ -80,9 +83,6 @@ class QuotesApiController extends Controller
                 'total' => 0,
             ]);
 
-            $itemsTotal = 0;
-            $otherExpensesTotal = 0;
-
             if (!empty($input['items']) && is_array($input['items'])) {
                 foreach ($input['items'] as $item) {
                     $type = $item['type'];
@@ -105,11 +105,9 @@ class QuotesApiController extends Controller
                         'filable_id' => $value['id'],
                         'item' => $value,
                         'amount' => $amount,
-                        'price_unit' => $unitPrice,
-                        'total' => $lineTotal,
+                        'price_unit' => $value['unit_price'],
+                        'total' => $value['price'],
                     ]);
-
-                    $itemsTotal += $lineTotal;
                 }
             }
 
@@ -122,26 +120,22 @@ class QuotesApiController extends Controller
                     ItemsQuotes::create([
                         'quote_id' => $quote->id,
                         'type' => $item['type'] ?? 'other_expense',
+                        'filable_type' => LogisticCats::class,
+                        'filable_id' => $item['id'],
                         'item' => $item,
                         'amount' => $amount,
-                        'price_unit' => $unitPrice,
-                        'total' => $lineTotal,
+                        'price_unit' => $item['unit_price'],
+                        'total' => $item['price'],
                     ]);
-
-                    $otherExpensesTotal += $lineTotal;
                 }
             }
 
-            $subtotal = $itemsTotal + $otherExpensesTotal;
-            $igv = $subtotal * 0.18;
-            $total = $subtotal + $igv;
-
             $quote->update([
-                'items_total' => $itemsTotal,
-                'other_expenses_total' => $otherExpensesTotal,
-                'subtotal' => $subtotal,
-                'igv' => $igv,
-                'total' => $total,
+                'items_total' => $input['subtotal'],
+                'other_expenses_total' => $input['other_expenses_total'],
+                'subtotal' => $input['subtotal'],
+                'igv' => $input['igv'],
+                'total' => $input['total'],
             ]);
 
             DB::commit();
@@ -164,7 +158,7 @@ class QuotesApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $userId = Auth::id();
+            $userId = Auth::guard('api')->id();
 
             if (!$userId) {
                 return $this->sendError('No hay un usuario autenticado');
@@ -178,9 +172,6 @@ class QuotesApiController extends Controller
             }
 
             $input = $request->all();
-
-            $itemsTotal = 0;
-            $otherExpensesTotal = 0;
 
             $quote->update([
                 'company_id' => $input['company_id'] ?? null,
@@ -219,43 +210,33 @@ class QuotesApiController extends Controller
                         'filable_id' => $value['id'] ?? null,
                         'item' => $value,
                         'amount' => $amount,
-                        'price_unit' => $unitPrice,
-                        'total' => $lineTotal,
+                        'price_unit' => $value['unit_price'],
+                        'total' => $value['price'],
                     ]);
-
-                    $itemsTotal += $lineTotal;
                 }
             }
 
             if (!empty($input['other_expenses']) && is_array($input['other_expenses'])) {
                 foreach ($input['other_expenses'] as $item) {
                     $amount = $item['amount'] ?? 0;
-                    $unitPrice = $item['unit_price'] ?? 0;
-                    $lineTotal = $item['price'] ?? ($amount * $unitPrice);
 
                     ItemsQuotes::create([
                         'quote_id' => $quote->id,
                         'type' => $item['type'] ?? 'other_expense',
                         'item' => $item,
                         'amount' => $amount,
-                        'price_unit' => $unitPrice,
-                        'total' => $lineTotal,
+                        'price_unit' => $item['unit_price'],
+                        'total' => $item['price'],
                     ]);
-
-                    $otherExpensesTotal += $lineTotal;
                 }
             }
 
-            $subtotal = $itemsTotal + $otherExpensesTotal;
-            $igv = $subtotal * 0.18;
-            $total = $subtotal + $igv;
-
             $quote->update([
-                'items_total' => $itemsTotal,
-                'other_expenses_total' => $otherExpensesTotal,
-                'subtotal' => $subtotal,
-                'igv' => $igv,
-                'total' => $total,
+                'items_total' => $input['subtotal'],
+                'other_expenses_total' => $input['other_expenses_total'],
+                'subtotal' => $input['subtotal'],
+                'igv' => $input['igv'],
+                'total' => $input['total'],
             ]);
 
             DB::commit();
@@ -301,5 +282,22 @@ class QuotesApiController extends Controller
                 $e->getMessage()
             ));
         }
+    }
+
+    public function exportQuote($id, Request $request)
+    {
+        $quote = Quotes::query()
+            ->with([
+                'company:id,ruc,business_name,direction,activity',
+                'user',
+                'itemsQuotes',
+            ])
+            ->find($id);
+
+        if (!$quote) {
+            return $this->sendError('No se encontro la cotización');
+        }
+
+        return Excel::download(new QuoteExport($quote), 'cotizacion.xlsx');
     }
 }

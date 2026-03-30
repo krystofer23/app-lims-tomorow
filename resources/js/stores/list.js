@@ -9,6 +9,7 @@ export const useListStore = defineStore("listStore", () => {
     const companies = ref([])
     const matrizDescription = ref([])
     const services = ref([])
+    const comerciales = ref([])
 
     const essays = ref([])
     const paginationEssays = ref({
@@ -161,7 +162,7 @@ export const useListStore = defineStore("listStore", () => {
     }
 
     return {
-        conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService,
+        conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService, comerciales,
         getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices,
     }
 })

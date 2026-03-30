@@ -41,21 +41,22 @@
                             <div class="grid grid-cols-12 w-full gap-3">
                                 <div class="col-span-3">
                                     <p class="font-medium">Comercial</p>
-                                    <el-select placeholder="Seleccionar" class="!w-full" size="small" clearable>
-                                        <el-option></el-option>
+                                    <el-select v-model="filters.comercial_id" placeholder="Seleccionar" class="!w-full"
+                                        size="small" clearable>
+                                        <el-option v-for="row in comerciales"></el-option>
                                     </el-select>
                                 </div>
                                 <div class="col-span-3">
                                     <p class="font-medium">Empresa</p>
-                                    <el-select placeholder="Seleccionar" class="!w-full" size="small" clearable>
-                                        <el-option></el-option>
+                                    <el-select v-model="filters.company_id" placeholder="Seleccionar" class="!w-full"
+                                        size="small" clearable>
+                                        <el-option v-for="row in companies" :label="row.business_name"
+                                            :value="row.id"></el-option>
                                     </el-select>
                                 </div>
                                 <div class="col-span-3">
                                     <p class="font-medium">OS Generada</p>
-                                    <el-select placeholder="Seleccionar" class="!w-full" size="small" clearable>
-                                        <el-option></el-option>
-                                    </el-select>
+                                    <el-switch v-model="filters.is_os" size="small"></el-switch>
                                 </div>
                             </div>
                         </template>
@@ -83,7 +84,8 @@
 
                     <el-table-column label="OS Generada">
                         <template #default="{ row }">
-                            <el-tag type="danger">NO</el-tag>
+                            <!-- <span class="rounded-md py-0.5 px-1.5 text-xs font-medium text-white bg-[#1abc9c]">Si</span> -->
+                            <span class="rounded-md py-0.5 px-1.5 text-xs font-medium text-white bg-[#e7515a]">No</span>
                         </template>
                     </el-table-column>
 
@@ -96,35 +98,24 @@
                         </template>
                     </el-table-column>
 
-                    <el-table-column label="Acciones" width="160" fixed="right">
+                    <el-table-column label="Acciones" width="200" fixed="right">
                         <template #default="{ row }">
                             <div class="flex justify-start gap-2">
-                                <el-dropdown>
-                                    <template #default>
-                                        <button v-tippy="'Acciones'"
-                                            class="bg-emerald-400 text-white font-medium px-2.5 h-6 rounded-lg text-xs">
-                                            <i class="fa-solid fa-chevron-down"></i>
-                                        </button>
-                                    </template>
-                                    <template #dropdown>
-                                        <el-dropdown-item>
-                                            <i class="fa-regular fa-file-lines"></i>
-                                            Ver Pdf
-                                        </el-dropdown-item>
-                                        <el-dropdown-item>
-                                            <i class="fa-regular fa-file-excel"></i>
-                                            Excel
-                                        </el-dropdown-item>
-                                        <el-dropdown-item>
-                                            <i class="fa-regular fa-pen-to-square"></i>
-                                            Editar
-                                        </el-dropdown-item>
-                                        <el-dropdown-item class="!text-red-500">
-                                            <i class="fa-regular fa-trash-can"></i>
-                                            Eliminar
-                                        </el-dropdown-item>
-                                    </template>
-                                </el-dropdown>
+                                <el-button-group>
+                                    <el-button v-tippy="'Generar PDF'" size="small" type="primary">
+                                        <i class="fa-regular fa-file-pdf"></i>
+                                    </el-button>
+                                    <el-button :loading="row?.loading" @click="downloadQuoteExcel(row)"
+                                        v-tippy="'Generar Excel'" size="small" type="success">
+                                        <i class="fa-regular fa-file-excel"></i>
+                                    </el-button>
+                                    <el-button v-tippy="'Editar'" size="small" type="warning">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </el-button>
+                                    <el-button v-tippy="'Eliminar'" size="small" type="danger">
+                                        <i class="fa-regular fa-trash-can"></i>
+                                    </el-button>
+                                </el-button-group>
                             </div>
                         </template>
                     </el-table-column>
@@ -144,12 +135,12 @@
                 <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-sm text-slate-500">
                         Mostrando <span class="font-semibold text-slate-700">{{ quotes.length }}</span> de
-                        <span class="font-semibold text-slate-700">{{ pagination?.total }}</span> registros
+                        <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
                     </p>
 
                     <el-pagination background layout="prev, pager, next, sizes" :total="pagination.total"
                         v-model:page-size="pagination.per_page" v-model:current-page="pagination.current_page"
-                        :page-sizes="[10, 20, 50, 100]" @update:current-page="changePage" />
+                        :page-sizes="[10, 20, 50, 100]" @change="getQuotes" />
                 </div>
             </div>
         </div>
@@ -157,10 +148,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import tenant from '../../../stores/tenant';
+import { useListStore } from '../../../stores/list';
+import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
 
 const activeNames = ref(['1'])
+const listStore = useListStore()
+
+const companies = computed(() => listStore.companies)
+const comerciales = computed(() => listStore.comerciales)
 
 const headerStyle = () => ({
     background: "#F8FAFC",
@@ -182,7 +179,10 @@ const formatTime = (iso) => {
 }
 
 const filters = ref({
-    q: null
+    q: null,
+    comercial_id: null,
+    company_id: null,
+    is_os: null
 })
 
 const loading = ref(false)
@@ -218,12 +218,36 @@ const getQuotes = async (page = 1) => {
     }
 }
 
-const changePage = (p) => {
-    getQuotes(p)
+const downloadQuoteExcel = async (row) => {
+    row.loading = true
+
+    try {
+        const response = await tenant.post(`/quote/export/${row.id}`, {}, {
+            responseType: 'blob',
+        })
+
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+
+        link.href = url
+        link.setAttribute('download', 'cotizacion.xlsx')
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+
+        window.URL.revokeObjectURL(url)
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        row.loading = false
+    }
 }
 
-onMounted(() => {
-    getQuotes()
+onMounted(async () => {
+    await getQuotes()
+    await listStore.getCompanies()
 })
 </script>
 

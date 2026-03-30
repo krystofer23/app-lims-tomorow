@@ -443,7 +443,7 @@ function toggleMobileSub(menuKey, itemKey) {
 const router = useRouter()
 
 function go(item, closeMobile = false) {
-    router.push(item.key)
+    router.push(item?.key)
 
     closeAll();
     if (closeMobile) mobileOpen.value = false;

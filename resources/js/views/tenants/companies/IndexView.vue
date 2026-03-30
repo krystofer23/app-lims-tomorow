@@ -76,7 +76,7 @@
                             </div>
                         </template>
                     </el-table-column>
-                    
+
                     <el-table-column label="Estado" min-width="120">
                         <template #default="{ row }">
                             <div class="flex items-center gap-3">
@@ -131,12 +131,12 @@
                 <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-sm text-slate-500">
                         Mostrando <span class="font-semibold text-slate-700">{{ companies.length }}</span> de
-                        <span class="font-semibold text-slate-700">{{ pagination?.total }}</span> registros
+                        <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
                     </p>
 
                     <el-pagination background layout="prev, pager, next, sizes" :total="pagination.total"
                         v-model:page-size="pagination.per_page" v-model:current-page="pagination.current_page"
-                        :page-sizes="[10, 20, 50, 100]" @update:current-page="changePage" />
+                        :page-sizes="[10, 20, 50, 100]" @change="changePage" />
                 </div>
             </div>
         </div>

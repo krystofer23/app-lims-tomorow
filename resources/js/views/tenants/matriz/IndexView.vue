@@ -227,7 +227,7 @@
                     </el-select>
                 </div>
 
-                <div
+                <!-- <div
                     class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
                     hover:border-slate-300 hover:shadow-md focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-100">
                     <div class="flex items-start justify-between gap-3">
@@ -248,7 +248,7 @@
                             <i class="fa-solid fa-hashtag text-slate-400"></i>
                         </template>
                     </el-input>
-                </div>
+                </div> -->
 
                 <div
                     class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
@@ -272,7 +272,7 @@
                     </el-input>
                 </div>
 
-                <div
+                <!-- <div
                     class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
                     hover:border-slate-300 hover:shadow-md focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-100">
                     <div class="flex items-start justify-between gap-3">
@@ -292,7 +292,7 @@
                             <i class="fa-solid fa-hashtag text-slate-400"></i>
                         </template>
                     </el-input>
-                </div>
+                </div> -->
             </div>
 
             <div class="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">

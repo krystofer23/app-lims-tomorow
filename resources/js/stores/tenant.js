@@ -43,18 +43,18 @@ tenant.interceptors.response.use(
                 return tenant(originalRequest);
             }
             catch (e) {
-                ElNotification({
-                    message: `
-                        Cerrando sesión
-                    `,
-                    type: 'error',
-                    dangerouslyUseHTMLString: true
-                });
+                // ElNotification({
+                //     message: `
+                //         Cerrando sesión
+                //     `,
+                //     type: 'error',
+                //     dangerouslyUseHTMLString: true
+                // });
 
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                // localStorage.removeItem('token');
+                // localStorage.removeItem('user');
 
-                router.push({ name: 'login' });
+                // router.push({ name: 'login' });
             }
         }
 
@@ -73,18 +73,18 @@ tenant.interceptors.response.use(
                 return tenant(originalRequest);
             }
             catch (e) {
-                ElNotification({
-                    message: `
-                        Cerrando sesión
-                    `,
-                    type: 'error',
-                    dangerouslyUseHTMLString: true
-                });
+                // ElNotification({
+                //     message: `
+                //         Cerrando sesión
+                //     `,
+                //     type: 'error',
+                //     dangerouslyUseHTMLString: true
+                // });
 
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                // localStorage.removeItem('token');
+                // localStorage.removeItem('user');
 
-                router.push({ name: 'login' });
+                // router.push({ name: 'login' });
             }
         }
 

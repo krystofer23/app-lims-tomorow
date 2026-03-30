@@ -1,32 +1,25 @@
 <template>
-    <el-dialog :style="{ width: computedDialogWidth }" :model-value="showServiceModal" width="800" class="!rounded-xl" @close="handleClose">
+    <el-dialog :model-value="state" style="max-width: 90% !important;" class="!rounded-xl" @close="handleClose"
+        :style="{ width: computedDialogWidth }">
         <template #header>
-            <div class="flex items-center gap-3 mb-4">
-                <div class="flex items-center justify-center w-10 h-10 bg-emerald-50 rounded-xl">
-                    <i class="fa-solid fa-clipboard-list text-emerald-500"></i>
-                </div>
-
-                <div>
-                    <h3 class="text-lg font-semibold text-slate-800">
-                        Seleccionar Servicios
-                    </h3>
-                    <p class="text-xs text-slate-500">
-                        Agrega servicios a la cotización
-                    </p>
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-10 h-10 bg-amber-50 rounded-xl">
+                        <i class="fa-solid fa-coins text-amber-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-800">
+                            Seleccionar Gastos Logisticos
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Selecciona uno o mas gastos para agregar
+                        </p>
+                    </div>
                 </div>
             </div>
         </template>
 
-        <div class="mb-3 flex justify-end gap-3">
-            <el-input style="max-width: 200px;" v-model="filters.q" clearable size="default" placeholder="Buscador..."
-                class="w-full sm:w-[320px]">
-                <template #prefix>
-                    <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
-                </template>
-            </el-input>
-        </div>
-
-        <el-table size="small" :data="services" v-loading="loading" class="w-full" :header-cell-style="headerStyle"
+        <el-table size="small" :data="logisticCats" v-loading="loading" class="w-full" :header-cell-style="headerStyle"
             :row-class-name="rowClassName" stripe @row-click="handleRowClick">
             <el-table-column width="40" fixed="left">
                 <template #default="{ row }">
@@ -36,7 +29,7 @@
 
             <el-table-column type="index" label="#" width="60" />
 
-            <el-table-column label="Servicio" min-width="160">
+            <el-table-column label="Matriz" min-width="160">
                 <template #default="{ row }">
                     <div class="flex items-center gap-3">
                         {{ row?.description }}
@@ -44,10 +37,10 @@
                 </template>
             </el-table-column>
 
-            <el-table-column label="Servicio" min-width="160">
+            <el-table-column label="Precio Unit." min-width="120" fixed="right">
                 <template #default="{ row }">
                     <div class="flex items-center gap-3">
-                        {{ row?.unit_price }}
+                        S/ {{ row?.unit_price }}
                     </div>
                 </template>
             </el-table-column>
@@ -66,17 +59,17 @@
 
         <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-slate-500">
-                Mostrando <span class="font-semibold text-slate-700">{{ services.length }}</span> de
-                <span class="font-semibold text-slate-700">{{ pagination?.total }}</span> registros
+                Mostrando <span class="font-semibold text-slate-700">{{ logisticCats.length }}</span> de
+                <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
             </p>
 
             <el-pagination background layout="prev, pager, next" :total="pagination.total"
                 v-model:page-size="pagination.per_page" v-model:current-page="pagination.current_page"
-                @update:current-page="changePage" />
+                @update:current-page="getLogisticCast" />
         </div>
 
         <template #footer>
-            <div class="flex justify-end mt-5">
+            <div class="flex justify-end p-4">
                 <el-button @click="handleClose" class="!rounded-xl">
                     Cerrar
                 </el-button>
@@ -86,11 +79,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
-import { useListStore } from '../../../../stores/list'
-
+import { computed, onMounted, ref } from 'vue';
 import { useWindowSize } from '@vueuse/core';
+import { handleErrorsExeption } from '../../../../stores/handleErrorsExeption';
+import tenant from '../../../../stores/tenant';
 const { width: windowWidth } = useWindowSize();
+
+const emits = defineEmits(['close'])
 
 const computedDialogWidth = computed(() => {
     if (windowWidth.value <= 576) {
@@ -102,14 +97,12 @@ const computedDialogWidth = computed(() => {
     } else if (windowWidth.value <= 1200) {
         return "80%";
     } else {
-        return "40%";
+        return "60%";
     }
 });
 
-const listStore = useListStore()
-
 const props = defineProps({
-    showServiceModal: {
+    state: {
         type: Boolean,
         default: false
     },
@@ -119,23 +112,14 @@ const props = defineProps({
     }
 })
 
-const filters = ref({
-    q: null,
+const loading = ref(false)
+const logisticCats = ref([])
+const pagination = ref({
+    last_page: 0,
+    current_page: 0,
+    total: 0,
+    per_page: 0,
 })
-
-watch(() => filters.value.q, (newVal) => {
-    listStore.getServices(newVal)
-})
-
-const pagination = computed(() => listStore.paginationService)
-const loading = computed(() => listStore.loadingService)
-const services = computed(() => listStore.services)
-
-const emits = defineEmits(['close'])
-
-const handleClose = () => {
-    emits('close')
-}
 
 const handleRowClick = (row) => {
     if (valueArray(row)) {
@@ -147,48 +131,30 @@ const handleRowClick = (row) => {
 
 const addItem = (item) => {
     const exists = props.items.some(
-        i => i.id === item?.id && i.type === 'service'
+        i => i.id === item?.id
     )
 
     if (!exists) {
         item.amount = 1
+        item.total = item.amount * item.unit_price
         item.days = 1
 
         const newItem = JSON.parse(JSON.stringify(item))
 
         props.items.push({
-            type: 'service',
-            id: item?.id,
-            item: newItem
+            ...newItem
         })
     }
 }
 
 const removeItem = (item) => {
     const index = props.items.findIndex(
-        i => i.id === item?.id && i.type === 'service'
+        i => i.id === item?.id
     )
 
     if (index !== -1) {
         props.items.splice(index, 1)
     }
-}
-
-const headerStyle = () => ({
-    background: "#F8FAFC",
-    color: "#0F172A",
-    fontWeight: "700",
-    borderBottom: "1px solid #E2E8F0",
-});
-
-const rowClassName = ({ row }) => {
-    return valueArray(row) ? 'selected-row' : ''
-}
-
-const valueArray = (item) => {
-    return props.items.some(
-        i => i.id === item?.id && i.type === 'service'
-    )
 }
 
 const handleCheck = (row, checked) => {
@@ -199,12 +165,53 @@ const handleCheck = (row, checked) => {
     }
 }
 
-const changePage = (p) => {
-    listStore.getServices(null, pageXOffset)
+const valueArray = (item) => {
+    return props.items.some(
+        i => i.id === item?.id
+    )
+}
+
+const getLogisticCast = async (page = 1) => {
+    loading.value = true
+
+    try {
+        const { data } = await tenant.get(`logistic-cats?page=${page}`)
+
+        if (data.data) {
+            logisticCats.value = data.data.data
+            pagination.value = {
+                current_page: data.data.current_page,
+                last_page: data.data.last_page,
+                per_page: data.data.per_page,
+                total: data.data.total,
+            }
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        loading.value = false
+    }
+}
+
+const handleClose = () => {
+    emits('close')
+}
+
+const headerStyle = () => ({
+    background: "#F8FAFC",
+    color: "#0F172A",
+    fontWeight: "700",
+    borderBottom: "1px solid #E2E8F0",
+})
+
+const rowClassName = ({ row }) => {
+    return valueArray(row) ? 'selected-row' : ''
 }
 
 onMounted(() => {
-    listStore.getServices()
+    getLogisticCast()
 })
 </script>
 

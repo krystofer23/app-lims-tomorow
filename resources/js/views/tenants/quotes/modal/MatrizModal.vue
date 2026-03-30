@@ -69,13 +69,13 @@
                 </template>
             </el-table-column>
 
-            <el-table-column label="N° de muestras" min-width="160">
+            <!-- <el-table-column label="N° de muestras" min-width="160">
                 <template #default="{ row }">
                     <div class="flex items-center gap-3">
                         {{ row?.number_samples }}
                     </div>
                 </template>
-            </el-table-column>
+            </el-table-column> -->
 
             <el-table-column label="Precio Unit." min-width="120" fixed="right">
                 <template #default="{ row }">
@@ -85,13 +85,13 @@
                 </template>
             </el-table-column>
 
-            <el-table-column label="Precio" min-width="120" fixed="right">
+            <!-- <el-table-column label="Precio" min-width="120" fixed="right">
                 <template #default="{ row }">
                     <div class="flex items-center gap-3">
                         S/ {{ row?.price }}
                     </div>
                 </template>
-            </el-table-column>
+            </el-table-column> -->
 
             <template #empty>
                 <div class="py-16 text-center">

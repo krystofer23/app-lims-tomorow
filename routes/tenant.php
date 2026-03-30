@@ -66,6 +66,7 @@ Route::middleware([
                 Route::post('', 'store');
                 Route::put('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
+                Route::post('/export/{id}', 'exportQuote');
             });
 
             Route::controller(ServiceApiController::class)->prefix('service')->group(function () {

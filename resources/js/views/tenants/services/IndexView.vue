@@ -152,9 +152,9 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="grid grid-cols-12 gap-4">
                 <div
-                    class="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
+                    class="col-span-12 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
                     hover:border-slate-300 hover:shadow-md focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-100">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
@@ -176,7 +176,7 @@
                 </div>
 
                 <div
-                    class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
+                    class="col-span-12 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition
                     hover:border-slate-300 hover:shadow-md focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-100">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
@@ -268,8 +268,8 @@ const formData = ref({
     description: null,
     days: null,
     amount: null,
-    unit_price: null,
-    price: null,
+    unit_price: 0,
+    price: 0,
 })
 
 const handleEdit = (row) => {
@@ -291,8 +291,8 @@ const handleClose = () => {
         description: null,
         days: null,
         amount: null,
-        unit_price: null,
-        price: null,
+        unit_price: 0,
+        price: 0,
     }
 }
 
