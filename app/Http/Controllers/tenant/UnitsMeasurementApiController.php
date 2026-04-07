@@ -26,6 +26,12 @@ class UnitsMeasurementApiController extends Controller
         try {
             $input = $request->all();
 
+            $find = UnitsMeasurement::where('description', $input['description'])->first();
+
+            if ($find) {
+                return $this->sendError('Ya existe la unidad de medida');
+            }
+
             UnitsMeasurement::create([
                 'description' => $input['description']
             ]);

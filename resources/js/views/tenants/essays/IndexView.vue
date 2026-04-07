@@ -81,18 +81,20 @@
                     <el-table-column label="Acciones" width="160" fixed="right">
                         <template #default="{ row }">
                             <div class="flex justify-end gap-2">
-                                <el-tooltip content="Editar" placement="top">
-                                    <el-button circle class="!rounded-xl !m-0" @click="handleEdit(row)">
+                                <el-button-group>
+                                    <el-button v-tippy="'Relacionar Equipos'" size="small" class="!m-0"
+                                        @click="handleTeam(row)">
+                                        <i class="fa-solid fa-sitemap"></i>
+                                    </el-button>
+                                    <el-button v-tippy="'Editar'" type="warning" plain size="small" class="!m-0"
+                                        @click="handleEdit(row)">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </el-button>
-                                </el-tooltip>
-
-                                <el-tooltip content="Eliminar" placement="top">
-                                    <el-button circle type="danger" plain class="!rounded-xl !m-0"
+                                    <el-button v-tippy="'Eliminar'" type="danger" plain size="small" class="!m-0"
                                         @click="handleDestroy(row?.id)">
                                         <i class="fa-regular fa-trash-can"></i>
                                     </el-button>
-                                </el-tooltip>
+                                </el-button-group>
                             </div>
                         </template>
                     </el-table-column>
@@ -297,18 +299,147 @@
             </div>
         </template>
     </el-dialog>
+
+    <el-dialog top="1vh" v-model="stateTeam" @close="handleCloseTeam" class="!p-0 overflow-hidden !rounded-xl"
+        width="840px">
+        <template #header>
+            <div class="px-6 pt-6">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 ring-1 ring-blue-100">
+                                <i class="fa-solid fa-sitemap text-blue-500"></i>
+                            </div>
+
+                            <div class="min-w-0">
+                                <h3 class="text-base font-semibold text-slate-900 leading-5">
+                                    Relacionar Equipos
+                                </h3>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    Selecciona equipos para el ensayo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 h-px w-full bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400">
+                </div>
+            </div>
+        </template>
+
+        <div class="mx-6 bg-slate-100 font-medium px-4 py-1.5 rounded-lg">
+            Ensayo: {{ essay?.description }}
+        </div>
+
+        <div class="px-6 pb-5 pt-4">
+            <div class="flex gap-3 items-center">
+                <el-input v-model="searchTeam" clearable size="default" placeholder="Buscar por denominación..."
+                    class="w-full sm:w-[320px]">
+                    <template #prefix>
+                        <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                    </template>
+                </el-input>
+                <el-input v-model="searchTeamSerie" clearable size="default" placeholder="Buscar por serie..."
+                    class="w-full sm:w-[320px]">
+                    <template #prefix>
+                        <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                    </template>
+                </el-input>
+                <el-input v-model="searchTeamCode" clearable size="default" placeholder="Buscar codigo..."
+                    class="w-full sm:w-[320px]">
+                    <template #prefix>
+                        <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                    </template>
+                </el-input>
+            </div>
+
+
+            <el-table :data="teams" v-loading="loadingTeam" @row-click="handleRowClick" stripe
+                :row-class-name="rowClassNameTeam">
+                <el-table-column width="30">
+                    <template #default="{ row }">
+                        <el-checkbox :model-value="valueArray(row)" @change="handleCheck(row, $event)" @click.stop />
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="#" width="60" type="index" :index="indexMethod" />
+
+                <el-table-column label="Codigo Interno">
+                    <template #default="{ row }">
+                        {{ row?.code }}
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Área">
+                    <template #default="{ row }">
+                        {{ row?.area?.description }}
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Denominación">
+                    <template #default="{ row }">
+                        {{ row?.denomination }}
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Marca / Modelo / Serie">
+                    <template #default="{ row }">
+                        <div class="flex flex-col leading-tight">
+                            <span class="font-medium text-gray-900">{{ row?.brand_manufacturer || '—' }}</span>
+                            <span class="text-xs text-gray-500">
+                                {{ row?.model || '—' }} · {{ row?.serie || '—' }}
+                            </span>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p class="text-sm text-slate-500">
+                    Mostrando <span class="font-semibold text-slate-700">{{ teams.length }}</span> de
+                    <span class="font-semibold text-slate-700">{{ paginationTeam?.total }}</span> registros
+                </p>
+
+                <el-pagination background layout="prev, pager, next, sizes" :total="paginationTeam.total"
+                    v-model:page-size="paginationTeam.per_page" v-model:current-page="paginationTeam.current_page"
+                    :page-sizes="[10, 20, 50, 100]" @update:current-page="listStore.getTeams" />
+            </div>
+        </div>
+
+        <template #footer>
+            <div class="px-6 pb-6">
+                <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <el-button class="!rounded-xl !m-0" @click="handleCloseTeam">
+                        Cancelar
+                    </el-button>
+                    <el-button :loading="loadingSave" type="primary" class="!rounded-xl !m-0" @click="saveRelations">
+                        <i class="fa-solid fa-cloud-arrow-up me-1.5"></i>
+                        Guardar Relaciones
+                    </el-button>
+                </div>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue"
+import { computed, onMounted, reactive, ref, watch } from "vue"
 import { ElNotification } from "element-plus";
 import tenant from "../../../stores/tenant"
 import { useListStore } from "../../../stores/list.js";
+import { handleErrorsExeption } from "../../../stores/handleErrorsExeption.js";
 
 const state = ref(false)
 const listStore = useListStore()
 const conditions = computed(() => listStore.conditions)
 const unitsMeasurement = computed(() => listStore.unitsMeasurement)
+const stateTeam = ref(false)
+
+const searchTeam = ref('')
+const searchTeamCode = ref('')
+const searchTeamSerie = ref('')
 
 const filters = reactive({
     q: null,
@@ -456,6 +587,136 @@ const remoteMethodConditions = async (q) => {
     loadingConditions.value = false
 }
 
+const paginationTeam = computed(() => listStore.paginationTeam)
+const loadingTeam = computed(() => listStore.loadingTeam)
+const teams = computed(() => listStore.teams)
+
+const essay = ref(null)
+const selectIds = ref([])
+
+const handleTeam = (row) => {
+    stateTeam.value = true
+    essay.value = row
+}
+
+const handleCloseTeam = () => {
+    stateTeam.value = false
+
+    essay.value = null
+    selectIds.value = []
+}
+
+const handleRowClick = (row) => {
+    if (valueArray(row)) {
+        removeItem(row)
+    } else {
+        addItem(row)
+    }
+}
+
+const valueArray = (item) => {
+    return selectIds.value.some(
+        i => i === item.id
+    )
+}
+
+const addItem = (item) => {
+    const exists = selectIds.value.some(
+        i => i === item.id
+    )
+
+    if (!exists) {
+        selectIds.value.push(item.id)
+    }
+}
+
+const removeItem = (item) => {
+    const index = selectIds.value.findIndex(
+        i => i === item.id
+    )
+
+    if (index !== -1) {
+        selectIds.value.splice(index, 1)
+    }
+}
+
+const handleCheck = (row, checked) => {
+    if (checked) {
+        addItem(row)
+    } else {
+        removeItem(row)
+    }
+}
+
+watch(() => stateTeam.value, async (newVal) => {
+    if (newVal) {
+        await listStore.getTeams()
+
+        if (!essay.value) return
+
+        await getRelationsTeam()
+    }
+})
+
+watch(() => searchTeam.value, (newVal) => {
+    listStore.getTeams(1, {
+        denomination: newVal,
+    })
+})
+watch(() => searchTeamCode.value, (newVal) => {
+    listStore.getTeams(1, {
+        code: newVal,
+    })
+})
+watch(() => searchTeamSerie.value, (newVal) => {
+    listStore.getTeams(1, {
+        serie: newVal,
+    })
+})
+
+const rowClassNameTeam = ({ row }) => {
+    return valueArray(row) ? 'selected-row' : ''
+}
+
+const indexMethod = (index) => {
+    return (paginationTeam.value.current_page - 1) * paginationTeam.value.per_page + index + 1
+}
+
+const loadingSave = ref(false)
+
+const saveRelations = async () => {
+    loadingSave.value = true
+
+    try {
+        const { data } = await tenant.post(`essays/relations-team`, {
+            essay_id: essay.value?.id,
+            teams_ids: selectIds.value,
+        })
+
+        ElNotification.success(data.message)
+        handleCloseTeam()
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        loadingSave.value = false
+    }
+}
+
+const getRelationsTeam = async () => {
+    try {
+        const { data } = await tenant.get(`essays/get-relations-team/${essay.value?.id}`)
+
+        if (data.data) {
+            selectIds.value = data.data
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
 onMounted(() => {
     getEssays()
 
@@ -471,5 +732,13 @@ onMounted(() => {
 
 :deep(.el-table__inner-wrapper::before) {
     height: 0;
+}
+
+:deep(.selected-row td) {
+    background-color: #dce1fc !important;
+}
+
+:deep(.selected-row:hover td) {
+    background-color: #bbc9f7 !important;
 }
 </style>

@@ -30,13 +30,13 @@ use Carbon\Carbon;
     </tr>
     <tr>
         <td style="font-weight:bold; background-color:#d9ead3;">Contacto:</td>
-        <td colspan="4">-</td>
+        <td colspan="4">{{ $quote?->contact?->user?->full_name }}</td>
         <td style="font-weight:bold; background-color:#d9ead3;">Teléfono/Celular:</td>
-        <td colspan="4">-</td>
+        <td colspan="4">{{ $quote?->contact?->phone }}</td>
     </tr>
     <tr>
         <td style="font-weight:bold; background-color:#d9ead3;">Facturar a:</td>
-        <td colspan="6">-</td>
+        <td colspan="6">{{ $quote?->contact?->email }}</td>
         <td style="font-weight:bold; background-color:#d9ead3;">R.U.C.:</td>
         <td colspan="2">{{ $company->ruc ?? '-' }}</td>
     </tr>
@@ -44,7 +44,7 @@ use Carbon\Carbon;
         <td style="font-weight:bold; background-color:#d9ead3;">Referencia/procedencia:</td>
         <td colspan="6">{{ $quote->reference }}</td>
         <td style="font-weight:bold; background-color:#d9ead3;">Email:</td>
-        <td colspan="2">-</td>
+        <td colspan="2">{{ $quote?->contact?->email }}</td>
     </tr>
 
     <tr>
@@ -205,7 +205,7 @@ use Carbon\Carbon;
         <td>{{ data_get($otherexpense, 'item.days', '-') }}</td>
         <td>{{ data_get($otherexpense, 'item.amount', '-') }}</td>
         <td>{{ number_format((float) data_get($otherexpense, 'item.unit_price', 0), 2, ',', '.') }}</td>
-        <td>{{ number_format((float) data_get($otherexpense, 'item.price', $service->total ?? 0), 2, ',', '.') }}</td>
+        <td>{{ number_format((float) data_get($otherexpense, 'item.price', $otherexpense->total ?? 0), 2, ',', '.') }}</td>
     </tr>
     @endforeach
 
@@ -256,7 +256,7 @@ use Carbon\Carbon;
             {{$quote->user?->full_name}}
         </td>
     </tr>
-    
+
     <tr>
         <td style="background: #92d050; font-weight: bold;" colspan="2">Aprobado por: </td>
         <td colspan="2">RRM</td>

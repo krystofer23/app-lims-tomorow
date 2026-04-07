@@ -3,6 +3,7 @@
 namespace App\Models\tenant;
 
 use App\Casts\LocalTimezone;
+use App\Models\Tenant\User;
 use App\Models\TenantModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;

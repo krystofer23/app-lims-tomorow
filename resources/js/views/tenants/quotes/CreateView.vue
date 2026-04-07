@@ -99,6 +99,17 @@
 
                         <div>
                             <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                Contacto
+                            </label>
+                            <el-select :loading="loadingContacts" clearable v-model="form.contact_id" filterable
+                                class="w-full" placeholder="Selecciona una empresa" size="large">
+                                <el-option v-for="contact in contacts" :key="contact.id"
+                                    :label="contact?.user?.full_name + ' | ' + contact?.type" :value="contact.id" />
+                            </el-select>
+                        </div>
+
+                        <div>
+                            <label class="mb-2 block text-sm font-semibold text-slate-700">
                                 Dirección
                             </label>
                             <el-input v-model="form.direction" placeholder="Ej: Av. Javier Prado 123" size="large" />
@@ -238,7 +249,7 @@
                                             {{ row?.item?.description || '-' }}
                                         </p>
 
-                                        <p v-tippy="row?.item?.methodologie?.description || 'No registrada'"
+                                        <p v-if="row?.item?.methodologie?.description" v-tippy="row?.item?.methodologie?.description || 'No registrada'"
                                             class="mt-1 text-xs text-slate-500 line-clamp-3">
                                             Metodología:
                                             {{ row?.item?.methodologie?.description || 'No registrada' }}
@@ -265,10 +276,11 @@
                                             <i class="fa-solid fa-trash-can"></i>
                                         </el-button>
 
-                                        <div class="absolute top-0 right-1 flex gap-2" v-if="row.frequency_label">
+                                        <div class="absolute top-0 right-1 flex gap-2"
+                                            v-if="row?.item?.frequency_label">
                                             <span
                                                 class="bg-[#1abc9c] px-2 pt-1 text-white rounded-lg text-xs font-medium w-full h-[24px] truncate">
-                                                {{ row?.frequency_label }}
+                                                {{ row?.item?.frequency_label }}
                                             </span>
                                             <el-button @click="() => {
                                                 row.item.select = null
@@ -429,7 +441,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import ServicesModal from './modal/ServicesModal.vue'
 import MatrizModal from './modal/MatrizModal.vue'
 import { useListStore } from '../../../stores/list'
@@ -441,9 +453,13 @@ import { handleErrorsExeption } from '../../../stores/handleErrorsExeption'
 
 const state = ref(false)
 const router = useRouter()
+const route = useRoute()
 const loadingSubmit = ref(false)
 const listStore = useListStore()
 const companies = computed(() => listStore.companies)
+
+const loadingContacts = computed(() => listStore.loadingContacts)
+const contacts = computed(() => listStore.contacts)
 
 const frequency = ref(null);
 
@@ -475,6 +491,7 @@ const form = reactive({
     total: null,
     reference: null,
     observations: null,
+    contact_id: null,
     items: [],
     other_expenses: []
 })
@@ -538,18 +555,9 @@ const resetForm = () => {
     form.total = null
     form.reference = null
     form.observations = null
+    form.contact_id = null
     form.items = []
     form.other_expenses = []
-}
-
-const addOtherExpense = () => {
-    form.other_expenses.push({
-        type: 'other',
-        description: '',
-        amount: 1,
-        unit_price: 0,
-        price: 0
-    })
 }
 
 const removeOtherExpense = (index) => {
@@ -646,6 +654,41 @@ watch(() => form.other_expenses, (newVal) => {
     })
 }, { deep: true })
 
+watch(() => form.company_id, (newVal) => {
+    if (newVal) {
+        listStore.getCompanies(newVal)
+        listStore.getContacts(null, newVal)
+    }
+})
+
+const getQuote = async (id) => {
+    try {
+        const { data } = await tenant.get(`quote/${id}`)
+
+        if (data.data) {
+            form.id = data.data?.id
+            form.company_id = data.data?.company_id
+            form.direction = data.data?.direction
+            form.date_attention = data.data?.date_attention
+            form.version = data.data?.version
+            form.code = data.data?.code
+            form.items_total = data.data?.items_total
+            form.other_expenses_total = data.data?.other_expenses_total
+            form.igv = data.data?.igv
+            form.subtotal = data.data?.subtotal
+            form.total = data.data?.total
+            form.reference = data.data?.reference
+            form.observations = data.data?.observations
+            form.contact_id = data.data?.contact_id
+            form.items = data.data?.items
+            form.other_expenses = data.data?.other_expenses
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
 onMounted(() => {
     listStore.getCompanies()
 
@@ -656,6 +699,10 @@ onMounted(() => {
     const day = String(date.getDate()).padStart(2, '0')
 
     form.date_attention = `${year}-${month}-${day}`
+
+    if (route.params.id) {
+        getQuote(route.params.id)
+    }
 })
 </script>
 

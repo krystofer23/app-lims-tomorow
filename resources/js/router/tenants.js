@@ -40,12 +40,6 @@ export const routesTenants = [
         meta: { scope: 'tenant' }
     },
     {
-        path: '/orders-services',
-        name: 'orders-services',
-        component: () => import('../views/tenants/orders-service/IndexView.vue'),
-        meta: { scope: 'tenant' }
-    },
-    {
         path: '/services',
         name: 'services',
         component: () => import('../views/tenants/services/IndexView.vue'),
@@ -103,6 +97,24 @@ export const routesTenants = [
         path: '/logistic-cats',
         name: 'logistic-cats',
         component: () => import('../views/tenants/logistic-cats/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/users',
+        name: 'users',
+        component: () => import('../views/tenants/users/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/orders-services',
+        name: 'orders-services',
+        component: () => import('../views/tenants/order-services/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/orders-services-create',
+        name: 'orders-services-create',
+        component: () => import('../views/tenants/order-services/CreateView.vue'),
         meta: { scope: 'tenant' }
     },
 ]

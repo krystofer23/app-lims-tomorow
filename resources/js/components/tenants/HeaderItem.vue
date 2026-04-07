@@ -3,7 +3,6 @@
         class="sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center justify-between gap-3">
-                <!-- Brand -->
                 <a href="#" class="group flex items-center gap-3 min-w-0">
                     <span
                         class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-400 text-white shadow-sm font-normal">
@@ -23,7 +22,6 @@
                 </a>
 
                 <div class="flex items-center gap-2">
-                    <!-- Search -->
                     <div class="hidden lg:flex flex-1 justify-center">
                         <label class="relative w-full max-w-xl">
                             <span class="sr-only">Buscar</span>
@@ -68,7 +66,7 @@
 
             <nav class="hidden md:flex items-center justify-between pb-3">
                 <div class="flex items-center gap-1">
-                    <a href="#" class="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                    <a href="/" class="rounded-xl px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
                         <i class="fa-solid fa-house me-1"></i>
                         Inicio
                     </a>
@@ -405,6 +403,7 @@ function toggleTop(key) {
         closeAll();
         return;
     }
+
     openTop.value = key;
     openSub.value = null;
 }
@@ -443,7 +442,7 @@ function toggleMobileSub(menuKey, itemKey) {
 const router = useRouter()
 
 function go(item, closeMobile = false) {
-    router.push(item?.key)
+    router.push({ name: item?.key })
 
     closeAll();
     if (closeMobile) mobileOpen.value = false;

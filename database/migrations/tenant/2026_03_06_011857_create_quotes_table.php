@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('company_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('user_validated_id')->nullable();
+            $table->unsignedBigInteger('contact_id')->nullable();
             $table->boolean('validated')->nullable();
             $table->string('direction')->nullable();
             $table->date('date_attention')->nullable();
@@ -31,6 +32,7 @@ return new class extends Migration
             $table->foreign('company_id')->references('id')->on('companies');
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('user_validated_id')->references('id')->on('users');
+            $table->foreign('contact_id')->references('id')->on('contact_companies');
             $table->timestamps();
             $table->softDeletes();
         });

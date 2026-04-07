@@ -33,8 +33,8 @@
             </div>
 
             <div class="p-5">
-                <el-table stripe :data="unitsmeasurement" v-loading="loading" class="w-full" :header-cell-style="headerStyle"
-                    :row-class-name="rowClassName">
+                <el-table stripe :data="unitsmeasurement" v-loading="loading" class="w-full"
+                    :header-cell-style="headerStyle" :row-class-name="rowClassName">
                     <el-table-column type="index" label="#" width="60" />
 
                     <el-table-column label="Descripción" min-width="280">
@@ -182,6 +182,7 @@
 import { onMounted, reactive, ref } from "vue"
 import { ElNotification } from "element-plus";
 import tenant from "../../../stores/tenant"
+import { handleErrorsExeption } from "../../../stores/handleErrorsExeption";
 
 const state = ref(false)
 
@@ -274,7 +275,7 @@ const onSubmit = async () => {
         handleClose()
     }
     catch (e) {
-        console.error(e)
+        handleErrorsExeption(e)
     }
     finally {
         loadingSubmit.value = false

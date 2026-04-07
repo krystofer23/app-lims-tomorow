@@ -89,6 +89,73 @@
                         </template>
                     </el-table-column>
 
+                    <el-table-column label="Contacto">
+                        <template #default="{ row }">
+                            <el-popover placement="top" :width="320" trigger="hover">
+                                <template #default>
+                                    <div class="p-1">
+                                        <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
+                                            <div
+                                                class="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                                <i class="fa-solid fa-user text-sm"></i>
+                                            </div>
+
+                                            <div class="min-w-0 flex-1">
+                                                <h4 class="truncate text-sm font-semibold text-slate-800">
+                                                    {{ row.contact?.user?.full_name || 'Sin nombre' }}
+                                                </h4>
+
+                                                <span
+                                                    class="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                                                    {{ row.contact?.type || 'Sin tipo' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3 space-y-2">
+                                            <div class="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                                                <i class="fa-solid fa-envelope mt-0.5 text-xs text-slate-500"></i>
+                                                <div class="min-w-0">
+                                                    <p
+                                                        class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                                        Correo
+                                                    </p>
+                                                    <p class="break-all text-sm text-slate-700">
+                                                        {{ row.contact?.email || 'No registrado' }}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div class="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2">
+                                                <i class="fa-solid fa-phone mt-0.5 text-xs text-slate-500"></i>
+                                                <div class="min-w-0">
+                                                    <p
+                                                        class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                                        Teléfono
+                                                    </p>
+                                                    <p class="text-sm text-slate-700">
+                                                        {{ row.contact?.phone || 'No registrado' }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <template #reference>
+                                    <el-button size="small" type="primary" plain
+                                        v-tippy="'Ver información del contacto'"
+                                        class="inline-flex max-w-full items-center gap-2 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md">
+                                        <i class="fa-solid fa-address-book text-xs me-2"></i>
+                                        <span class="max-w-[150px] truncate">
+                                            {{ row.contact?.user?.full_name || 'Sin contacto' }}
+                                        </span>
+                                    </el-button>
+                                </template>
+                            </el-popover>
+                        </template>
+                    </el-table-column>
+
                     <el-table-column prop="created_at" label="Creado" min-width="170" sortable="custom">
                         <template #default="{ row }">
                             <div class="text-sm">
@@ -102,17 +169,36 @@
                         <template #default="{ row }">
                             <div class="flex justify-start gap-2">
                                 <el-button-group>
-                                    <el-button v-tippy="'Generar PDF'" size="small" type="primary">
+                                    <el-button :loading="row?.loadingPdf" @click="downloadQuotePdf(row)"
+                                        v-tippy="'Generar PDF'" size="small" type="primary">
                                         <i class="fa-regular fa-file-pdf"></i>
                                     </el-button>
+
                                     <el-button :loading="row?.loading" @click="downloadQuoteExcel(row)"
                                         v-tippy="'Generar Excel'" size="small" type="success">
                                         <i class="fa-regular fa-file-excel"></i>
                                     </el-button>
-                                    <el-button v-tippy="'Editar'" size="small" type="warning">
+
+                                    <el-button @click="$router.push({
+                                        name: 'orders-services-create', query: {
+                                            quoteId: row.id
+                                        }
+                                    })" v-tippy="'Generar OS'" size="small" type="info">
+                                        <i class="fa-regular fa-file-zipper"></i>
+                                    </el-button>
+
+                                    <el-button @click="() => {
+                                        $router.push({
+                                            name: 'quote-update',
+                                            params: {
+                                                id: row.id
+                                            },
+                                        })
+                                    }" v-tippy="'Editar'" size="small" type="warning">
                                         <i class="fa-regular fa-pen-to-square"></i>
                                     </el-button>
-                                    <el-button v-tippy="'Eliminar'" size="small" type="danger">
+
+                                    <el-button @click="handleDelete" v-tippy="'Eliminar'" size="small" type="danger">
                                         <i class="fa-regular fa-trash-can"></i>
                                     </el-button>
                                 </el-button-group>
@@ -145,6 +231,8 @@
             </div>
         </div>
     </div>
+
+    <confirm-dialog ref="confirmRef" />
 </template>
 
 <script setup>
@@ -152,10 +240,12 @@ import { computed, onMounted, ref } from 'vue';
 import tenant from '../../../stores/tenant';
 import { useListStore } from '../../../stores/list';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
+import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
 
 const activeNames = ref(['1'])
 const listStore = useListStore()
 
+const confirmRef = ref(null)
 const companies = computed(() => listStore.companies)
 const comerciales = computed(() => listStore.comerciales)
 
@@ -242,6 +332,57 @@ const downloadQuoteExcel = async (row) => {
     }
     finally {
         row.loading = false
+    }
+}
+
+const downloadQuotePdf = async (row) => {
+    row.loadingPdf = true
+
+    try {
+        const response = await tenant.post(`/quote/pdf/${row.id}`, {}, {
+            responseType: 'blob',
+        })
+
+        const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+        const link = document.createElement('a')
+
+        link.href = url
+        link.setAttribute('download', `cotizacion-${row.id}.pdf`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+
+        window.URL.revokeObjectURL(url)
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        row.loadingPdf = false
+    }
+}
+
+async function handleDelete(row) {
+    const ok = await confirmRef.value?.open({
+        title: 'Eliminar cotización',
+        message: '¿Seguro que deseas eliminar la cotización?',
+        confirmText: 'Sí, aceptar',
+        cancelText: 'Cancelar',
+    })
+    if (ok) {
+        row.loading = true
+
+        try {
+            const { data } = await tenant.delete(`quote/${row.id}`)
+            ElNotification.success(data.message)
+            getQuotes(pagination.value.current_page)
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+        finally {
+            row.loading = false
+        }
     }
 }
 

@@ -252,6 +252,7 @@ const contacts = ref([])
 const contactTypes = [
     'RRHH',
     'Profesional',
+    'Facturación',
     'Citas',
     'Logística',
     'Gerente General',

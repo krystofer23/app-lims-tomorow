@@ -6,6 +6,7 @@ use App\Casts\LocalTimezone;
 use App\Models\TenantModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Essays extends TenantModel
@@ -33,5 +34,10 @@ class Essays extends TenantModel
     public function condition(): BelongsTo
     {
         return $this->belongsTo(Conditions::class, 'condition_id');
+    }
+
+    public function relationEssayTeam(): HasMany
+    {
+        return $this->hasMany(RelationEssayTeam::class, 'essay_id', 'id');
     }
 }

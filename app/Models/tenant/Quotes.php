@@ -16,6 +16,7 @@ class Quotes extends TenantModel
 
     protected $fillable = [
         'company_id',
+        'contact_id',
         'user_id',
         'user_validated_id',
         'validated',
@@ -41,6 +42,11 @@ class Quotes extends TenantModel
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(ContactCompanies::class, 'contact_id');
     }
 
     public function user(): BelongsTo

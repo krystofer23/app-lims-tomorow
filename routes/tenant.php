@@ -10,15 +10,21 @@ use App\Http\Controllers\tenant\ListApiController;
 use App\Http\Controllers\tenant\LogisticCatsApiController;
 use App\Http\Controllers\tenant\MatrizApiController;
 use App\Http\Controllers\tenant\MethodologiesApiController;
+use App\Http\Controllers\tenant\OrderServiceApiController;
 use App\Http\Controllers\tenant\QuotesApiController;
 use App\Http\Controllers\tenant\ServiceApiController;
 use App\Http\Controllers\tenant\UnitsMeasurementApiController;
+use App\Http\Controllers\tenant\UserApiController;
 use App\Http\Middleware\AllowExpiredTokenOnly;
 use App\Http\Middleware\JWTMiddleware;
+use App\Models\tenant\OrderService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use Illuminate\Support\Facades\Log;
+
 
 Route::middleware([
     InitializeTenancyByDomain::class,
@@ -53,6 +59,13 @@ Route::middleware([
         Route::post('auth', [AuthApiController::class, 'login']);
 
         Route::middleware([JWTMiddleware::class])->group(function () {
+
+            Route::controller(OrderServiceApiController::class)->prefix('order-service')->group(function () {
+
+                Route::get('', 'index');
+                Route::get('teams/{matrizId}', 'teams');
+            });
+
             Route::controller(AuthApiController::class)->prefix('auth')->group(function () {
 
                 Route::get('me', 'me');
@@ -67,6 +80,7 @@ Route::middleware([
                 Route::put('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
                 Route::post('/export/{id}', 'exportQuote');
+                Route::post('/pdf/{id}', 'exportQuotePdf');
             });
 
             Route::controller(ServiceApiController::class)->prefix('service')->group(function () {
@@ -94,6 +108,8 @@ Route::middleware([
                 Route::get('essays', 'essays');
                 Route::get('companies', 'companies');
                 Route::get('services', 'services');
+                Route::get('contacts', 'contacts');
+                Route::get('teams', 'teams');
             });
 
             Route::controller(MatrizApiController::class)->prefix('matriz')->group(function () {
@@ -110,6 +126,9 @@ Route::middleware([
                 Route::post('', 'store');
                 Route::put('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
+
+                Route::get('get-relations-team/{id}', 'getRelationsTeam');
+                Route::post('relations-team', 'relationsTeam');
             });
 
             Route::controller(MethodologiesApiController::class)->prefix('methodologies')->group(function () {
@@ -137,6 +156,14 @@ Route::middleware([
             });
 
             Route::controller(LogisticCatsApiController::class)->prefix('logistic-cats')->group(function () {
+
+                Route::get('', 'index');
+                Route::post('', 'store');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
+            });
+
+            Route::controller(UserApiController::class)->prefix('users')->group(function () {
 
                 Route::get('', 'index');
                 Route::post('', 'store');

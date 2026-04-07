@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class QuotesApiController extends Controller
 {
@@ -26,7 +27,8 @@ class QuotesApiController extends Controller
                     'company',
                     'user',
                     'validator',
-                    'itemsQuotes'
+                    'itemsQuotes',
+                    'contact.user',
                 ])
                 ->paginate(15);
 
@@ -36,16 +38,55 @@ class QuotesApiController extends Controller
         }
     }
 
-    public function show(int $id): JsonResponse
+    public function show(int $id, Request $request): JsonResponse
     {
         try {
             $quote = Quotes::with('itemsQuotes')->find($id);
 
-            if (!$quote) {
+            if (! $quote) {
                 return $this->sendError('Cotización no encontrada');
             }
 
-            return $this->sendResponse($quote, 'Enviando cotización');
+            $insets = $request?->is_order_service ? ['matriz'] : ['matriz', 'service'];
+
+            $items = $quote->itemsQuotes
+                ->whereIn('type', $insets)
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->item['id'],
+                        'type' => $item->type,
+                        'item' => $item->item,
+                    ];
+                })
+                ->values();
+
+            $otherExpenses = $quote->itemsQuotes
+                ->where('type', 'other_expense')
+                ->map(function ($item) {
+                    return $item->item;
+                })
+                ->values();
+
+            $mapData = [
+                'id' => $quote->id,
+                'company_id' => $quote->company_id,
+                'direction' => $quote->direction,
+                'date_attention' => $quote->date_attention,
+                'version' => $quote->version,
+                'code' => $quote->code,
+                'items_total' => $quote->items_total,
+                'other_expenses_total' => $quote->other_expenses_total,
+                'igv' => $quote->igv,
+                'subtotal' => $quote->subtotal,
+                'total' => $quote->total,
+                'reference' => $quote->reference,
+                'observations' => $quote->observations,
+                'contact_id' => $quote->contact_id,
+                'items' => $items,
+                'other_expenses' => $otherExpenses,
+            ];
+
+            return $this->sendResponse($mapData, 'Enviando cotización');
         } catch (Exception $e) {
             return $this->sendError(sprintf(
                 'El error está en %s línea %d. Detalles: %s',
@@ -81,6 +122,7 @@ class QuotesApiController extends Controller
                 'igv' => 0,
                 'subtotal' => 0,
                 'total' => 0,
+                'contact_id' => $input['contact_id'] ?? null
             ]);
 
             if (!empty($input['items']) && is_array($input['items'])) {
@@ -95,8 +137,6 @@ class QuotesApiController extends Controller
                     };
 
                     $amount = $value['amount'] ?? $value['number_samples'] ?? 0;
-                    $unitPrice = $value['unit_price'] ?? 0;
-                    $lineTotal = $value['price'] ?? ($amount * $unitPrice);
 
                     ItemsQuotes::create([
                         'quote_id' => $quote->id,
@@ -175,6 +215,7 @@ class QuotesApiController extends Controller
 
             $quote->update([
                 'company_id' => $input['company_id'] ?? null,
+                'contact_id' => $input['contact_id'] ?? null,
                 'user_id' => $userId,
                 'direction' => $input['direction'] ?? null,
                 'date_attention' => $input['date_attention'] ?? null,
@@ -291,6 +332,7 @@ class QuotesApiController extends Controller
                 'company:id,ruc,business_name,direction,activity',
                 'user',
                 'itemsQuotes',
+                'contact.user'
             ])
             ->find($id);
 
@@ -299,5 +341,75 @@ class QuotesApiController extends Controller
         }
 
         return Excel::download(new QuoteExport($quote), 'cotizacion.xlsx');
+    }
+
+    public function exportQuotePdf($id, Request $request)
+    {
+        $quote = Quotes::query()
+            ->with([
+                'company:id,ruc,business_name,direction,activity',
+                'user',
+                'itemsQuotes',
+                'contact.user'
+            ])
+            ->find($id);
+
+        if (!$quote) {
+            return $this->sendError('No se encontró la cotización');
+        }
+
+        $company = $quote->company;
+
+        $matrices = $quote->itemsQuotes->where('type', 'matriz');
+        $services = $quote->itemsQuotes->where('type', 'service');
+        $other_expense = $quote->itemsQuotes->where('type', 'other_expense');
+
+        $ruc = strval($company->ruc);
+
+        $groupedMatrices = $matrices
+            ->groupBy(function ($matriz) {
+                $description = data_get($matriz, 'item.description', 'Sin matriz');
+                $frequencyLabel = data_get($matriz, 'item.frequency_label');
+
+                return $description . '||' . ($frequencyLabel ?: 'SIN_FRECUENCIA');
+            })
+            ->map(function ($items) {
+                $first = $items->first();
+
+                return [
+                    'description' => data_get($first, 'item.description', 'Sin matriz'),
+                    'frequency_label' => data_get($first, 'item.frequency_label'),
+                    'items' => $items,
+                    'total' => $items->sum(fn($item) => (float) ($item->total ?? 0)),
+                ];
+            })
+            ->values();
+
+        $servicesTotal = $services->sum(function ($service) {
+            return (float) data_get($service, 'item.price', $service->total ?? 0);
+        });
+
+        $otherExpenseTotal = $other_expense->sum(function ($otherexpense) {
+            return (float) data_get($otherexpense, 'item.price', $otherexpense->total ?? 0);
+        });
+
+        $matricesTotal = $groupedMatrices->sum('total');
+        $grandTotal = $matricesTotal + $servicesTotal;
+
+        $pdf = Pdf::loadView('pdf.quotes.main', [
+            'quote' => $quote,
+            'company' => $company,
+            'ruc' => $ruc,
+            'groupedMatrices' => $groupedMatrices,
+            'services' => $services,
+            'servicesTotal' => $servicesTotal,
+            'matricesTotal' => $matricesTotal,
+            'grandTotal' => $grandTotal,
+            'other_expense' => $other_expense,
+            'otherExpenseTotal' => $otherExpenseTotal,
+            'contact' => $quote?->contact
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('cotizacion-' . $quote->id . '.pdf');
     }
 }

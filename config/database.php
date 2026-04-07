@@ -125,6 +125,18 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'system_inventory_db' => [
+            'driver' => 'mysql',
+            'host' => env('DB_EXTERNAL_HOST'),
+            'port' => env('DB_EXTERNAL_PORT', '3306'),
+            'database' => env('DB_EXTERNAL_DATABASE'),
+            'username' => env('DB_EXTERNAL_USERNAME'),
+            'password' => env('DB_EXTERNAL_PASSWORD'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+        ]
     ],
 
     /*

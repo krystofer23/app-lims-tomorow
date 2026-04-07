@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import tenant from "./tenant";
+import { handleErrorsExeption } from "./handleErrorsExeption";
 
 export const useListStore = defineStore("listStore", () => {
     const conditions = ref([])
@@ -10,6 +11,9 @@ export const useListStore = defineStore("listStore", () => {
     const matrizDescription = ref([])
     const services = ref([])
     const comerciales = ref([])
+
+    const contacts = ref([])
+    const loadingContacts = ref(false)
 
     const essays = ref([])
     const paginationEssays = ref({
@@ -36,7 +40,7 @@ export const useListStore = defineStore("listStore", () => {
             }
         }
         catch (e) {
-            console.error(e)
+            handleErrorsExeption(e)
         }
     }
 
@@ -53,7 +57,7 @@ export const useListStore = defineStore("listStore", () => {
             }
         }
         catch (e) {
-            console.error(e)
+            handleErrorsExeption(e)
         }
     }
 
@@ -70,7 +74,7 @@ export const useListStore = defineStore("listStore", () => {
             }
         }
         catch (e) {
-            console.error(e)
+            handleErrorsExeption(e)
         }
     }
 
@@ -87,7 +91,7 @@ export const useListStore = defineStore("listStore", () => {
             }
         }
         catch (e) {
-            console.error(e)
+            handleErrorsExeption(e)
         }
     }
 
@@ -110,7 +114,7 @@ export const useListStore = defineStore("listStore", () => {
             }
         }
         catch (e) {
-            console.error(e)
+            handleErrorsExeption(e)
         }
     }
 
@@ -127,7 +131,7 @@ export const useListStore = defineStore("listStore", () => {
             }
         }
         catch (e) {
-            console.error(e)
+            handleErrorsExeption(e)
         }
     }
 
@@ -154,15 +158,79 @@ export const useListStore = defineStore("listStore", () => {
             }
         }
         catch (e) {
-            console.error(e)
+            handleErrorsExeption(e)
         }
         finally {
             loadingService.value = false
         }
     }
 
+    const getContacts = async (q = null, company_id = null, page = 1) => {
+        if (!company_id) {
+            return
+        }
+
+        loadingContacts.value = true
+
+        try {
+            const { data } = await tenant.get(`list/contacts?page=${page}`, {
+                params: {
+                    query: q,
+                    company_id: company_id
+                }
+            })
+
+            if (data.data) {
+                contacts.value = data.data.data
+            }
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+        finally {
+            loadingContacts.value = false
+        }
+    }
+
+    const loadingTeam = ref(false)
+    const teams = ref([])
+    const paginationTeam = ref({
+        last_page: 0,
+        current_page: 0,
+        total: 0,
+        per_page: 0,
+    })
+
+    const getTeams = async (page = 1, params = {}) => {
+        loadingTeam.value = true
+
+        try {
+            const { data } = await tenant.get(`list/teams?page=${page}`, {
+                params: params
+            })
+
+            if (data.data) {
+                teams.value = data.data.data
+
+                paginationTeam.value = {
+                    last_page: data.data.last_page,
+                    current_page: data.data.current_page,
+                    total: data.data.total,
+                    per_page: data.data.per_page,
+                }
+            }
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+        finally {
+            loadingTeam.value = false
+        }
+    }
+
     return {
         conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService, comerciales,
-        getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices,
+        getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices, contacts, loadingContacts, getContacts, loadingTeam, 
+        teams, paginationTeam, getTeams
     }
 })
