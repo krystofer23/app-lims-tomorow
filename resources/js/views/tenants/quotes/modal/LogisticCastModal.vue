@@ -1,5 +1,5 @@
 <template>
-    <el-dialog :model-value="state" style="max-width: 90% !important;" class="!rounded-xl" @close="handleClose"
+    <el-dialog top="1vh" :model-value="state" style="max-width: 90% !important;" class="!rounded-xl" @close="handleClose"
         :style="{ width: computedDialogWidth }">
         <template #header>
             <div class="flex items-center justify-between mb-4">

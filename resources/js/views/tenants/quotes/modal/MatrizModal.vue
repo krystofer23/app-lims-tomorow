@@ -1,5 +1,5 @@
 <template>
-    <el-dialog :model-value="showMatrixModal" style="max-width: 90% !important;" class="!rounded-xl"
+    <el-dialog top="1vh" :model-value="showMatrixModal" style="max-width: 90% !important;" class="!rounded-xl"
         @close="handleClose" :style="{ width: computedDialogWidth }">
         <template #header>
             <div class="flex items-center justify-between mb-4">
@@ -20,8 +20,8 @@
         </template>
 
         <div class="mb-3 flex justify-end gap-3">
-            <el-select clearable v-model="filters.type" placeholder="Filtro por tipo" style="max-width: 200px;">
-                <el-option v-for="row in matrizDescription" :value="row" :label="row"></el-option>
+            <el-select filterable clearable v-model="filters.type" placeholder="Filtro por tipo" style="max-width: 200px;">
+                <el-option style="max-width: 200px !important;" v-for="row in matrizDescription" :value="row" v-tippy="row" :label="row"></el-option>
             </el-select>
             <el-input style="max-width: 200px;" v-model="filters.q" clearable size="default" placeholder="Buscador..."
                 class="w-full sm:w-[320px]">
@@ -125,7 +125,7 @@
         </template>
     </el-dialog>
 
-    <el-dialog v-model="stateEssay" @close="handleCloseEssay" width="600px" class="!p-0 overflow-hidden !rounded-2xl">
+    <el-dialog top="2vh" v-model="stateEssay" @close="handleCloseEssay" width="600px" class="!p-0 overflow-hidden !rounded-2xl">
         <template #header>
             <div class="px-6 pt-6">
                 <div class="flex items-start justify-between gap-4">

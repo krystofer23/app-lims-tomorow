@@ -24,7 +24,7 @@
                             <el-button type="primary" size="default" class="!rounded-xl"
                                 @click="$router.push({ name: 'orders-services-create' })">
                                 <i class="fa-solid fa-plus mr-2"></i>
-                                Nuevo
+                                Generar OS
                             </el-button>
                         </div>
                     </div>

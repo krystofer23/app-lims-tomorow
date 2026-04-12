@@ -32,6 +32,7 @@ class MatrizApiController extends Controller
                 ->when($request->filled('type'), function ($q) use ($type) {
                     $q->where('description', $type);
                 })
+                ->orderByDesc('id')
                 ->paginate(15);
 
             $data = collect($query->items())->map(function ($item) {

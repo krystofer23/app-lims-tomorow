@@ -6,6 +6,7 @@ use App\Http\Controllers\tenant\AuthApiController;
 use App\Http\Controllers\tenant\CompaniesApiController;
 use App\Http\Controllers\tenant\ConditionsApiController;
 use App\Http\Controllers\tenant\EssaysApiController;
+use App\Http\Controllers\tenant\ImportApiController;
 use App\Http\Controllers\tenant\ListApiController;
 use App\Http\Controllers\tenant\LogisticCatsApiController;
 use App\Http\Controllers\tenant\MatrizApiController;
@@ -59,6 +60,11 @@ Route::middleware([
         Route::post('auth', [AuthApiController::class, 'login']);
 
         Route::middleware([JWTMiddleware::class])->group(function () {
+
+            Route::controller(ImportApiController::class)->prefix('import')->group(function () {
+
+                Route::post('', 'import');
+            });
 
             Route::controller(OrderServiceApiController::class)->prefix('order-service')->group(function () {
 

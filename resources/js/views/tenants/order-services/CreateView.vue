@@ -38,7 +38,8 @@
                                     <label class="mb-2 block text-sm font-semibold text-slate-700">
                                         Empresa
                                     </label>
-                                    <el-select v-model="form.company_id" filterable class="w-full"
+                                    <el-select :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                                        v-model="form.company_id" filterable class="w-full"
                                         placeholder="Selecciona una empresa" size="large">
                                         <el-option v-for="company in companies" :key="company.id"
                                             :label="company.business_name" :value="company.id" />
@@ -379,7 +380,7 @@
                             class="!rounded-xl !border-emerald-500 !bg-emerald-500 !px-5 hover:!border-emerald-600 hover:!bg-emerald-600"
                             :loading="loadingSubmit" @click="onSubmit">
                             <i class="fa-solid fa-floppy-disk me-2"></i>
-                            {{ form.id ? 'Guardar cambios' : 'Generar Orden de Servicio' }}
+                            {{ form.id ? 'Guardar cambios' : 'Generar OS' }}
                         </el-button>
                     </div>
                 </div>
@@ -415,6 +416,14 @@ const contacts = computed(() => listStore.contacts)
 const activeTab = ref('general')
 const state = ref(false)
 const matrizId = ref(null)
+
+const loadingCompany = ref(false)
+
+const remoteMethodCompany = async (q) => {
+    loadingCompany.value = true
+    await listStore.getCompanies(q)
+    loadingCompany.value = false
+}
 
 const form = reactive({
     id: null,
@@ -469,7 +478,17 @@ const itemDelete = (index) => {
 }
 
 const onSubmit = async () => {
-
+    try {
+        if (form.id) {
+            const { data } = await tenant.put(``)
+        }
+        else {
+            const { data } = await tenant.post(``)
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
 }
 
 const onCancel = () => {

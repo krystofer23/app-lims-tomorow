@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('essays', function (Blueprint $table) {
             $table->id();
-            $table->string('description')->nullable();
+            $table->text('description')->nullable();
             $table->string('lcm')->nullable();
             $table->unsignedBigInteger('units_measurement_id')->nullable();
             $table->unsignedBigInteger('condition_id')->nullable();

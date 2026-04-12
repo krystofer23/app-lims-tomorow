@@ -81,13 +81,13 @@
                         </template>
                     </el-table-column>
 
-                    <el-table-column label="Precio" min-width="160">
+                    <!-- <el-table-column label="Precio" min-width="160">
                         <template #default="{ row }">
                             <div class="flex items-center gap-3">
                                 S/ {{ row?.price }}
                             </div>
                         </template>
-                    </el-table-column>
+                    </el-table-column> -->
 
                     <el-table-column prop="created_at" label="Creado" min-width="170" sortable="custom">
                         <template #default="{ row }">
@@ -590,7 +590,7 @@ const getMatriz = async (page = 1) => {
     loading.value = true
 
     try {
-        const { data } = await tenant.get(`matriz?page=${page = 1}`)
+        const { data } = await tenant.get(`matriz?page=${page}`)
 
         if (data.data) {
             matrices.value = data.data.data
@@ -694,9 +694,9 @@ const handleDestroy = async (id) => {
 
 const loadingMethodologies = ref(false)
 
-const remoteMethodMethodologies = async () => {
+const remoteMethodMethodologies = async (q) => {
     loadingMethodologies.value = true
-    await listStore.getMethodologies()
+    await listStore.getMethodologies(q)
     loadingMethodologies.value = false
 }
 

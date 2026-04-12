@@ -1,5 +1,5 @@
 <template>
-    <el-dialog :style="{ width: computedDialogWidth }" :model-value="showServiceModal" width="800" class="!rounded-xl" @close="handleClose">
+    <el-dialog top="1vh" :style="{ width: computedDialogWidth }" :model-value="showServiceModal" width="800" class="!rounded-xl" @close="handleClose">
         <template #header>
             <div class="flex items-center gap-3 mb-4">
                 <div class="flex items-center justify-center w-10 h-10 bg-emerald-50 rounded-xl">

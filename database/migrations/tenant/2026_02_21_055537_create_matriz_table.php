@@ -22,6 +22,11 @@ return new class extends Migration
             $table->foreign('methodologie_id')->references('id')->on('methodologies');
             $table->decimal('unit_price', 10, 2)->nullable();
             $table->decimal('price', 10, 2)->nullable();
+
+            $table->string('other_company')->nullable();
+            $table->string('other_company_name')->nullable();
+            $table->decimal('other_company_price', 10, 2)->nullable();
+            
             $table->timestamps();
             $table->softDeletes();
         });

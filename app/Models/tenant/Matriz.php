@@ -23,10 +23,14 @@ class Matriz extends TenantModel
         'category',
         'information', 
         'type_matriz',
+        'other_company',
+        'other_company_name',
+        'other_company_price'
     ];
 
     protected $casts = [
         'created_at' => LocalTimezone::class,
+        'other_company' => 'boolean'
     ];
 
     public function methodologie(): BelongsTo

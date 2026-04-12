@@ -156,7 +156,7 @@
                         </template>
                     </el-table-column>
 
-                    <el-table-column prop="created_at" label="Creado" min-width="170" sortable="custom">
+                    <el-table-column prop="created_at" label="Creado" sortable="custom">
                         <template #default="{ row }">
                             <div class="text-sm">
                                 <p class="text-slate-900 font-medium">{{ formatDate(row?.created_at) }}</p>
@@ -233,6 +233,8 @@
     </div>
 
     <confirm-dialog ref="confirmRef" />
+
+    <!-- <import-item /> -->
 </template>
 
 <script setup>
@@ -241,6 +243,7 @@ import tenant from '../../../stores/tenant';
 import { useListStore } from '../../../stores/list';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
 import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
+import ImportItem from '../../../components/tenants/ImportItem.vue';
 
 const activeNames = ref(['1'])
 const listStore = useListStore()

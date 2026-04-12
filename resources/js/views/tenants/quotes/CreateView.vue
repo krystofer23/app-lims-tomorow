@@ -90,8 +90,9 @@
                             <label class="mb-2 block text-sm font-semibold text-slate-700">
                                 Empresa
                             </label>
-                            <el-select v-model="form.company_id" filterable class="w-full"
-                                placeholder="Selecciona una empresa" size="large">
+                            <el-select :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                                v-model="form.company_id" filterable class="w-full" placeholder="Selecciona una empresa"
+                                size="large">
                                 <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
                                     :value="company.id" />
                             </el-select>
@@ -157,7 +158,7 @@
                         <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
                             <span class="text-sm text-slate-600">Otros gastos</span>
                             <span class="text-sm font-semibold text-slate-800">S/ {{ formatMoney(otherExpensesTotal)
-                                }}</span>
+                            }}</span>
                         </div>
 
                         <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
@@ -249,7 +250,8 @@
                                             {{ row?.item?.description || '-' }}
                                         </p>
 
-                                        <p v-if="row?.item?.methodologie?.description" v-tippy="row?.item?.methodologie?.description || 'No registrada'"
+                                        <p v-if="row?.item?.methodologie?.description"
+                                            v-tippy="row?.item?.methodologie?.description || 'No registrada'"
                                             class="mt-1 text-xs text-slate-500 line-clamp-3">
                                             Metodología:
                                             {{ row?.item?.methodologie?.description || 'No registrada' }}
@@ -258,16 +260,16 @@
 
                                     <td :class="row?.item?.bg" class="px-4 py-4 text-center">
                                         <el-input v-if="row?.type === 'matriz'" v-model="row.item.number_samples"
-                                            size="small" class="!w-[110px]" />
+                                            size="small" class="!w-[70px]" />
                                         <el-input v-else v-model="row.item.amount" size="small" class="!w-[110px]" />
                                     </td>
 
                                     <td :class="row?.item?.bg" class="px-4 py-4 text-right">
-                                        <el-input v-model="row.item.unit_price" size="small" class="!w-[120px]" />
+                                        <el-input v-model="row.item.unit_price" size="small" class="!w-[100px]" />
                                     </td>
 
                                     <td :class="row?.item?.bg" class="px-4 py-4 text-right">
-                                        <el-input v-model="row.item.price" size="small" disabled class="!w-[120px]" />
+                                        <el-input v-model="row.item.price" size="small" disabled class="!w-[100px]" />
                                     </td>
 
                                     <td :class="row?.item?.bg" class="px-4 py-4 text-right relative">
@@ -458,8 +460,15 @@ const loadingSubmit = ref(false)
 const listStore = useListStore()
 const companies = computed(() => listStore.companies)
 
+const loadingCompany = ref(false)
 const loadingContacts = computed(() => listStore.loadingContacts)
 const contacts = computed(() => listStore.contacts)
+
+const remoteMethodCompany = async (q) => {
+    loadingCompany.value = true
+    await listStore.getCompanies(q)
+    loadingCompany.value = false
+}
 
 const frequency = ref(null);
 
