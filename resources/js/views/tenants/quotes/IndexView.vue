@@ -84,8 +84,10 @@
 
                     <el-table-column label="OS Generada">
                         <template #default="{ row }">
-                            <!-- <span class="rounded-md py-0.5 px-1.5 text-xs font-medium text-white bg-[#1abc9c]">Si</span> -->
-                            <span class="rounded-md py-0.5 px-1.5 text-xs font-medium text-white bg-[#e7515a]">No</span>
+                            <span v-if="row?.order_service"
+                                class="rounded-md py-0.5 px-1.5 text-xs font-medium text-white bg-[#1abc9c]">Si</span>
+                            <span v-else
+                                class="rounded-md py-0.5 px-1.5 text-xs font-medium text-white bg-[#e7515a]">No</span>
                         </template>
                     </el-table-column>
 
@@ -179,7 +181,7 @@
                                         <i class="fa-regular fa-file-excel"></i>
                                     </el-button>
 
-                                    <el-button @click="$router.push({
+                                    <el-button v-if="!row?.order_service" @click="$router.push({
                                         name: 'orders-services-create', query: {
                                             quoteId: row.id
                                         }

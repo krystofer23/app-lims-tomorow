@@ -29,6 +29,7 @@ class QuotesApiController extends Controller
                     'validator',
                     'itemsQuotes',
                     'contact.user',
+                    'orderService'
                 ])
                 ->paginate(15);
 
@@ -41,7 +42,7 @@ class QuotesApiController extends Controller
     public function show(int $id, Request $request): JsonResponse
     {
         try {
-            $quote = Quotes::with('itemsQuotes')->find($id);
+            $quote = Quotes::with('itemsQuotes', 'orderService')->find($id);
 
             if (! $quote) {
                 return $this->sendError('Cotización no encontrada');
@@ -84,6 +85,8 @@ class QuotesApiController extends Controller
                 'contact_id' => $quote->contact_id,
                 'items' => $items,
                 'other_expenses' => $otherExpenses,
+                'is_os' => $quote?->orderService ? true : false,
+                'order_service' => $quote?->orderService
             ];
 
             return $this->sendResponse($mapData, 'Enviando cotización');

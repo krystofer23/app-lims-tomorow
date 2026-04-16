@@ -501,6 +501,16 @@ const menus = computed(() => {
                     subtitle: "Órdenes de Servicio",
                 },
                 {
+                    key: "reception",
+                    title: "Recepción",
+                    desc: "Módulo de recepción",
+                    cta: "Ir →",
+                    ctaColor: "text-indigo-700",
+                    iconBg: "bg-amber-50 text-amber-700",
+                    icon: "fa-solid fa-satellite-dish",
+                    subtitle: "Recepción",
+                },
+                {
                     key: "companies",
                     title: "Empresas",
                     desc: "Módulo de empresas",

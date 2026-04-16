@@ -406,6 +406,7 @@ import tenant from '../../../stores/tenant';
 import { useListStore } from '../../../stores/list';
 import MatrizModal from '../quotes/modal/MatrizModal.vue';
 import TeamsModal from './modals/TeamsModal.vue';
+import { ElNotification } from 'element-plus';
 
 const listStore = useListStore()
 const companies = computed(() => listStore.companies)
@@ -478,16 +479,25 @@ const itemDelete = (index) => {
 }
 
 const onSubmit = async () => {
+    loadingSubmit.value = true
+
     try {
         if (form.id) {
-            const { data } = await tenant.put(``)
+            const { data } = await tenant.put(`order-service/${form.id}`, form)
+            ElNotification.success(data.message)
         }
         else {
-            const { data } = await tenant.post(``)
+            const { data } = await tenant.post(`order-service`, form)
+            ElNotification.success(data.message)
         }
+
+        resetForm()
     }
     catch (e) {
         handleErrorsExeption(e)
+    }
+    finally {
+        loadingSubmit.value = false
     }
 }
 
@@ -572,6 +582,33 @@ const handleTeam = (row) => {
     matrizId.value = row.id
 }
 
+const resetForm = () => {
+    form.id = null
+    form.company_id = null
+    form.direction = null
+    form.date_attention = null
+    form.version = null
+    form.code = null
+    form.items_total = null
+    form.other_expenses_total = null
+    form.igv = null
+    form.subtotal = null
+    form.total = null
+    form.reference = null
+    form.observations = null
+    form.contact_id = null
+    form.origin = null
+    form.project = null
+    form.date_monitoring_init = null
+    form.date_monitoring_end = null
+    form.date_induction = null
+    form.date_output = null
+    form.details = null
+    form.stations_monitoring = null
+    form.project_monitoring = null
+    form.items = []
+}
+
 onMounted(() => {
     const date = new Date()
 
@@ -585,6 +622,7 @@ onMounted(() => {
 
     if (route.query?.quoteId) {
         getQuote(route.query?.quoteId)
+        form.quote_id = route.query?.quoteId;
     }
 })
 </script>

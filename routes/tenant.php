@@ -69,6 +69,9 @@ Route::middleware([
             Route::controller(OrderServiceApiController::class)->prefix('order-service')->group(function () {
 
                 Route::get('', 'index');
+                Route::post('', 'store');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
                 Route::get('teams/{matrizId}', 'teams');
             });
 

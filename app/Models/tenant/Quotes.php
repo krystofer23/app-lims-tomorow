@@ -6,6 +6,7 @@ use App\Casts\LocalTimezone;
 use App\Models\TenantModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Quotes extends TenantModel
@@ -62,5 +63,10 @@ class Quotes extends TenantModel
     public function itemsQuotes()
     {
         return $this->hasMany(ItemsQuotes::class, 'quote_id');
+    }
+
+    public function orderService(): HasOne
+    {
+        return $this->hasOne(OrderService::class, 'quote_id', 'id');
     }
 }
