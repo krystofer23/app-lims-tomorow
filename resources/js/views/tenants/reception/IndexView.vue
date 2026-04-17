@@ -166,35 +166,55 @@
         </template>
 
         <div class="px-3 pb-3">
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Razón social</label>
-                    <el-input v-model="form.razonSocial" placeholder="Ingrese razón social" />
+            <div class="grid grid-cols-3 gap-3">
+                <div class="">
+                    <label for="">Empresa</label>
+                    <el-select clearable :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                        v-model="form.company_id" filterable class="w-full" placeholder="Selecciona una empresa"
+                        size="large">
+                        <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
+                            :value="company.id" />
+                    </el-select>
+                </div>
+
+                <div class="">
+                    <label for="">Solicitante</label>
+                    <el-select clearable :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                        v-model="form.application_id" filterable class="w-full" placeholder="Selecciona una empresa"
+                        size="large">
+                        <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
+                            :value="company.id" />
+                    </el-select>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Solicitante</label>
-                    <el-input v-model="form.solicitante" placeholder="Ingrese solicitante" />
+                    <label for="">N° Orden de servicio</label>
+                    <el-select clearable :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                        v-model="form.application_id" filterable class="w-full" placeholder="Selecciona una empresa"
+                        size="large">
+                        <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
+                            :value="company.id" />
+                    </el-select>
+                </div>
+
+                <el-divider class="col-span-3">
+                    <p class="text-xs uppercase">Datos de cadena de custodia</p>
+                </el-divider>
+
+                <div>
+                    <label for="">N° Cadena de custodia</label>
+                    <el-input clearable size="large" v-model="form.number_chain" placeholder="Ingrese cadena" />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">N° Orden de servicio</label>
-                    <el-input v-model="form.numeroOrdenServicio" placeholder="Ingrese orden" />
+                    <label for="">N° Informe de ensayo</label>
+                    <el-input clearable size="large" v-model="form.number_report" placeholder="Ingrese informe" />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">N° Cadena de custodia</label>
-                    <el-input v-model="form.numeroCadena" placeholder="Ingrese cadena" />
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">N° Informe de ensayo</label>
-                    <el-input v-model="form.numeroInforme" placeholder="Ingrese informe" />
-                </div>
-
-                <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Tipo de muestra</label>
-                    <el-select v-model="form.tipoMuestra" placeholder="Seleccionar" class="!w-full">
+                    <label for="">Tipo de muestra</label>
+                    <el-select clearable size="large" v-model="form.type_sample" placeholder="Seleccionar"
+                        class="!w-full">
                         <el-option label="Aire" value="Aire" />
                         <el-option label="Suelo" value="Suelo" />
                         <el-option label="Agua" value="Agua" />
@@ -202,39 +222,39 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Matriz</label>
-                    <el-input v-model="form.matriz" placeholder="Ej: Aire (AIR)" />
+                    <label for="">Matriz</label>
+                    <el-input clearable size="large" v-model="form.matriz" placeholder="Ej: Aire (AIR)" />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Muestra N°</label>
-                    <el-input-number v-model="form.muestraNumero" :min="1" class="!w-full" />
+                    <label for="">Muestra N°</label>
+                    <el-input clearable size="large" v-model="form.number_sample" :min="1" class="!w-full" />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">N° de ensayos</label>
-                    <el-input-number v-model="form.numeroEnsayos" :min="0" class="!w-full" />
+                    <label for="">N° de ensayos</label>
+                    <el-input clearable size="large" v-model="form.number_essays" :min="0" class="!w-full" />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Fecha recepción</label>
-                    <el-date-picker v-model="form.fechaRecepcion" type="date" placeholder="Seleccionar fecha"
-                        format="DD/MM/YYYY" value-format="YYYY-MM-DD" class="!w-full" />
+                    <label for="">Fecha recepción</label>
+                    <el-date-picker clearable size="large" v-model="form.date_reception" type="date"
+                        placeholder="Seleccionar fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" class="!w-full" />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Código laboratorio</label>
-                    <el-input v-model="form.codigoLaboratorio" placeholder="Ingrese código" />
+                    <label for="">Código laboratorio</label>
+                    <el-input clearable size="large" v-model="form.code_lab" placeholder="Ingrese código" />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Código estación</label>
-                    <el-input v-model="form.codigoEstacion" placeholder="Ingrese estación" />
+                    <label for="">Código estación</label>
+                    <el-input clearable size="large" v-model="form.code_season" placeholder="Ingrese estación" />
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Condición del reporte</label>
-                    <el-select v-model="form.condicionReporte" placeholder="Seleccionar" class="!w-full">
+                    <label for="">Condición del reporte</label>
+                    <el-select size="large" v-model="form.condicionReporte" placeholder="Seleccionar" class="!w-full">
                         <el-option label="Normal" value="Normal" />
                         <el-option label="Observado" value="Observado" />
                         <el-option label="Urgente" value="Urgente" />
@@ -242,18 +262,23 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Laboratorio Sub-Contrata</label>
-                    <el-input v-model="form.laboratorioSubcontrata" placeholder="Ingrese laboratorio" />
+                    <label for="">Laboratorio Sub-Contrata</label>
+                    <el-select clearable :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                        v-model="form.other_company_id" filterable class="w-full" placeholder="Selecciona una empresa"
+                        size="large">
+                        <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
+                            :value="company.id" />
+                    </el-select>
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Análisis requeridos</label>
+                    <label for="">Análisis requeridos</label>
                     <el-input v-model="form.analisisRequeridos" type="textarea" :rows="3"
                         placeholder="Ingrese los análisis requeridos" />
                 </div>
 
-                <div class="md:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-slate-600">Observaciones</label>
+                <div class="md:col-span-1">
+                    <label for="">Observaciones</label>
                     <el-input v-model="form.observaciones" type="textarea" :rows="3"
                         placeholder="Ingrese observaciones" />
                 </div>
@@ -281,10 +306,22 @@ import { computed, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { useWindowSize } from '@vueuse/core';
+import { useListStore } from '../../../stores/list'
 
 const { width: windowWidth } = useWindowSize();
+
+const listStore = useListStore();
 const dialogVisible = ref(false)
 const loadingSave = ref(false)
+
+const loadingCompany = ref(false)
+const companies = computed(() => listStore.companies)
+
+const remoteMethodCompany = async (q) => {
+    loadingCompany.value = true
+    await listStore.getCompanies(q)
+    loadingCompany.value = false
+}
 
 const computedDialogWidth = computed(() => {
     if (windowWidth.value <= 576) {
@@ -377,11 +414,12 @@ const tableData = ref([...initialData])
 
 const emptyForm = () => ({
     id: null,
-    razonSocial: '',
-    solicitante: '',
-    numeroOrdenServicio: '',
-    numeroCadena: '',
-    numeroInforme: '',
+    company_id: null,
+    application_id: null,
+    order_id: null,
+    number_chain: '',
+    number_report: '',
+
     tipoMuestra: '',
     matriz: '',
     muestraNumero: 1,
@@ -498,7 +536,7 @@ const getConditionClass = (condition) => {
 }
 </script>
 
-<style scoped> 
+<style scoped>
 :deep(.el-table th.el-table__cell) {
     background: #f8fafc;
     color: #334155;
