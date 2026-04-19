@@ -37,6 +37,30 @@ class OrderServiceApiController extends Controller
         }
     }
 
+    public function show($id): JsonResponse
+    {
+        try {
+            $os = OrderService::query()
+                ->with([
+                    'quote',
+                    'user',
+                    'reviwed',
+                    'company',
+                    'items',
+                    'contact.user',
+                ])
+                ->find($id);
+
+            if (!$os) {
+                return $this->sendError('Orden de servicio no encontrada.');
+            }
+
+            return $this->sendResponse($os, 'Enviando orden de servicio');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
     public function store(Request $request): JsonResponse
     {
         try {
@@ -80,6 +104,8 @@ class OrderServiceApiController extends Controller
                 'observations' => $input['observations'] ?? null,
                 'code' => $code,
                 'contact_id' => $input['contact_id'] ?? null,
+                'direction' => $input['direction'] ?? null,
+                'date_attention' => $input['date_attention'] ?? null
             ]);
 
             if (!empty($input['items']) && is_array($input['items'])) {
@@ -134,6 +160,8 @@ class OrderServiceApiController extends Controller
                 'conditions' => $input['conditions'] ?? null,
                 'emision_data' => $input['emision_data'] ?? null,
                 'observations' => $input['observations'] ?? null,
+                'direction' => $input['direction'] ?? null,
+                'date_attention' => $input['date_attention'] ?? null
             ]);
 
             ItemsOrderService::where('order_service_id', $orderService->id)->delete();

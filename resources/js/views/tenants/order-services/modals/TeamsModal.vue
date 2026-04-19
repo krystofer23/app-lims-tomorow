@@ -1,5 +1,5 @@
 <template>
-    <el-dialog :model-value="state" width="85%" top="5vh" :close-on-click-modal="false" destroy-on-close
+    <el-dialog :model-value="state" width="85%" :top="teams.length === 0 ? '' : '5vh'" :close-on-click-modal="false" destroy-on-close
         @close="closeModal" class="!rounded-xl" :style="{ width: computedDialogWidth }">
         <template #header>
             <div class="flex items-center gap-3">

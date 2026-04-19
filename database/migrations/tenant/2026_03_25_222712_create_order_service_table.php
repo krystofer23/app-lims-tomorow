@@ -37,6 +37,8 @@ return new class extends Migration
             $table->text('observations')->nullable();
             $table->string('code')->nullable();
             $table->foreign('contact_id')->references('id')->on('contact_companies');
+            $table->string('direction')->nullable();
+            $table->date('date_attention')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -4,7 +4,6 @@ namespace App\Models\tenant;
 
 use App\Casts\LocalTimezone;
 use App\Models\TenantModel;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -25,6 +24,7 @@ class ItemsOrderService extends TenantModel
 
     protected $casts = [
         'created_at' => LocalTimezone::class,
+        'item' => 'json'
     ];
 
     public function orderService(): BelongsTo

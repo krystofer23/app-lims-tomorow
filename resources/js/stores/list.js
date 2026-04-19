@@ -31,6 +31,15 @@ export const useListStore = defineStore("listStore", () => {
         per_page: 0,
     })
 
+    const loadingOrderService = ref(false)
+    const ordersServices = ref([])
+    const paginationOrderService = ref({
+        last_page: 0,
+        current_page: 0,
+        total: 0,
+        per_page: 0,
+    })
+
     const getMatrizDescription = async () => {
         try {
             const { data } = await tenant.get(`list/matriz-description`)
@@ -228,9 +237,37 @@ export const useListStore = defineStore("listStore", () => {
         }
     }
 
+    const getOrderServices = async (q = null, page = 1) => {
+        loadingOrderService.value = true
+
+        try {
+            const { data } = await tenant.get(`order-service?page=${page}`, {
+                params: {
+                    search: q
+                }
+            })
+
+            if (data.data) {
+                ordersServices.value = data.data.data
+                paginationOrderService.value = {
+                    last_page: data.data.last_page,
+                    current_page: data.data.current_page,
+                    total: data.data.total,
+                    per_page: data.data.per_page,
+                }
+            }
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+        finally {
+            loadingOrderService.value = false
+        }
+    }
+
     return {
         conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService, comerciales,
-        getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices, contacts, loadingContacts, getContacts, loadingTeam, 
-        teams, paginationTeam, getTeams
+        getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices, contacts, loadingContacts, getContacts, loadingTeam,
+        teams, paginationTeam, getTeams, loadingOrderService, ordersServices, paginationOrderService, getOrderServices
     }
 })
