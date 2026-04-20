@@ -13,6 +13,7 @@ use App\Http\Controllers\tenant\MatrizApiController;
 use App\Http\Controllers\tenant\MethodologiesApiController;
 use App\Http\Controllers\tenant\OrderServiceApiController;
 use App\Http\Controllers\tenant\QuotesApiController;
+use App\Http\Controllers\tenant\ReceptionApiController;
 use App\Http\Controllers\tenant\ServiceApiController;
 use App\Http\Controllers\tenant\UnitsMeasurementApiController;
 use App\Http\Controllers\tenant\UserApiController;
@@ -64,6 +65,14 @@ Route::middleware([
             Route::controller(ImportApiController::class)->prefix('import')->group(function () {
 
                 Route::post('', 'import');
+            });
+
+            Route::controller(ReceptionApiController::class)->prefix('reception')->group(function () {
+
+                Route::get('', 'index');
+                Route::post('', 'store');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
             });
 
             Route::controller(OrderServiceApiController::class)->prefix('order-service')->group(function () {
