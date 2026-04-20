@@ -103,6 +103,25 @@ use Carbon\Carbon;
             line-height: 1.3;
             vertical-align: top;
         }
+
+        /* Fallback visual merge for long blocks that may cross pages in DomPDF */
+        .merge-start {
+            vertical-align: top;
+            border-bottom: none !important;
+        }
+
+        .merge-mid {
+            vertical-align: top;
+            border-top: none !important;
+            border-bottom: none !important;
+        }
+
+        .merge-end {
+            vertical-align: top;
+            border-top: none !important;
+        }
+
+        
     </style>
 </head>
 
@@ -134,13 +153,13 @@ use Carbon\Carbon;
         </tr>
         <tr>
             <td class="label-green">Contacto:</td>
-            <td colspan="4">{{ $contact->user?->full_name }}</td>
+            <td colspan="4">{{ $contact?->user?->full_name ?? '-' }}</td>
             <td class="label-green">Teléfono/Celular:</td>
-            <td colspan="4">{{ $contact?->phone }}</td>
+            <td colspan="4">{{ $contact?->phone ?? '-' }}</td>
         </tr>
         <tr>
             <td class="label-green">Facturar a:</td>
-            <td colspan="6">{{ $contact?->email }}</td>
+            <td colspan="6">{{ $contact?->email ?? '-' }}</td>
             <td class="label-green">R.U.C.:</td>
             <td colspan="2">{{ $company->ruc ?? '-' }}</td>
         </tr>
@@ -148,7 +167,7 @@ use Carbon\Carbon;
             <td class="label-green">Referencia/procedencia:</td>
             <td colspan="6">{{ $quote->reference ?? '-' }}</td>
             <td class="label-green">Email:</td>
-            <td colspan="2">{{ $contact?->email }}</td>
+            <td colspan="2">{{ $contact?->email ?? '-' }}</td>
         </tr>
 
         <tr class="spacer">
@@ -178,62 +197,110 @@ use Carbon\Carbon;
         </tr>
 
         @foreach($group['items'] as $matriz)
-        @php
-        $essays = data_get($matriz, 'item.essays', []);
-        $rowspan = max(count($essays), 1);
-        @endphp
+            @php
+                $essays = data_get($matriz, 'item.essays', []);
+                $methodology = data_get($matriz, 'item.methodologie.description', '-');
+                $samples = data_get($matriz, 'item.number_samples', '-');
+                $priceUnitFmt = number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.');
+                $totalFmt = number_format((float) ($matriz->total ?? 0), 2, ',', '.');
+                $rowspan = max(count($essays), 1);
+                $useRealRowspan = count($essays) <= 6;
+            @endphp
 
-        @if(count($essays))
-        @foreach($essays as $index => $essay)
-        <tr>
-            @if($index === 0)
-            <td rowspan="{{ $rowspan }}">
-                {{ data_get($matriz, 'item.description', '-') }}
-            </td>
+            @if(count($essays))
+                @if($useRealRowspan)
+                    @foreach($essays as $index => $essay)
+                        <tr>
+                            @if($index === 0)
+                                <td rowspan="{{ $rowspan }}" style="vertical-align: top;">
+                                    {{ data_get($matriz, 'item.description', '-') }}
+                                </td>
+                            @endif
+
+                            <td>{{ data_get($essay, 'description', '-') }}</td>
+
+                            @if($index === 0)
+                                <td colspan="2" rowspan="{{ $rowspan }}" style="vertical-align: top;">
+                                    {{ $methodology }}
+                                </td>
+                            @endif
+
+                            <td>{{ data_get($essay, 'lcm', '-') }}</td>
+                            <td>{{ data_get($essay, 'units_measurement.description', '-') }}</td>
+
+                            @if($index === 0)
+                                <td rowspan="{{ $rowspan }}" class="text-center">
+                                    {{ $samples }}
+                                </td>
+                            @endif
+
+                            @if($index === 0)
+                                <td rowspan="{{ $rowspan }}" style="vertical-align: top;">
+                                    {{ data_get($essay, 'condition.description', '-') }}
+                                </td>
+                            @endif
+
+                            @if($index === 0)
+                                <td rowspan="{{ $rowspan }}" class="text-right">
+                                    {{ $priceUnitFmt }}
+                                </td>
+                                <td rowspan="{{ $rowspan }}" class="text-right">
+                                    {{ $totalFmt }}
+                                </td>
+                            @endif
+                        </tr>
+                    @endforeach
+                @else
+                    @foreach($essays as $index => $essay)
+                        @php
+                            $isFirst = ($index === 0);
+                            $isLast = ($index === count($essays) - 1);
+                            $mergeClass = $isFirst ? 'merge-start' : ($isLast ? 'merge-end' : 'merge-mid');
+                        @endphp
+                        <tr>
+                            <td class="{{ $mergeClass }}">
+                                {{ $isFirst ? data_get($matriz, 'item.description', '-') : '' }}
+                            </td>
+
+                            <td>{{ data_get($essay, 'description', '-') }}</td>
+
+                            <td colspan="2" class="{{ $mergeClass }}">
+                                {{ $isFirst ? $methodology : '' }}
+                            </td>
+
+                            <td>{{ data_get($essay, 'lcm', '-') }}</td>
+                            <td>{{ data_get($essay, 'units_measurement.description', '-') }}</td>
+
+                            <td class="text-center {{ $mergeClass }}">
+                                {{ $isFirst ? $samples : '' }}
+                            </td>
+
+                            <td>{{ data_get($essay, 'condition.description', '-') }}</td>
+
+                            <td class="text-right {{ $mergeClass }}">
+                                {{ $isFirst ? $priceUnitFmt : '' }}
+                            </td>
+                            <td class="text-right {{ $mergeClass }}">
+                                {{ $isFirst ? $totalFmt : '' }}
+                            </td>
+                        </tr>
+                    @endforeach
+                @endif
+            @else
+                <tr>
+                    <td style="vertical-align: top;">
+                        {{ data_get($matriz, 'item.description', '-') }}
+                    </td>
+                    <td>-</td>
+                    <td colspan="2">{{ $methodology }}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td class="text-center">{{ $samples }}</td>
+                    <td>-</td>
+                    <td class="text-right">{{ number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format((float) ($matriz->total ?? 0), 2, ',', '.') }}</td>
+                </tr>
             @endif
-
-            <td>{{ data_get($essay, 'description', '-') }}</td>
-
-            @if($index === 0)
-            <td colspan="2" rowspan="{{ $rowspan }}">
-                {{ data_get($matriz, 'item.methodologie.description', '-') }}
-            </td>
-            @endif
-
-            <td>{{ data_get($essay, 'lcm', '-') }}</td>
-            <td>{{ data_get($essay, 'units_measurement.description', '-') }}</td>
-
-            @if($index === 0)
-            <td rowspan="{{ $rowspan }}" class="text-center">
-                {{ data_get($matriz, 'item.number_samples', '-') }}
-            </td>
-            @endif
-
-            <td>{{ data_get($essay, 'condition.description', '-') }}</td>
-
-            @if($index === 0)
-            <td rowspan="{{ $rowspan }}" class="text-right">
-                {{ number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.') }}
-            </td>
-            <td rowspan="{{ $rowspan }}" class="text-right">
-                {{ number_format((float) ($matriz->total ?? 0), 2, ',', '.') }}
-            </td>
-            @endif
-        </tr>
-        @endforeach
-        @else
-        <tr>
-            <td>{{ data_get($matriz, 'item.description', '-') }}</td>
-            <td>-</td>
-            <td colspan="2">{{ data_get($matriz, 'item.methodologie.description', '-') }}</td>
-            <td>-</td>
-            <td>-</td>
-            <td class="text-center">{{ data_get($matriz, 'item.number_samples', '-') }}</td>
-            <td>-</td>
-            <td class="text-right">{{ number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.') }}</td>
-            <td class="text-right">{{ number_format((float) ($matriz->total ?? 0), 2, ',', '.') }}</td>
-        </tr>
-        @endif
         @endforeach
 
         <tr>

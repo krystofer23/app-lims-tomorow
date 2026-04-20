@@ -19,6 +19,8 @@ return [
     'central_domains' => [
         'app-lims.test',
         'central.app-lims.test',
+        'app-lims-tomorow.test',
+        'central.app-lims-tomorow.test',
         'localhost',
         '127.0.0.1',
     ],
