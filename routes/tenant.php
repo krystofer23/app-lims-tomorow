@@ -58,7 +58,13 @@ Route::middleware([
             Route::post('auth/refresh', [AuthApiController::class, 'refresh']);
         });
 
-        Route::post('auth', [AuthApiController::class, 'login']);
+        Route::post('/auth', [AuthApiController::class, 'login']);
+
+        Route::get('/test-prod', function () {
+            return response()->json([
+                'Todo bien'
+            ]);
+        });
 
         Route::middleware([JWTMiddleware::class])->group(function () {
 
