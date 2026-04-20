@@ -118,6 +118,12 @@ export const routesTenants = [
         meta: { scope: 'tenant' }
     },
     {
+        path: '/orders-services-update/:id',
+        name: 'orders-services-update',
+        component: () => import('../views/tenants/order-services/CreateView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
         path: '/reception',
         name: 'reception',
         component: () => import('../views/tenants/reception/IndexView.vue'),

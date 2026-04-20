@@ -73,6 +73,8 @@ Route::middleware([
                 Route::post('', 'store');
                 Route::put('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
+                Route::post('/export/{id}', 'exportOrderService');
+                Route::post('/pdf/{id}', 'exportOrderServicePdf');
                 Route::get('teams/{matrizId}', 'teams');
             });
 

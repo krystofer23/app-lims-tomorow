@@ -428,6 +428,7 @@ const remoteMethodCompany = async (q) => {
 
 const form = reactive({
     id: null,
+    quote_id: null,
     company_id: null,
     direction: null,
     date_attention: null,
@@ -478,10 +479,21 @@ const itemDelete = (index) => {
     form.items.splice(index, 1)
 }
 
+const normalizeItems = (items = []) => {
+    return items.map((row) => ({
+        ...row,
+        id: row.id ?? row.filable_id ?? null,
+        item: row.item ?? {},
+        select: row.select ?? false,
+    }))
+}
+
 const onSubmit = async () => {
     loadingSubmit.value = true
 
     try {
+        const orderServiceId = form.id
+
         if (form.id) {
             const { data } = await tenant.put(`order-service/${form.id}`, form)
             ElNotification.success(data.message)
@@ -491,7 +503,12 @@ const onSubmit = async () => {
             ElNotification.success(data.message)
         }
 
-        resetForm()
+        if (orderServiceId) {
+            await getOrderService(orderServiceId)
+        }
+        else {
+            resetForm()
+        }
     }
     catch (e) {
         handleErrorsExeption(e)
@@ -558,11 +575,42 @@ const getQuote = async (quoteId) => {
         })
 
         if (data.data) {
+            form.quote_id = data.data.id
             form.company_id = data.data.company_id
             form.direction = data.data.direction
             form.reference = data.data.reference
             form.contact_id = data.data.contact_id
-            form.items = data.data.items
+            form.items = normalizeItems(data.data.items)
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+const getOrderService = async (id) => {
+    try {
+        const { data } = await tenant.get(`order-service/${id}`)
+
+        if (data.data) {
+            form.id = data.data.id
+            form.quote_id = data.data.quote_id
+            form.company_id = data.data.company_id
+            form.direction = data.data.direction
+            form.date_attention = data.data.date_attention
+            form.reference = data.data.reference
+            form.observations = data.data.observations
+            form.contact_id = data.data.contact_id
+            form.origin = data.data.origin
+            form.project = data.data.project
+            form.date_monitoring_init = data.data.date_monitoring_init
+            form.date_monitoring_end = data.data.date_monitoring_end
+            form.date_induction = data.data.date_induction
+            form.date_output = data.data.date_output
+            form.details = data.data.details
+            form.stations_monitoring = data.data.stations_monitoring
+            form.project_monitoring = data.data.project_monitoring
+            form.items = normalizeItems(data.data.items)
         }
     }
     catch (e) {
@@ -579,11 +627,12 @@ watch(() => form.company_id, (newVal) => {
 
 const handleTeam = (row) => {
     state.value = true
-    matrizId.value = row.id
+    matrizId.value = row.id ?? row.filable_id
 }
 
 const resetForm = () => {
     form.id = null
+    form.quote_id = null
     form.company_id = null
     form.direction = null
     form.date_attention = null
@@ -620,9 +669,11 @@ onMounted(() => {
 
     listStore.getCompanies()
 
-    if (route.query?.quoteId) {
+    if (route.params.id) {
+        getOrderService(route.params.id)
+    }
+    else if (route.query?.quoteId) {
         getQuote(route.query?.quoteId)
-        form.quote_id = route.query?.quoteId;
     }
 })
 </script>

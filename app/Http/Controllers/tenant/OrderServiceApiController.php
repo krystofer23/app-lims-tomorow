@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\tenant;
 
+use App\Exports\OrderServiceExport;
 use App\Http\Controllers\Controller;
 use App\Models\tenant\Essays;
 use App\Models\tenant\ItemsOrderService;
 use App\Models\tenant\Matriz;
 use App\Models\tenant\OrderService;
 use App\Models\tenant\RelationEssayTeam;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OrderServiceApiController extends Controller
 {
@@ -174,6 +177,7 @@ class OrderServiceApiController extends Controller
                         'order_service_id' => $orderService->id,
                         'filable_type' => $model,
                         'filable_id' => $value['id'] ?? null,
+                        'item' => isset($value['item']) ? json_encode($value['item']) : null,
                         'type' => $value['type'] ?? null,
                         'amount' => $value['item']['number_samples'] ?? null,
                         'price_unit' => $value['item']['unit_price'] ?? null,
@@ -207,6 +211,36 @@ class OrderServiceApiController extends Controller
             DB::rollBack();
             return $this->sendError($e->getMessage());
         }
+    }
+
+    public function exportOrderService($id)
+    {
+        $orderService = $this->getOrderServiceForExport($id);
+
+        if (!$orderService) {
+            return $this->sendError('No se encontró la orden de servicio');
+        }
+
+        return Excel::download(
+            new OrderServiceExport($orderService),
+            'orden-servicio-' . ($orderService->code ?? $orderService->id) . '.xlsx'
+        );
+    }
+
+    public function exportOrderServicePdf($id)
+    {
+        $orderService = $this->getOrderServiceForExport($id);
+
+        if (!$orderService) {
+            return $this->sendError('No se encontró la orden de servicio');
+        }
+
+        $exportData = $this->buildOrderServiceExportData($orderService);
+
+        $pdf = Pdf::loadView('pdf.order-services.main', $exportData)
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('orden-servicio-' . ($orderService->code ?? $orderService->id) . '.pdf');
     }
 
     public function teams($matrizId): JsonResponse
@@ -297,5 +331,53 @@ class OrderServiceApiController extends Controller
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
+    }
+
+    private function getOrderServiceForExport($id): ?OrderService
+    {
+        return OrderService::query()
+            ->with([
+                'quote',
+                'company:id,ruc,business_name,direction,activity',
+                'user',
+                'items',
+                'contact.user',
+            ])
+            ->find($id);
+    }
+
+    private function buildOrderServiceExportData(OrderService $orderService): array
+    {
+        $company = $orderService->company;
+        $contact = $orderService->contact;
+
+        $matrices = $orderService->items->where('type', 'matriz');
+        $services = $orderService->items->where('type', 'service');
+
+        $groupedMatrices = $matrices
+            ->groupBy(function ($matriz) {
+                $description = data_get($matriz, 'item.description', 'Sin matriz');
+                $frequencyLabel = data_get($matriz, 'item.frequency_label');
+
+                return $description . '||' . ($frequencyLabel ?: 'SIN_FRECUENCIA');
+            })
+            ->map(function ($items) {
+                $first = $items->first();
+
+                return [
+                    'description' => data_get($first, 'item.description', 'Sin matriz'),
+                    'frequency_label' => data_get($first, 'item.frequency_label'),
+                    'items' => $items->values(),
+                ];
+            })
+            ->values();
+
+        return [
+            'orderService' => $orderService,
+            'company' => $company,
+            'contact' => $contact,
+            'groupedMatrices' => $groupedMatrices,
+            'services' => $services->values(),
+        ];
     }
 }

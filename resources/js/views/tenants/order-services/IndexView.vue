@@ -130,16 +130,18 @@
                     <el-table-column label="Acciones" width="160" fixed="right">
                         <template #default="{ row }">
                             <el-button-group>
-                                <el-button type="primary" size="small" v-tippy="'Generar PDF'">
+                                <el-button :loading="row?.loadingPdf" type="primary" size="small"
+                                    v-tippy="'Generar PDF'" @click="downloadOrderServicePdf(row)">
                                     <i class="fa-regular fa-file-pdf"></i>
                                 </el-button>
-                                <el-button type="success" size="small" v-tippy="'Generar Excel'">
+                                <el-button :loading="row?.loadingExcel" type="success" size="small"
+                                    v-tippy="'Generar Excel'" @click="downloadOrderServiceExcel(row)">
                                     <i class="fa-regular fa-file-excel"></i>
                                 </el-button>
-                                <el-button type="warning" size="small" v-tippy="'Editar'">
+                                <el-button type="warning" size="small" v-tippy="'Editar'" @click="onEdit(row)">
                                     <i class="fa-regular fa-pen-to-square"></i>
                                 </el-button>
-                                <el-button type="danger" size="small" v-tippy="'Eliminar'">
+                                <el-button type="danger" size="small" v-tippy="'Eliminar'" @click="onDelete(row)">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </el-button>
                             </el-button-group>
@@ -176,9 +178,12 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import tenant from '../../../stores/tenant';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
 
+const router = useRouter()
 const orders = ref([])
 const loading = ref(false)
 const pagination = ref({
@@ -210,6 +215,94 @@ const headerStyle = () => ({
 });
 
 const rowClassName = () => "hover:bg-slate-50 transition";
+
+const onEdit = (row) => {
+    router.push({
+        name: 'orders-services-update',
+        params: { id: row.id }
+    })
+}
+
+const downloadOrderServiceExcel = async (row) => {
+    row.loadingExcel = true
+
+    try {
+        const response = await tenant.post(`/order-service/export/${row.id}`, {}, {
+            responseType: 'blob',
+        })
+
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+
+        link.href = url
+        link.setAttribute('download', `orden-servicio-${row.code ?? row.id}.xlsx`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+
+        window.URL.revokeObjectURL(url)
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        row.loadingExcel = false
+    }
+}
+
+const downloadOrderServicePdf = async (row) => {
+    row.loadingPdf = true
+
+    try {
+        const response = await tenant.post(`/order-service/pdf/${row.id}`, {}, {
+            responseType: 'blob',
+        })
+
+        const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+        const link = document.createElement('a')
+
+        link.href = url
+        link.setAttribute('download', `orden-servicio-${row.code ?? row.id}.pdf`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+
+        window.URL.revokeObjectURL(url)
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        row.loadingPdf = false
+    }
+}
+
+const onDelete = async (row) => {
+    try {
+        await ElMessageBox.confirm(
+            `¿Deseas eliminar la orden de servicio${row?.code ? ` ${row.code}` : ''}?`,
+            'Confirmación',
+            {
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                type: 'warning',
+            }
+        )
+
+        loading.value = true
+        const { data } = await tenant.delete(`order-service/${row.id}`)
+        ElMessage.success(data.message || 'Orden de servicio eliminada correctamente')
+        await getOrders()
+    }
+    catch (e) {
+        if (e === 'cancel' || e === 'close') return
+
+        handleErrorsExeption(e)
+    }
+    finally {
+        loading.value = false
+    }
+}
 
 const getOrders = async () => {
     loading.value = true
