@@ -199,12 +199,19 @@ use Carbon\Carbon;
         @foreach($group['items'] as $matriz)
             @php
                 $essays = data_get($matriz, 'item.essays', []);
+                $matrizDescription = data_get($matriz, 'item.description', '-');
                 $methodology = data_get($matriz, 'item.methodologie.description', '-');
                 $samples = data_get($matriz, 'item.number_samples', '-');
                 $priceUnitFmt = number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.');
                 $totalFmt = number_format((float) ($matriz->total ?? 0), 2, ',', '.');
                 $rowspan = max(count($essays), 1);
-                $useRealRowspan = count($essays) <= 6;
+                $essayTextLength = collect($essays)->sum(function ($essay) {
+                    return strlen((string) data_get($essay, 'description', ''));
+                });
+                $contentLength = strlen((string) $matrizDescription)
+                    + strlen((string) $methodology)
+                    + $essayTextLength;
+                $useRealRowspan = count($essays) <= 6 && $contentLength <= 220;
             @endphp
 
             @if(count($essays))
@@ -213,7 +220,7 @@ use Carbon\Carbon;
                         <tr>
                             @if($index === 0)
                                 <td rowspan="{{ $rowspan }}" style="vertical-align: top;">
-                                    {{ data_get($matriz, 'item.description', '-') }}
+                                    {{ $matrizDescription }}
                                 </td>
                             @endif
 
@@ -259,7 +266,7 @@ use Carbon\Carbon;
                         @endphp
                         <tr>
                             <td class="{{ $mergeClass }}">
-                                {{ $isFirst ? data_get($matriz, 'item.description', '-') : '' }}
+                                {{ $isFirst ? $matrizDescription : '' }}
                             </td>
 
                             <td>{{ data_get($essay, 'description', '-') }}</td>
@@ -289,7 +296,7 @@ use Carbon\Carbon;
             @else
                 <tr>
                     <td style="vertical-align: top;">
-                        {{ data_get($matriz, 'item.description', '-') }}
+                        {{ $matrizDescription }}
                     </td>
                     <td>-</td>
                     <td colspan="2">{{ $methodology }}</td>
