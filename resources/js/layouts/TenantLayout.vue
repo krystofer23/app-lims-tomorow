@@ -12,7 +12,7 @@
                 </div>
             </div> -->
 
-            <main class="max-w-7xl mx-auto">
+            <main class="w-full">
                 <RouterView />
             </main>
         </div>

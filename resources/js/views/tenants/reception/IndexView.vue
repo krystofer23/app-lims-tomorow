@@ -40,7 +40,7 @@
     </div>
 
     <div class="bg-white p-5 md:p-6 space-y-6">
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div
                 class="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
                 <div class="flex items-center justify-between">
@@ -112,11 +112,171 @@
 
                 <div class="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-violet-100 opacity-40"></div>
             </div>
-        </div>
+        </div> -->
 
-        <el-table :data="receptions" v-loading="loading">
-            <el-table-column label=""></el-table-column>
-        </el-table>
+        <div class="overflow-x-auto">
+            <el-table :data="receptions" v-loading="loading" stripe :header-cell-style="headerStyle"
+                :row-class-name="rowClassName" class="custom-table w-full" table-layout="auto">
+                <el-table-column label="Razón Social" min-width="220">
+                    <template #default="{ row }">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-slate-800 text-xs max-w-[140px]">
+                                {{ row.company?.business_name || '-' }}
+                            </p>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Solicitante" min-width="220">
+                    <template #default="{ row }">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-slate-800 text-xs max-w-[140px]">
+                                {{ row.application?.business_name || '-' }}
+                            </p>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="N° Orden de Servicio" min-width="190">
+                    <template #default="{ row }">
+                        <span class="inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                            {{ row.order?.code || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="N° Cadena de Custodia" min-width="190">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.number_chain || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="N° de Informe de Ensayo" min-width="200">
+                    <template #default="{ row }">
+                        <span class="font-medium text-slate-700">
+                            {{ row.content?.number_report || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Tipo de muestra" min-width="180">
+                    <template #default="{ row }">
+                        <span
+                            class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                            {{ row.content?.type_sample || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Matriz" min-width="160">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.matriz || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Muestra número N°" min-width="180">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.number_sample || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="N° de Ensayos" min-width="150" align="center">
+                    <template #default="{ row }">
+                        <span
+                            class="inline-flex min-w-[36px] justify-center rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
+                            {{ row.content?.number_essays || 0 }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Fecha y Hora de Recepción" min-width="220">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.date_reception || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Fecha y Hora de Muestreo (Inicio)" min-width="240">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.date_sampling_init || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Fecha y Hora de Muestreo (Final)" min-width="240">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.date_sampling_end || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Fecha pactada" min-width="180">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.date_agreed || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Muestreo por" min-width="180">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.company_sampling_id || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Código de Laboratorio" min-width="280">
+                    <template #default="{ row }">
+                        <span class="font-mono text-xs text-slate-700 break-words">
+                            {{ row.content?.code_lab || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Código de estación de muestreo" min-width="240">
+                    <template #default="{ row }">
+                        <span class="font-mono text-xs text-slate-700 break-words">
+                            {{ row.content?.code_season || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Condición del reporte" min-width="190">
+                    <template #default="{ row }">
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
+                            :class="getConditionClass(row.content?.condition_report)">
+                            {{ row.content?.condition_report || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Laboratorio Sub-Contrata" min-width="220">
+                    <template #default="{ row }">
+                        <span class="text-sm text-slate-700">
+                            {{ row.content?.other_company_id || '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <template #empty>
+                    <div class="py-10 text-center">
+                        <p class="text-sm font-medium text-slate-500">
+                            No hay recepciones disponibles
+                        </p>
+                    </div>
+                </template>
+            </el-table>
+        </div>
 
         <div
             class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5">
@@ -656,6 +816,43 @@ const onSubmit = async () => {
     }
 }
 
+const headerStyle = () => {
+    return {
+        background: '#f8fafc',
+        color: '#334155',
+        fontWeight: '700',
+        fontSize: '13px',
+        borderBottom: '1px solid #e2e8f0',
+        height: '52px'
+    }
+}
+
+const rowClassName = ({ rowIndex }) => {
+    return rowIndex % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'
+}
+
+const getConditionClass = (condition) => {
+    if (!condition) {
+        return 'bg-slate-100 text-slate-600'
+    }
+
+    const value = String(condition).toLowerCase()
+
+    if (value.includes('conforme') || value.includes('aprobado')) {
+        return 'bg-emerald-100 text-emerald-700'
+    }
+
+    if (value.includes('observado') || value.includes('pendiente')) {
+        return 'bg-amber-100 text-amber-700'
+    }
+
+    if (value.includes('rechazado') || value.includes('no conforme')) {
+        return 'bg-red-100 text-red-700'
+    }
+
+    return 'bg-slate-100 text-slate-600'
+}
+
 const parameters = ref([
     'Aceites y Grasas',
     'Aceites y Grasas (suelo)',
@@ -1134,5 +1331,27 @@ onMounted(async () => {
 
 :deep(.el-popover) {
     border-radius: 10px !important;
+}
+
+:deep(.custom-table .el-table__cell) {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    vertical-align: middle;
+}
+
+:deep(.custom-table .el-table__row:hover > td.el-table__cell) {
+    background-color: #f8fafc !important;
+}
+
+:deep(.custom-table .el-table__inner-wrapper::before) {
+    display: none;
+}
+
+:deep(.custom-table th.el-table__cell) {
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+:deep(.custom-table td.el-table__cell) {
+    border-bottom: 1px solid #f1f5f9 !important;
 }
 </style>
