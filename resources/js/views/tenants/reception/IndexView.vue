@@ -148,7 +148,7 @@
                         </el-input>
                     </div>
 
-                    <button
+                    <button @click="handleGenerateOT()"
                         class="inline-flex h-8 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-sky-500 px-5 text-sm font-semibold text-white shadow-md shadow-blue-100 transition-all duration-200 hover:shadow-lg active:translate-y-0 md:w-auto">
                         <i class="fa-solid fa-file-circle-plus text-sm"></i>
                         Generar OT
@@ -753,6 +753,12 @@
             </div>
         </template>
     </el-dialog>
+
+    <select-type :number_chain="filters.number_chain" :visible="visibleSelectType" @close="() => {
+        visibleSelectType = false
+    }" />
+
+    <confirm-dialog ref="confirmRef" />
 </template>
 
 <script setup>
@@ -763,14 +769,30 @@ import { useWindowSize } from '@vueuse/core';
 import { useListStore } from '../../../stores/list'
 import tenant from '../../../stores/tenant';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
+import SelectType from './modals/SelectType.vue';
+import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
 
 const { width: windowWidth } = useWindowSize();
 
 const listStore = useListStore()
 const dialogVisible = ref(false)
-
+const visibleSelectType = ref(false)
+const confirmRef = ref(null);
 const loadingCompany = ref(false)
 const companies = computed(() => listStore.companies)
+
+const handleGenerateOT = async () => {
+    const ok = await confirmRef.value?.open({
+        title: 'Seguro de generar una OT',
+        message: 'Si estas seguro dale continuar?',
+        confirmText: 'Sí, continuar',
+        cancelText: 'Cancelar',
+    })
+
+    if (ok) {
+        visibleSelectType.value = true
+    }
+}
 
 const remoteMethodCompany = async (q) => {
     loadingCompany.value = true

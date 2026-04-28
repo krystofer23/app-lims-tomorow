@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdenTrabajoExport;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ReceptionApiController extends Controller
 {
@@ -89,7 +91,7 @@ class ReceptionApiController extends Controller
             $input = $request->all();
             $userId = Auth::guard('api')->id();
 
-            $chainCustody = ChainCustody::find($id);
+            $chainCustody = ChainCustody::findOrFail($id);
 
             if (!$chainCustody) {
                 return $this->sendError('No se encontro el registro');
@@ -127,7 +129,7 @@ class ReceptionApiController extends Controller
 
             $userId = Auth::guard('api')->id();
 
-            $chainCustody = ChainCustody::find($id);
+            $chainCustody = ChainCustody::findOrFail($id);
 
             if (!$chainCustody) {
                 return $this->sendError('No se encontro el registro');
@@ -157,8 +159,12 @@ class ReceptionApiController extends Controller
             $numberChain = $request->input('number_chain');
 
             $data = ChainCustody::query()
-                ->where('content->number_chain', 'like', "%{$numberChain}%")
+                ->where('content->number_chain', $numberChain)
                 ->get();
+
+            if ($data->isEmpty()) {
+                return $this->sendError('No se encontraron cadenas de custodia.');
+            }
 
             $orderIds = $data->pluck('order_id')->unique()->values()->toArray();
             $os = $data->pluck('os')->unique()->values()->toArray();
@@ -166,19 +172,25 @@ class ReceptionApiController extends Controller
             $content = $data->map(function ($item) {
                 return [
                     'code_lab' => $item->content['code_lab'] ?? null,
-                    'chain_custody' => $item,
+                    'chain_custody_id' => $item->id,
+                    'content' => $item->content,
                 ];
             })->values()->toArray();
 
-            OtsGenerate::create([
-                'user_id' => $userId,
-                'os' => $os,
-                'order_id' => $orderIds,
-                'content' => $content,
-            ]);
+            $otsGenerate = OtsGenerate::updateOrCreate(
+                [
+                    'os' => $os[0] ?? null,
+                    'order_id' => $orderIds[0] ?? null,
+                    'number_chain' => $numberChain
+                ],
+                [
+                    'user_id' => $userId,
+                    'content' => $content,
+                ]
+            );
 
-            return $this->sendResponse([], 'Datos generados correctamente');
-        } catch (Exception $e) {
+            return $this->sendResponse($otsGenerate, 'Datos generados correctamente');
+        } catch (\Throwable $e) {
             return $this->sendError($e->getMessage());
         }
     }
@@ -195,70 +207,43 @@ class ReceptionApiController extends Controller
                 'orden_trabajo_' . $ot->id . '.xlsx'
             );
         } catch (\Throwable $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return $this->sendError($e->getMessage());
         }
     }
 
-    // 🔹 2) GENERAR PDF
-    public function downloadPdfOT(int $id)
+    public function downloadPdfOT($id)
     {
         try {
             $ot = OtsGenerate::findOrFail($id);
-
             $payload = $this->buildPayload($ot);
 
-            $pdf = Pdf::loadView('pdf.orden-trabajo', $payload)
+            $pdf = Pdf::loadView('pdf.chain-custody.main', $payload)
                 ->setPaper('a4', 'portrait');
 
             return $pdf->download('orden_trabajo_' . $ot->id . '.pdf');
-        } catch (\Throwable $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
         }
     }
 
-    // 🔹 3) HELPER: transforma tu content a filas (code_lab + parámetro)
     private function buildPayload(OtsGenerate $ot): array
     {
-        $rows = [];
+        $firstOt = $ot->content[0]['content'] ?? [];
 
-        foreach ($ot->content as $item) {
-            // $item viene de tu map: ['code_lab', 'chain_custody']
-            $chain = $item['chain_custody']['content'] ?? [];
+        $datetime = $firstOt['date_sampling_init'];
 
-            $codeLab = $item['code_lab']
-                ?? ($chain['code_lab'] ?? '');
+        $carbon = Carbon::parse($datetime);
 
-            // parameters viene como string con comas y saltos de línea
-            $parameters = $chain['parameters'] ?? '';
-
-            $parametersArray = collect(preg_split('/[\n,]+/', $parameters))
-                ->map(fn($p) => trim($p))
-                ->filter()
-                ->values();
-
-            foreach ($parametersArray as $param) {
-                $rows[] = [
-                    'code_lab' => $codeLab,
-                    'parameter' => $param,
-                ];
-            }
-        }
-
-        // Puedes tomar estos datos del primer item o de donde prefieras
-        $first = $ot->content[0]['chain_custody']['content'] ?? [];
+        $date = $carbon->toDateString();
+        $hour = $carbon->toTimeString();
 
         return [
-            // Cabecera
-            'os' => is_array($ot->os) ? implode(', ', $ot->os) : $ot->os,
-            'number_report' => $first['number_report'] ?? '',
-            'number_chain'  => $first['number_chain'] ?? '',
-            'matriz'        => $first['matriz'] ?? '',
-            'date_agreed'   => isset($first['date_agreed']) ? date('d/m/Y', strtotime($first['date_agreed'])) : '',
-            'hour'          => isset($first['date_reception']) ? date('H:i:s', strtotime($first['date_reception'])) : '',
-
-            // Detalle para tabla
-            'rows'    => $rows,   // para PDF
-            'details' => array_map(fn($r) => [$r['code_lab'], $r['parameter']], $rows), // para Excel
+            'os' => $ot?->os ?? '-',
+            'number_report' => $firstOt['number_report'] ?? '-',
+            'number_chain' => $firstOt['number_chain'] ?? '-',
+            'matriz' => $firstOt['matriz'] ?? '-',
+            'date_agreed' => $date ?? '-',
+            'hour' => $hour ?? '-',
         ];
     }
 }

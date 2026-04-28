@@ -19,6 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('order_id')->nullable();
             $table->foreign('order_id')->references('id')->on('order_service');
             $table->json('content')->nullable();
+            $table->string('number_chain')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

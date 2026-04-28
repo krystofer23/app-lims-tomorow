@@ -79,6 +79,11 @@ Route::middleware([
                 Route::post('', 'store');
                 Route::put('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
+
+                Route::post('generate-ot', 'generateOT');
+
+                Route::get('download-excel/{id}', 'downloadExcelOT');
+                Route::get('download-pdf/{id}', 'downloadPdfOT');
             });
 
             Route::controller(OrderServiceApiController::class)->prefix('order-service')->group(function () {

@@ -16,10 +16,12 @@ class OtsGenerate extends Model
         'os',
         'order_id',
         'content',
+        'number_chain',
     ];
 
     protected $casts = [
-        'created_at' => LocalTimezone::class
+        'created_at' => LocalTimezone::class,
+        'content' => 'array',
     ];
 
     public function user(): BelongsTo

@@ -138,15 +138,6 @@
                                         </div>
                                     </Transition>
                                 </div>
-
-                                <!-- <div v-if="menu.footerText"
-                                    class="mt-2 flex items-center justify-between rounded-2xl bg-slate-50 p-3">
-                                    <p class="text-xs text-slate-600">{{ menu.footerText }}</p>
-                                    <a href="#" class="text-xs font-bold text-slate-900 hover:underline"
-                                        @click.prevent="closeAll">
-                                        Ver todo
-                                    </a>
-                                </div> -->
                             </div>
                         </Transition>
                     </div>
@@ -483,11 +474,6 @@ function onPointerDown(e) {
     }
 }
 
-// onMounted(() => {
-//     window.addEventListener("keydown", onKeydown);
-//     window.addEventListener("pointerdown", onPointerDown, { capture: true });
-// });
-
 onBeforeUnmount(() => {
     window.removeEventListener("keydown", onKeydown);
     window.removeEventListener("pointerdown", onPointerDown, { capture: true });
@@ -553,6 +539,25 @@ const menus = computed(() => {
                     subtitle: "Empresas",
                 },
             ],
+        },
+        {
+            key: "reports",
+            label: "Reportes",
+            icon: "fa-solid fa-bug",
+            variant: "mega",
+            footerText: "Ver reportes y datos generados",
+            items: [
+                {
+                    key: "report-ots",
+                    title: "Reporte de OTS",
+                    desc: "Módulo de reporte de ots",
+                    cta: "Ir →",
+                    ctaColor: "text-blue-700",
+                    iconBg: "bg-blue-50 text-blue-700",
+                    icon: "fa-solid fa-arrows-turn-to-dots",
+                    subtitle: "Reporte de OTS",
+                }
+            ]
         },
         {
             key: "settings",

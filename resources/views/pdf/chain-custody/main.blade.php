@@ -49,7 +49,7 @@
         }
 
         .info-table {
-            width: 70%;
+            width: 100%;
             margin: 0 auto 25px;
             border-collapse: collapse;
         }
@@ -61,7 +61,6 @@
         .info-label {
             width: 40%;
             font-weight: bold;
-            text-align: right;
         }
 
         .info-separator {
@@ -71,7 +70,6 @@
 
         .info-value {
             border-bottom: 1px solid #6b7280;
-            text-align: center;
         }
 
         .note {
@@ -186,26 +184,7 @@
         * Este documento debe ser entregado junto con los siguientes análisis requeridos *
     </div>
 
-    <table class="main-table">
-        <thead>
-            <tr>
-                <th class="code-col">Código de Laboratorio<br>(muestras)</th>
-                <th>Análisis Requeridos</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($rows as $row)
-            <tr>
-                <td>{{ $row['code_lab'] }}</td>
-                <td>{{ $row['parameter'] }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
 
-    <div class="stamp">
-        ENTREGADO
-    </div>
 
     <div class="footer">
         Documento generado automáticamente - GreenLab Perú S.A.C.
