@@ -1,29 +1,32 @@
 <template>
     <div
-        class="h-[70px] flex flex-col gap-5 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-white to-emerald-50/60 px-6 py-6 lg:flex-row lg:items-center lg:justify-between">
+        class="flex flex-col gap-4 border-b border-slate-200/80 bg-white px-5 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between lg:px-6">
         <div class="min-w-0">
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-100">
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-100">
                     <i class="fa-regular fa-file-lines text-lg"></i>
                 </div>
 
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-slate-800">
-                        Gestión de Muestras
-                    </h1>
-                    <p class="-mt-1 text-xs text-slate-500">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h1 class="truncate text-lg font-bold tracking-tight text-slate-900">
+                            Gestión de Muestras
+                        </h1>
+                    </div>
+
+                    <p class="mt-0.5 truncate text-xs text-slate-500">
                         Registro y control de cadenas de custodia, informes y muestras.
                     </p>
                 </div>
             </div>
         </div>
 
-        <div class="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-            <el-input v-model="filters.search" placeholder="Buscar por razón social, cadena o informe" clearable
-                class="!w-full sm:!w-[340px]">
+        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+            <el-input v-model="filters.search" placeholder="Buscar razón social, cadena o informe..." clearable
+                class="!w-full sm:!w-[360px]">
                 <template #prefix>
-                    <el-icon>
+                    <el-icon class="text-slate-400">
                         <Search />
                     </el-icon>
                 </template>
@@ -114,9 +117,57 @@
             </div>
         </div> -->
 
+        <el-collapse>
+            <el-collapse-item>
+                <template #title>
+                    <i class="fa-solid fa-filter"></i>
+                    Filtros
+                </template>
+                <div class="grid grid-cols-12">
+
+                </div>
+            </el-collapse-item>
+        </el-collapse>
+
+        <div class="grid grid-cols-12">
+            <div class="col-span-6 rounded-2xl border border-slate-200 bg-white p-4">
+                <div class="flex flex-col gap-3 md:flex-row md:items-end">
+                    <div class="min-w-0 flex-1">
+                        <label class="mb-1.5 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <span class="grid h-7 w-7 place-items-center rounded-lg bg-blue-50 text-blue-600">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </span>
+                            Buscar cadena de custodia
+                        </label>
+
+                        <el-input v-model="filters.number_chain" placeholder="Ingrese código de cadena..." clearable
+                            class="!w-full">
+                            <template #prefix>
+                                <i class="fa-solid fa-barcode text-slate-400"></i>
+                            </template>
+                        </el-input>
+                    </div>
+
+                    <button
+                        class="inline-flex h-8 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-sky-500 px-5 text-sm font-semibold text-white shadow-md shadow-blue-100 transition-all duration-200 hover:shadow-lg active:translate-y-0 md:w-auto">
+                        <i class="fa-solid fa-file-circle-plus text-sm"></i>
+                        Generar OT
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <el-table :data="receptions" v-loading="loading" stripe :header-cell-style="headerStyle"
                 :row-class-name="rowClassName" class="custom-table w-full" table-layout="auto">
+                <el-table-column fixed="left">
+                    <template #default="{ row }">
+                        <el-button v-tippy="'Replicar'" size="small" type="warning" plain @click="toReply(row)">
+                            <i class="fa-solid fa-repeat"></i>
+                        </el-button>
+                    </template>
+                </el-table-column>
+
                 <el-table-column label="Razón Social" min-width="220">
                     <template #default="{ row }">
                         <div class="min-w-0">
@@ -268,6 +319,19 @@
                     </template>
                 </el-table-column>
 
+                <el-table-column fixed="right" width="120" label="Acciones">
+                    <template #default="{ row }">
+                        <el-button-group>
+                            <el-button size="small" type="warning" v-tippy="'Editar'">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </el-button>
+                            <el-button size="small" type="danger" v-tippy="'Eliminar'">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </el-button>
+                        </el-button-group>
+                    </template>
+                </el-table-column>
+
                 <template #empty>
                     <div class="py-10 text-center">
                         <p class="text-sm font-medium text-slate-500">
@@ -278,43 +342,35 @@
             </el-table>
         </div>
 
-        <div
-            class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/70 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-5">
+        <div class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-slate-500">
-                Mostrando una vista paginada de tus registros.
+                Mostrando <span class="font-semibold text-slate-700">{{ receptions.length }}</span> de
+                <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
             </p>
 
-            <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.per_page"
-                :page-sizes="[5, 10, 20, 50]" background layout="total, sizes, prev, pager, next"
-                :total="receptions.length" />
+            <el-pagination background layout="prev, pager, next, sizes" :total="pagination.total"
+                v-model:page-size="pagination.per_page" v-model:current-page="pagination.current_page"
+                :page-sizes="[10, 20, 50, 100]" @change="getReceptions" />
         </div>
     </div>
 
     <el-dialog v-model="dialogVisible" top="2vh" :style="{ width: computedDialogWidth }" width="980px" destroy-on-close
         class="modern-record-dialog !rounded-2xl">
         <template #header>
-            <div class="border-b border-slate-200/80 px-1 pb-4">
-                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div class="flex items-start gap-4">
-                        <div
-                            class="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-100 to-orange-50 text-amber-500 shadow-sm ring-1 ring-amber-200">
-                            <i class="fa-solid fa-person-digging text-xl"></i>
-                        </div>
-
-                        <div>
-                            <h3 class="text-xl font-bold tracking-tight text-slate-800">
-                                {{ form.id ? 'Editar registro' : 'Agregar registro' }}
-                            </h3>
-                            <p class="mt-1 text-sm text-slate-500">
-                                Completa la información del registro y guarda los cambios.
-                            </p>
-                        </div>
+            <div class="flex items-start justify-between gap-4 border-b border-slate-200 pb-5">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-100">
+                        <i class="fa-solid fa-person-digging text-lg"></i>
                     </div>
 
-                    <div
-                        class="inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
-                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                        Formulario de gestión
+                    <div>
+                        <h3 class="text-xl font-bold tracking-tight text-slate-900">
+                            {{ form.id ? 'Editar registro' : 'Agregar registro' }}
+                        </h3>
+                        <p class="text-sm text-slate-500">
+                            Registra la información de la cadena de custodia, muestra e informe.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -322,7 +378,6 @@
 
         <div class="px-1 pb-2">
             <div class="space-y-5">
-                <!-- Datos principales -->
                 <section class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 md:p-5">
                     <div class="mb-4 flex items-center gap-3">
                         <div
@@ -529,8 +584,10 @@
                             <el-select v-model="form.company_sampling_id" clearable filterable
                                 :remote-method="remoteMethodCompany" :loading="loadingCompany" class="w-full"
                                 placeholder="Selecciona una empresa" size="large">
-                                <el-option v-for="row in companies" :label="row.business_name"
-                                    :value="row.id"></el-option>
+                                <el-option v-for="row in [
+                                    { business_name: 'Cliente' },
+                                    { business_name: 'GreenLab S.A.C.' }
+                                ]" :label="row.business_name" :value="row.business_name"></el-option>
                             </el-select>
                         </div>
 
@@ -585,36 +642,59 @@
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div class="space-y-2 md:col-span-2">
-                            <label class="text-sm font-medium text-slate-700 flex items-center justify-between">
-                                Análisis requeridos
+                            <div class="flex items-center justify-between gap-3">
+                                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <span class="grid h-7 w-7 place-items-center rounded-lg bg-blue-50 text-blue-600">
+                                        <i class="fa-solid fa-list-check text-xs"></i>
+                                    </span>
+                                    Análisis requeridos
+                                </label>
 
-                                <el-popover placement="bottom" width="420" class="!rounded-xl"
-                                    style="border-radius: 12px !important;" trigger="click" v-model:visible="visible">
+                                <el-popover placement="bottom-end" width="430" trigger="click" v-model:visible="visible"
+                                    popper-class="parameter-popover">
                                     <template #default>
                                         <div class="space-y-3">
-                                            <div class="relative w-full">
-                                                <input v-model="search" @focus="open = true" @input="filterOptions"
-                                                    placeholder="Seleccionar parámetro"
-                                                    class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                                            <div>
+                                                <label class="mb-1.5 block text-xs font-semibold text-slate-600">
+                                                    Seleccionar parámetro
+                                                </label>
 
-                                                <div v-if="open"
-                                                    class="absolute z-50 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg max-h-52 overflow-auto">
-                                                    <div v-for="item in filtered" :key="item" @click="selectItem(item)"
-                                                        class="cursor-pointer px-3 py-2 text-sm hover:bg-blue-50">
-                                                        {{ item }}
-                                                    </div>
+                                                <div class="relative">
+                                                    <i
+                                                        class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
 
-                                                    <div v-if="!filtered.length"
-                                                        class="px-3 py-2 text-xs text-slate-400">
-                                                        Sin resultados
+                                                    <input v-model="search" @focus="open = true" @input="filterOptions"
+                                                        placeholder="Buscar parámetro..."
+                                                        class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100" />
+
+                                                    <div v-if="open"
+                                                        class="absolute z-50 mt-2 max-h-44 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+                                                        <div v-for="item in filtered" :key="item"
+                                                            @click="selectItem(item)"
+                                                            class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-blue-50 hover:text-blue-700">
+                                                            <i class="fa-solid fa-vial text-xs text-blue-400"></i>
+                                                            <span class="truncate">{{ item }}</span>
+                                                        </div>
+
+                                                        <div v-if="!filtered.length"
+                                                            class="flex items-center gap-2 px-3 py-3 text-xs text-slate-400">
+                                                            <i class="fa-regular fa-face-frown"></i>
+                                                            Sin resultados
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div class="flex justify-end">
-                                                <el-button type="primary" size="small" class="!rounded-lg"
+                                            <div
+                                                class="flex items-center justify-between border-t border-slate-100 pt-3">
+                                                <p class="text-xs text-slate-400">
+                                                    Agrega el parámetro seleccionado.
+                                                </p>
+
+                                                <el-button type="primary" size="small"
+                                                    class="!rounded-lg !border-0 !bg-blue-600 !font-semibold hover:!bg-blue-700"
                                                     @click="handleAddParameter">
-                                                    <i class="fa-solid fa-plus me-1"></i>
+                                                    <i class="fa-solid fa-plus mr-1"></i>
                                                     Agregar
                                                 </el-button>
                                             </div>
@@ -623,21 +703,28 @@
 
                                     <template #reference>
                                         <button
-                                            class="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100 transition">
+                                            class="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:border-blue-200 hover:bg-blue-100">
                                             <i class="fa-solid fa-plus text-xs"></i>
                                             Agregar parámetros
                                         </button>
                                     </template>
                                 </el-popover>
-                            </label>
-                            <el-input v-model="form.parameters" type="textarea" :rows="4" resize="none"
-                                placeholder="..." />
+                            </div>
+
+                            <el-input v-model="form.parameters" type="textarea" :rows="5" resize="none"
+                                placeholder="Los análisis requeridos aparecerán aquí..." class="custom-textarea" />
                         </div>
 
                         <div class="space-y-2 md:col-span-1">
-                            <label class="text-sm font-medium text-slate-700 mb-2 block">Observaciones</label>
-                            <el-input v-model="form.observations" type="textarea" :rows="4" resize="none"
-                                placeholder="Ingrese observaciones" />
+                            <label class="flex items-center pb-1.5 gap-2 text-sm font-semibold text-slate-700">
+                                <span class="grid h-7 w-7 place-items-center rounded-lg bg-amber-50 text-amber-600">
+                                    <i class="fa-regular fa-note-sticky text-xs"></i>
+                                </span>
+                                Observaciones
+                            </label>
+
+                            <el-input v-model="form.observations" type="textarea" :rows="5" resize="none"
+                                placeholder="Ingrese observaciones..." class="custom-textarea" />
                         </div>
                     </div>
                 </section>
@@ -651,14 +738,13 @@
                         Verifica la información antes de guardar el registro.
                     </p>
 
-                    <div class="flex flex-col-reverse gap-2 sm:flex-row">
-                        <el-button class="!m-0 !h-11 !rounded-xl !border-slate-300 !px-5" @click="handleClose">
+                    <div class="flex flex-col-reverse sm:flex-row">
+                        <el-button class="!m-0 !h-9 !rounded-xl !border-slate-300 !px-5" @click="handleClose">
                             Cancelar
                         </el-button>
 
                         <el-button type="primary" :loading="loadingSubmit" @click="onSubmit"
-                            class="custom-search-btn !h-[44px] !rounded-xl !border-0 !bg-emerald-400 !px-5 hover:!bg-emerald-500"
-                            v-tippy="'Buscar'">
+                            class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
                             <i class="fa-solid fa-cloud-arrow-up me-2"></i>
                             Guardar relaciones
                         </el-button>
@@ -670,7 +756,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElNotification } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { useWindowSize } from '@vueuse/core';
@@ -715,7 +801,8 @@ const computedDialogWidth = computed(() => {
 });
 
 const filters = reactive({
-    search: '',
+    search: null,
+    number_chain: null,
 })
 
 const emptyForm = () => ({
@@ -728,7 +815,6 @@ const emptyForm = () => ({
     type_sample: null,
     matriz: null,
     number_sample: null,
-    number_essays: null,
     number_essays: null,
     date_reception: null,
     date_sampling_init: null,
@@ -807,6 +893,8 @@ const onSubmit = async () => {
         }
 
         getReceptions(pagination.value.current_page)
+        resetForm();
+
     }
     catch (e) {
         handleErrorsExeption(e)
@@ -1301,14 +1389,29 @@ const handleAddParameter = () => {
     if (!parameter.value) return
 
     if (form.parameters) {
-        form.parameters += '\n' + parameter.value
+        form.parameters += '\n' + parameter.value + ','
     } else {
-        form.parameters = parameter.value
+        form.parameters = parameter.value + ','
     }
 
     parameter.value = null
     visible.value = false
 }
+
+const toReply = (row) => {
+    dialogVisible.value = true
+
+    form.company_id = row?.company_id
+    form.application_id = row?.application_id
+    form.order_id = row?.order_id
+    form.number_chain = row.content?.number_chain
+    form.number_report = row.content?.number_report
+    form.company_sampling_id = row.content?.company_sampling_id
+}
+
+watch(() => filters, (newVal) => {
+    getReceptions()
+}, { deep: true })
 
 onMounted(async () => {
     await getReceptions()
@@ -1353,5 +1456,9 @@ onMounted(async () => {
 
 :deep(.custom-table td.el-table__cell) {
     border-bottom: 1px solid #f1f5f9 !important;
+}
+
+:deep(.el-input__wrapper) {
+    border-radius: 10px !important;
 }
 </style>

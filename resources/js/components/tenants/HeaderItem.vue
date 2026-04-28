@@ -1,25 +1,34 @@
 <template>
     <div class="flex min-h-screen bg-slate-50">
         <aside ref="headerRef"
-            class="hidden md:flex md:w-80 lg:w-84 xl:w-84 shrink-0 flex-col border-r border-slate-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 h-screen z-40">
+            class="hidden md:flex lg:w-80 shrink-0 flex-col border-r border-slate-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 h-screen z-40">
             <div class="flex h-full flex-col">
                 <div class="border-b border-slate-200 px-4 py-4">
-                    <a href="#" class="group flex items-center gap-3 min-w-0">
+                    <a href="#"
+                        class="group flex items-center gap-3 p-2 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 transition-all duration-200">
                         <span
-                            class="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-400 text-white shadow-sm font-normal">
-                            <i class="fa-solid fa-flask-vial"></i>
-                        </span>
+                            class="relative grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md transition-all duration-200 group-hover:scale-105 group-hover:shadow-lg">
 
+                            <i class="fa-solid fa-flask-vial text-[16px]"></i>
+                            <span
+                                class="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition"></span>
+                        </span>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
+                                <span class="truncate text-sm font-bold tracking-tight text-slate-900 transition">
+                                    GreenLab
+                                </span>
+
                                 <span
-                                    class="truncate text-sm font-semibold tracking-tight text-slate-900">GreenLab</span>
-                                <span
-                                    class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                    class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                    <i class="fa-solid fa-crown text-[9px]"></i>
                                     Pro
                                 </span>
                             </div>
-                            <p class="truncate text-[12px] text-slate-500">Sistema LIMS</p>
+
+                            <p class="truncate text-[12px] text-slate-500 group-hover:text-slate-600 transition">
+                                Sistema LIMS
+                            </p>
                         </div>
                     </a>
 
@@ -75,8 +84,9 @@
                             <div v-if="menu.items?.length && openTop === menu.key" class="px-2 pb-2">
                                 <div v-for="item in menu.items" :key="item.key" class="relative">
                                     <button type="button"
-                                        class="w-full text-left group rounded-2xl border border-transparent bg-white p-3 hover:bg-slate-50 transition"
-                                        @click="item.children?.length ? toggleSub(item.key) : go(item)">
+                                        class="w-full text-left group rounded-2xl border border-transparent p-3 hover:bg-slate-50 transition"
+                                        @click="item.children?.length ? toggleSub(item.key) : go(item)"
+                                        :class="item.key == $route.name ? 'bg-gradient-to-tr from-slate-50 to-slate-100' : 'bg-white'">
                                         <div class="flex items-start gap-3">
                                             <span class="grid h-10 w-10 place-items-center rounded-2xl"
                                                 :class="item.iconBg">
@@ -99,11 +109,6 @@
                                                 </div>
 
                                                 <p class="text-xs text-slate-600">{{ item.desc }}</p>
-
-                                                <p v-if="item.cta" class="mt-2 text-xs font-semibold"
-                                                    :class="item.ctaColor">
-                                                    {{ item.cta }}
-                                                </p>
                                             </div>
                                         </div>
                                     </button>
@@ -157,11 +162,11 @@
 
                         <div class="relative flex-1">
                             <button
-                                class="w-full inline-flex h-10 items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-2 pr-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[.98] transition"
+                                class="w-full inline-flex h-11 items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-2 pr-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[.98] transition"
                                 :aria-expanded="openTop === 'profile' ? 'true' : 'false'" @click="toggleTop('profile')">
                                 <span class="flex items-center gap-2">
                                     <span
-                                        class="grid h-9 w-9 place-items-center rounded-2xl bg-slate-900 text-white text-xs font-black">
+                                        class="grid h-9 w-9 place-items-center rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 text-white text-xs font-black">
                                         K
                                     </span>
                                     <span class="truncate">Mi cuenta</span>
@@ -461,7 +466,7 @@ const router = useRouter()
 function go(item, closeMobile = false) {
     router.push({ name: item?.key })
 
-    closeAll();
+    // closeAll();
     if (closeMobile) mobileOpen.value = false;
 }
 
@@ -478,10 +483,10 @@ function onPointerDown(e) {
     }
 }
 
-onMounted(() => {
-    window.addEventListener("keydown", onKeydown);
-    window.addEventListener("pointerdown", onPointerDown, { capture: true });
-});
+// onMounted(() => {
+//     window.addEventListener("keydown", onKeydown);
+//     window.addEventListener("pointerdown", onPointerDown, { capture: true });
+// });
 
 onBeforeUnmount(() => {
     window.removeEventListener("keydown", onKeydown);
