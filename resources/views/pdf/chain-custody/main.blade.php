@@ -133,13 +133,13 @@
             <tr>
                 <td>
                     <div class="logo-box">
-                        GreenLab Perú
+
                     </div>
                 </td>
                 <td class="meta">
                     <strong>Identificación:</strong> F-PR-01-2<br>
                     <strong>Revisión:</strong> 01<br>
-                    <strong>Inicio de Vigencia:</strong> 2025-09-12
+                    <strong>Inicio de Vigencia:</strong> {{ $created_at ?? '' }}
                 </td>
             </tr>
         </table>

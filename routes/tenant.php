@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\tenant\AuthApiController;
 use App\Http\Controllers\tenant\CompaniesApiController;
 use App\Http\Controllers\tenant\ConditionsApiController;
+use App\Http\Controllers\tenant\ConsultingRucApiController;
 use App\Http\Controllers\tenant\EssaysApiController;
 use App\Http\Controllers\tenant\ImportApiController;
 use App\Http\Controllers\tenant\ListApiController;
@@ -14,19 +15,16 @@ use App\Http\Controllers\tenant\MethodologiesApiController;
 use App\Http\Controllers\tenant\OrderServiceApiController;
 use App\Http\Controllers\tenant\QuotesApiController;
 use App\Http\Controllers\tenant\ReceptionApiController;
+use App\Http\Controllers\tenant\ReportOtsApiController;
 use App\Http\Controllers\tenant\ServiceApiController;
 use App\Http\Controllers\tenant\UnitsMeasurementApiController;
 use App\Http\Controllers\tenant\UserApiController;
 use App\Http\Middleware\AllowExpiredTokenOnly;
 use App\Http\Middleware\JWTMiddleware;
-use App\Models\tenant\OrderService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
-use Illuminate\Support\Facades\Log;
-
 
 Route::middleware([
     InitializeTenancyByDomain::class,
@@ -73,6 +71,13 @@ Route::middleware([
                 Route::post('', 'import');
             });
 
+            Route::get('consulting-ruc/{ruc}', [ConsultingRucApiController::class, 'consulting']);
+
+            Route::controller(ReportOtsApiController::class)->prefix('report-ots')->group(function() {
+
+                Route::get('', 'index');
+            });
+
             Route::controller(ReceptionApiController::class)->prefix('reception')->group(function () {
 
                 Route::get('', 'index');
@@ -83,7 +88,7 @@ Route::middleware([
                 Route::post('generate-ot', 'generateOT');
 
                 Route::get('download-excel/{id}', 'downloadExcelOT');
-                Route::get('download-pdf/{id}', 'downloadPdfOT');
+                Route::get('view-pdf-ot/{id}', 'viewPdfOT');
             });
 
             Route::controller(OrderServiceApiController::class)->prefix('order-service')->group(function () {

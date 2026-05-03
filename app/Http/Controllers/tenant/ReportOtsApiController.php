@@ -14,6 +14,9 @@ class ReportOtsApiController extends Controller
     {
         try {
             $data = OtsGenerate::query()
+                ->with([
+                    'user:id,full_name,type_document,document_number'
+                ])
                 ->paginate(15);
 
             return $this->sendResponse($data, 'Enviando OTs');

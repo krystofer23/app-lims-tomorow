@@ -190,7 +190,7 @@ class ReceptionApiController extends Controller
             );
 
             return $this->sendResponse($otsGenerate, 'Datos generados correctamente');
-        } catch (\Throwable $e) {
+        } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
     }
@@ -211,7 +211,7 @@ class ReceptionApiController extends Controller
         }
     }
 
-    public function downloadPdfOT($id)
+    public function viewPdfOT(int $id)
     {
         try {
             $ot = OtsGenerate::findOrFail($id);
@@ -220,7 +220,7 @@ class ReceptionApiController extends Controller
             $pdf = Pdf::loadView('pdf.chain-custody.main', $payload)
                 ->setPaper('a4', 'portrait');
 
-            return $pdf->download('orden_trabajo_' . $ot->id . '.pdf');
+            return $pdf->stream('orden_trabajo_' . $ot->id . '.pdf');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
@@ -244,6 +244,7 @@ class ReceptionApiController extends Controller
             'matriz' => $firstOt['matriz'] ?? '-',
             'date_agreed' => $date ?? '-',
             'hour' => $hour ?? '-',
+            'created_at' => optional($ot?->created_at)->format('Y-m-d')
         ];
     }
 }

@@ -23,7 +23,9 @@
 import { ref, watch } from 'vue'
 import { handleErrorsExeption } from '../../../../stores/handleErrorsExeption'
 import tenant from '../../../../stores/tenant'
-import { ElMessage, ElNotification } from 'element-plus'
+import { usePdfViewerStore } from '../../../../stores/pdf-viewer'
+
+const pdfViewerStore = usePdfViewerStore()
 
 const props = defineProps({
     number_chain: {
@@ -36,10 +38,10 @@ const props = defineProps({
 })
 
 const emits = defineEmits(['close'])
+
 const loadingExcel = ref(false)
 const loadingPdf = ref(false)
 const loading = ref(false)
-
 const chainId = ref(null)
 
 const onSubmit = async () => {
@@ -53,52 +55,64 @@ const onSubmit = async () => {
         if (data.data) {
             chainId.value = data.data.id
         }
-    }
-    catch (e) {
+    } catch (e) {
         handleErrorsExeption(e)
-    }
-    finally {
+    } finally {
         loading.value = false
     }
 }
 
 const downloadFile = async (type) => {
     try {
-        if (type === 'pdf') loadingPdf.value = true
-        if (type === 'excel') loadingExcel.value = true
+        if (!chainId.value) return
 
-        const url =
-            type === 'excel'
-                ? `reception/download-excel/${chainId.value}`
-                : `reception/download-pdf/${chainId.value}`
+        if (type === 'pdf') {
+            loadingPdf.value = true
 
-        const response = await tenant.get(url, {
-            responseType: 'blob'
-        })
+            try {
+                const response = await tenant.get(`reception/view-pdf-ot/${row.id}`, {
+                    responseType: 'blob'
+                })
 
-        const blob = new Blob([response.data], {
-            type:
-                type === 'pdf'
-                    ? 'application/pdf'
-                    : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        })
+                const blob = new Blob([response.data], {
+                    type: 'application/pdf'
+                })
 
-        const downloadUrl = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
+                const pdfUrl = window.URL.createObjectURL(blob)
 
-        link.href = downloadUrl
-        link.download =
-            type === 'pdf'
-                ? `orden_trabajo_${props.code}.pdf`
-                : `orden_trabajo_${props.code}.xlsx`
+                pdfViewerStore.url = pdfUrl
+                pdfViewerStore.state = true
+            }
+            catch (e) {
+                handleErrorsExeption(e)
+            }
+            finally {
+                loadingPdf.value = false
+            }
+        }
+        else {
+            loadingExcel.value = true
 
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
+            const response = await tenant.get(`reception/download-excel/${chainId.value}`, {
+                responseType: 'blob'
+            })
 
-        window.URL.revokeObjectURL(downloadUrl)
+            const blob = new Blob([response.data], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            })
 
-        emits('close')
+            const downloadUrl = window.URL.createObjectURL(blob)
+            const link = document.createElement('a')
+
+            link.href = downloadUrl
+            link.download = `orden_trabajo_${chainId.value}.xlsx`
+
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+
+            window.URL.revokeObjectURL(downloadUrl)
+        }
     }
     catch (e) {
         handleErrorsExeption(e)

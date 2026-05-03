@@ -322,10 +322,10 @@
                 <el-table-column fixed="right" width="120" label="Acciones">
                     <template #default="{ row }">
                         <el-button-group>
-                            <el-button size="small" type="warning" v-tippy="'Editar'">
+                            <el-button @click="handleEdit(row)" size="small" type="warning" v-tippy="'Editar'">
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </el-button>
-                            <el-button size="small" type="danger" v-tippy="'Eliminar'">
+                            <el-button @click="handleDelete(row.id)" size="small" type="danger" v-tippy="'Eliminar'">
                                 <i class="fa-regular fa-trash-can"></i>
                             </el-button>
                         </el-button-group>
@@ -365,7 +365,7 @@
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-bold tracking-tight text-slate-900">
+                        <h3 class="text-xl font-semibold tracking-tight text-slate-700">
                             {{ form.id ? 'Editar registro' : 'Agregar registro' }}
                         </h3>
                         <p class="text-sm text-slate-500">
@@ -378,22 +378,21 @@
 
         <div class="px-1 pb-2">
             <div class="space-y-5">
-                <section class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 md:p-5">
-                    <div class="mb-4 flex items-center gap-3">
-                        <div
-                            class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200">
-                            <i class="fa-solid fa-building"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                                Datos principales
-                            </h4>
-                            <p class="text-xs text-slate-500">
-                                Información base del cliente y la orden.
-                            </p>
-                        </div>
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200">
+                        <i class="fa-solid fa-building"></i>
                     </div>
-
+                    <div>
+                        <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                            Datos principales
+                        </h4>
+                        <p class="text-xs text-slate-500">
+                            Información base del cliente y la orden.
+                        </p>
+                    </div>
+                </div>
+                <section class="rounded-2xl border border-slate-200 p-4 md:p-5">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-slate-700">Empresa</label>
@@ -426,22 +425,22 @@
                     </div>
                 </section>
 
-                <section class="rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
-                    <div class="mb-4 flex items-center gap-3">
-                        <div
-                            class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 ring-1 ring-sky-200">
-                            <i class="fa-solid fa-link"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                                Datos de cadena de custodia
-                            </h4>
-                            <p class="text-xs text-slate-500">
-                                Datos operativos y de trazabilidad del registro.
-                            </p>
-                        </div>
+                <div class="mb-4 flex items-center gap-3">
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 ring-1 ring-sky-200">
+                        <i class="fa-solid fa-link"></i>
                     </div>
+                    <div>
+                        <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                            Datos de cadena de custodia
+                        </h4>
+                        <p class="text-xs text-slate-500">
+                            Datos operativos y de trazabilidad del registro.
+                        </p>
+                    </div>
+                </div>
 
+                <section class="rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-slate-700">N° Cadena de custodia</label>
@@ -624,31 +623,40 @@
                     </div>
                 </section>
 
-                <section class="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 md:p-5">
-                    <div class="mb-4 flex items-center gap-3">
-                        <div
-                            class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-200">
-                            <i class="fa-solid fa-file-lines"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                                Detalles adicionales
-                            </h4>
-                            <p class="text-xs text-slate-500">
-                                Información complementaria del registro.
-                            </p>
-                        </div>
+                <div class="mb-4 flex items-center gap-3">
+                    <div
+                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-200">
+                        <i class="fa-solid fa-file-lines"></i>
                     </div>
+                    <div>
+                        <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                            Detalles adicionales
+                        </h4>
+                        <p class="text-xs text-slate-500">
+                            Información complementaria del registro.
+                        </p>
+                    </div>
+                </div>
 
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div class="space-y-2 md:col-span-2">
-                            <div class="flex items-center justify-between gap-3">
-                                <label class="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                                    <span class="grid h-7 w-7 place-items-center rounded-lg bg-blue-50 text-blue-600">
-                                        <i class="fa-solid fa-list-check text-xs"></i>
+                <section class="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 md:p-5">
+                    <div class="grid grid-cols-1 gap-5 md:grid-cols-12">
+                        <section
+                            class="col-span-12 md:col-span-7 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div class="mb-4 flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-600">
+                                        <i class="fa-solid fa-list-check text-sm"></i>
                                     </span>
-                                    Análisis requeridos
-                                </label>
+
+                                    <div>
+                                        <h3 class="text-sm font-bold text-slate-800">
+                                            Análisis requeridos
+                                        </h3>
+                                        <p class="text-xs text-slate-400">
+                                            Parámetros solicitados para la muestra
+                                        </p>
+                                    </div>
+                                </div>
 
                                 <el-popover placement="bottom-end" width="430" trigger="click" v-model:visible="visible"
                                     popper-class="parameter-popover">
@@ -703,29 +711,64 @@
 
                                     <template #reference>
                                         <button
-                                            class="inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-600 transition hover:border-blue-200 hover:bg-blue-100">
+                                            class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md">
                                             <i class="fa-solid fa-plus text-xs"></i>
-                                            Agregar parámetros
+                                            Agregar
                                         </button>
                                     </template>
                                 </el-popover>
                             </div>
 
-                            <el-input v-model="form.parameters" type="textarea" :rows="5" resize="none"
-                                placeholder="Los análisis requeridos aparecerán aquí..." class="custom-textarea" />
-                        </div>
+                            <div class="overflow-hidden rounded-xl border border-slate-200">
+                                <el-table :data="form.parameters" size="small" class="custom-parameter-table"
+                                    empty-text="No hay parámetros agregados">
+                                    <el-table-column label="Parámetro" min-width="220">
+                                        <template #default="{ row }">
+                                            <div class="flex items-center gap-2">
+                                                <span
+                                                    class="grid h-7 w-7 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                                                    <i class="fa-solid fa-vial text-xs"></i>
+                                                </span>
 
-                        <div class="space-y-2 md:col-span-1">
-                            <label class="flex items-center pb-1.5 gap-2 text-sm font-semibold text-slate-700">
-                                <span class="grid h-7 w-7 place-items-center rounded-lg bg-amber-50 text-amber-600">
-                                    <i class="fa-regular fa-note-sticky text-xs"></i>
+                                                <el-input :model-value="row" readonly class="parameter-input" />
+                                            </div>
+                                        </template>
+                                    </el-table-column>
+
+                                    <el-table-column label="Acción" width="95" align="center">
+                                        <template #default="scope">
+                                            <el-tooltip content="Eliminar parámetro" placement="top">
+                                                <el-button @click="remove(scope.$index)" type="danger" plain circle
+                                                    class="!h-8 !w-8 !rounded-xl hover:scale-105 transition-all duration-200">
+                                                    <i class="fa-regular fa-trash-can text-sm"></i>
+                                                </el-button>
+                                            </el-tooltip>
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </div>
+                        </section>
+
+                        <section
+                            class="col-span-12 md:col-span-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div class="mb-4 flex items-center gap-3">
+                                <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-50 text-amber-600">
+                                    <i class="fa-regular fa-note-sticky text-sm"></i>
                                 </span>
-                                Observaciones
-                            </label>
 
-                            <el-input v-model="form.observations" type="textarea" :rows="5" resize="none"
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-800">
+                                        Observaciones
+                                    </h3>
+                                    <p class="text-xs text-slate-400">
+                                        Comentarios adicionales
+                                    </p>
+                                </div>
+                            </div>
+
+                            <el-input v-model="form.observations" type="textarea" :rows="7" resize="none"
                                 placeholder="Ingrese observaciones..." class="custom-textarea" />
-                        </div>
+                        </section>
                     </div>
                 </section>
             </div>
@@ -847,7 +890,7 @@ const emptyForm = () => ({
     code_season: null,
     condition_report: null,
     other_company_id: null,
-    parameters: null,
+    parameters: [],
     observations: null,
 })
 
@@ -870,6 +913,26 @@ const pagination = ref({
     total: 0,
     last_page: 0,
 })
+
+const handleDelete = async (id) => {
+    const ok = await confirmRef.value?.open({
+        title: 'Seguro que deseas eliminar',
+        message: 'Si estas seguro dale continuar?',
+        confirmText: 'Sí, eliminar',
+        cancelText: 'Cancelar',
+    })
+
+    if (ok) {
+        try {
+            const { data } = await tenant.delete(`reception/${id}`)
+            ElNotification.success(data.message)
+            getReceptions(pagination.value.current_page)
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+    }
+}
 
 const getReceptions = async (page = 1) => {
     loading.value = true
@@ -916,7 +979,6 @@ const onSubmit = async () => {
 
         getReceptions(pagination.value.current_page)
         resetForm();
-
     }
     catch (e) {
         handleErrorsExeption(e)
@@ -1410,14 +1472,14 @@ const selectItem = (item) => {
 const handleAddParameter = () => {
     if (!parameter.value) return
 
-    if (form.parameters) {
-        form.parameters += '\n' + parameter.value + ','
-    } else {
-        form.parameters = parameter.value + ','
-    }
+    form.parameters.push(parameter.value)
 
     parameter.value = null
     visible.value = false
+}
+
+const remove = async (index) => {
+    form.parameters.splice(index, 1)
 }
 
 const toReply = (row) => {
@@ -1429,6 +1491,32 @@ const toReply = (row) => {
     form.number_chain = row.content?.number_chain
     form.number_report = row.content?.number_report
     form.company_sampling_id = row.content?.company_sampling_id
+}
+
+const handleEdit = (row) => {
+    dialogVisible.value = true
+
+    form.id = row?.id
+    form.company_id = row?.company_id
+    form.application_id = row?.application_id
+    form.order_id = row.order_id
+    form.number_chain = row.content?.number_chain
+    form.number_report = row.content?.number_report
+    form.type_sample = row.content?.type_sample
+    form.matriz = row.content?.matriz
+    form.number_sample = row.content?.number_sample
+    form.number_essays = row.content?.number_essays
+    form.date_reception = row.content?.date_reception
+    form.date_sampling_init = row.content?.date_sampling_init
+    form.date_sampling_end = row.content?.date_sampling_end
+    form.date_agreed = row.content?.date_agreed
+    form.company_sampling_id = row.content?.company_sampling_id
+    form.code_lab = row.content?.code_lab
+    form.code_season = row.content?.code_season
+    form.condition_report = row.content?.condition_report
+    form.other_company_id = row.content?.other_company_id
+    form.parameters = row.content?.parameters
+    form.observations = row.content?.observations
 }
 
 watch(() => filters, (newVal) => {
@@ -1482,5 +1570,35 @@ onMounted(async () => {
 
 :deep(.el-input__wrapper) {
     border-radius: 10px !important;
+}
+
+.custom-parameter-table :deep(.el-table__header th) {
+    background: #f8fafc !important;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.parameter-input :deep(.el-input__wrapper) {
+    box-shadow: none !important;
+    background: transparent !important;
+    padding-left: 0;
+}
+
+.parameter-input :deep(.el-input__inner) {
+    color: #334155;
+    font-weight: 600;
+}
+
+.custom-textarea :deep(.el-textarea__inner) {
+    border-radius: 14px;
+    border-color: #e2e8f0;
+    background: #f8fafc;
+    font-size: 13px;
+}
+
+.custom-textarea :deep(.el-textarea__inner:focus) {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 4px #fef3c7;
 }
 </style>

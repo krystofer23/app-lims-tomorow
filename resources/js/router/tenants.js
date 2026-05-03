@@ -134,5 +134,11 @@ export const routesTenants = [
         name: 'information',
         component: () => import('../views/tenants/information/IndexView.vue'),
         meta: { scope: 'tenant'}
+    },
+    {
+        path: '/report-ots',
+        name: 'report-ots',
+        component: () => import('../views/tenants/reports/ReportOtsView.vue'),
+        meta: { scope: 'tenant'}
     }
 ]
