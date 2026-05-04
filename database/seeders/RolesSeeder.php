@@ -18,6 +18,7 @@ class RolesSeeder extends Seeder
             'Comercial',
             'Recepción',
             'Profesional',
+            'Informes',
         ];
 
         foreach ($roles as $key => $value) {

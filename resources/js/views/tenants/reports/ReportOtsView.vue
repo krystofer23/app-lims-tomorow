@@ -49,16 +49,6 @@
         <div class="overflow-x-auto">
             <el-table :data="reportsOts" v-loading="loading" stripe :header-cell-style="headerStyle"
                 :row-class-name="rowClassName" class="custom-table w-full" table-layout="auto">
-                <el-table-column prop="id" label="#" width="80">
-                    <template #default="{ row }">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-700">
-                                {{ row.id }}
-                            </span>
-                        </div>
-                    </template>
-                </el-table-column>
 
                 <el-table-column label="OS" min-width="160">
                     <template #default="{ row }">
@@ -107,16 +97,54 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="Parámetros" min-width="230">
+                <el-table-column label="Parámetros" min-width="260">
                     <template #default="{ row }">
-                        <div class="space-y-1">
-                            <template v-for="(item, index) in row.content" :key="index">
-                                <div v-for="(parameter, pIndex) in splitParameters(item.content?.parameters)"
-                                    :key="`${index}-${pIndex}`"
-                                    class="inline-flex mr-1 mb-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                                    {{ parameter }}
+                        <div class="space-y-2">
+                            <div v-for="(item, index) in row.content" :key="index"
+                                class="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+                                <div class="min-w-0">
+                                    <p class="truncate text-xs font-bold text-slate-700">
+                                        {{ item.code_lab || item.content?.code_lab || `Registro ${index + 1}` }}
+                                    </p>
+
+                                    <p class="text-[11px] text-slate-400">
+                                        {{ getParameters(item).length }} parámetro(s)
+                                    </p>
                                 </div>
-                            </template>
+
+                                <el-popover placement="left" width="360" trigger="click"
+                                    popper-class="parameters-popover">
+                                    <template #reference>
+                                        <el-button size="small" type="success" plain>
+                                            Ver
+                                        </el-button>
+                                    </template>
+
+                                    <div class="space-y-3">
+                                        <div>
+                                            <p class="text-sm font-bold text-slate-800">
+                                                {{ item.content?.matriz || 'Matriz no indicada' }}
+                                            </p>
+                                            <p class="text-xs text-slate-400">
+                                                {{ item.content?.type_sample || 'Tipo de muestra no indicado' }}
+                                            </p>
+                                        </div>
+
+                                        <div class="max-h-64 overflow-y-auto pr-1">
+                                            <div class="flex flex-wrap gap-1.5">
+                                                <span v-for="(parameter, pIndex) in getParameters(item)" :key="pIndex"
+                                                    class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                                                    {{ parameter }}
+                                                </span>
+                                            </div>
+
+                                            <p v-if="!getParameters(item).length" class="text-xs text-slate-400">
+                                                No hay parámetros registrados.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </el-popover>
+                            </div>
                         </div>
                     </template>
                 </el-table-column>
@@ -209,13 +237,13 @@
                 <el-table-column fixed="right" width="130" label="Acciones">
                     <template #default="{ row }">
                         <el-button-group>
-                            <el-button :loading="row.loading" size="small" type="danger" v-tippy="'Ver pdf'"
+                            <el-button :loading="row.loadingPdf" size="small" type="danger" v-tippy="'Ver pdf'"
                                 @click="handleView(row)">
                                 <i class="fa-solid fa-file-pdf"></i>
                             </el-button>
 
-                            <el-button :loading="row.loading" size="small" type="success" v-tippy="'Descargar excel'"
-                                @click="handleDownload(row)">
+                            <el-button :loading="row.loadingExcel" size="small" type="success"
+                                v-tippy="'Descargar excel'" @click="handleDownload(row)">
                                 <i class="fa-solid fa-file-excel"></i>
                             </el-button>
                         </el-button-group>
@@ -367,7 +395,7 @@ const getInitials = (name) => {
 }
 
 const handleView = async (row) => {
-    row.loading = true
+    row.loadingPdf = true
 
     try {
         const response = await tenant.get(`reception/view-pdf-ot/${row.id}`, {
@@ -387,12 +415,12 @@ const handleView = async (row) => {
         handleErrorsExeption(e)
     }
     finally {
-        row.loading = false
+        row.loadingPdf = false
     }
 }
 
 const handleDownload = async (row) => {
-    row.loading = true
+    row.loadingExcel = true
 
     try {
         const response = await tenant.get(`reception/download-excel/${row.id}`, {
@@ -419,8 +447,33 @@ const handleDownload = async (row) => {
         handleErrorsExeption(e)
     }
     finally {
-        row.loading = false
+        row.loadingExcel = false
     }
+}
+
+const getParameters = (item) => {
+    const parameters = item?.content?.parameters
+
+    if (!parameters) return []
+
+    if (Array.isArray(parameters)) {
+        return parameters
+            .map(parameter => {
+                if (typeof parameter === 'string') return parameter.trim()
+
+                return parameter?.name ||
+                    parameter?.description ||
+                    parameter?.parameter ||
+                    parameter?.label ||
+                    ''
+            })
+            .filter(Boolean)
+    }
+
+    return String(parameters)
+        .split(/\r?\n|,/)
+        .map(parameter => parameter.trim())
+        .filter(Boolean)
 }
 
 onMounted(() => {

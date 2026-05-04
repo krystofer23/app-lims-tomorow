@@ -10,7 +10,7 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
             color: #111827;
-            margin: 25px;
+            margin: 15px;
         }
 
         .header {
@@ -88,16 +88,18 @@
         .main-table th {
             background: #92d050;
             border: 1px solid #111827;
-            padding: 8px;
+            padding: 4px;
             text-align: center;
             font-weight: bold;
+            font-size: 10px !important;
         }
 
         .main-table td {
             border: 1px solid #111827;
-            padding: 7px;
+            padding: 5px;
             text-align: center;
             vertical-align: middle;
+            font-size: 10px !important;
         }
 
         .code-col {
@@ -132,14 +134,15 @@
         <table class="header-table">
             <tr>
                 <td>
-                    <div class="logo-box">
-
+                    <div class="">
+                        <img src="{{ storage_path('app/public/logos/logo.jpg') }}" alt="logo" class="logo"
+                            width="200px" height="75px">
                     </div>
                 </td>
                 <td class="meta">
                     <strong>Identificación:</strong> F-PR-01-2<br>
                     <strong>Revisión:</strong> 01<br>
-                    <strong>Inicio de Vigencia:</strong> {{ $created_at ?? '' }}
+                    <strong>Inicio de Vigencia:</strong> {{ '2025-09-19' }}
                 </td>
             </tr>
         </table>
@@ -184,12 +187,38 @@
         * Este documento debe ser entregado junto con los siguientes análisis requeridos *
     </div>
 
+    <table class="main-table">
+        <thead>
+            <tr>
+                <th>Código de Laboratorio<br>(muestras)</th>
+                <th colspan="{{ max(($maxColumns ?? 1) - 1, 1) }}">
+                    Análisis Requeridos
+                </th>
+            </tr>
+        </thead>
 
+        <tbody>
+            @forelse ($rows as $row)
+                <tr>
+                    @foreach ($row as $cell)
+                        <td>
+                            {{ $cell ?? '-' }}
+                        </td>
+                    @endforeach
 
-    <div class="footer">
-        Documento generado automáticamente - GreenLab Perú S.A.C.
-    </div>
-
+                    @for ($i = count($row); $i < $maxColumns; $i++)
+                        <td>-</td>
+                    @endfor
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="{{ $maxColumns ?? 2 }}">
+                        No hay análisis requeridos
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
 </body>
 
 </html>

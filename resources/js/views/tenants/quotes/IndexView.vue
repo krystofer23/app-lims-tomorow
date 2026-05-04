@@ -5,7 +5,7 @@
             <div class="flex items-center gap-3">
                 <div
                     class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-100">
-                    <i class="fa-regular fa-file-lines text-lg"></i>
+                    <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
                 </div>
 
                 <div class="min-w-0">
@@ -34,7 +34,7 @@
 
             <el-button @click="$router.push('/quote-create')" type="primary"
                 class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
-                <i class="fa-regular fa-file-lines mr-2"></i>
+                <i class="fa-solid fa-file-invoice-dollar mr-2"></i>
                 Agregar Registro
             </el-button>
         </div>

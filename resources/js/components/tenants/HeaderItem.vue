@@ -457,7 +457,6 @@ const router = useRouter()
 function go(item, closeMobile = false) {
     router.push({ name: item?.key })
 
-    // closeAll();
     if (closeMobile) mobileOpen.value = false;
 }
 
@@ -484,7 +483,7 @@ const menus = computed(() => {
         {
             key: "admision",
             label: "Admisión",
-            icon: "fa-solid fa-laptop-medical",
+            icon: "fa-solid fa-door-open",
             variant: "mega",
             footerText: "Accede rápido a los módulos principales de admisión.",
             items: [
@@ -495,7 +494,7 @@ const menus = computed(() => {
                     cta: "Ir →",
                     ctaColor: "text-emerald-700",
                     iconBg: "bg-emerald-50 text-emerald-700",
-                    icon: "fa-solid fa-file-lines",
+                    icon: "fa-solid fa-file-invoice-dollar",
                     subtitle: "Cotizaciones",
                 },
                 {
@@ -503,9 +502,9 @@ const menus = computed(() => {
                     title: "Órdenes de Servicio",
                     desc: "Módulo de OS",
                     cta: "Ir →",
-                    ctaColor: "text-emerald-700",
+                    ctaColor: "text-blue-700",
                     iconBg: "bg-blue-50 text-blue-700",
-                    icon: "fa-solid fa-file-export",
+                    icon: "fa-solid fa-clipboard-list",
                     subtitle: "Órdenes de Servicio",
                 },
                 {
@@ -515,7 +514,7 @@ const menus = computed(() => {
                     cta: "Ir →",
                     ctaColor: "text-orange-700",
                     iconBg: "bg-orange-50 text-orange-700",
-                    icon: "fa-solid fa-satellite-dish",
+                    icon: "fa-solid fa-truck-ramp-box",
                     subtitle: "Recepción",
                 },
                 {
@@ -525,7 +524,7 @@ const menus = computed(() => {
                     cta: "Ir →",
                     ctaColor: "text-red-700",
                     iconBg: "bg-red-50 text-red-700",
-                    icon: "fa-solid fa-satellite-dish",
+                    icon: "fa-solid fa-file-shield",
                     subtitle: "Informes",
                 },
                 {
@@ -535,7 +534,7 @@ const menus = computed(() => {
                     cta: "Ir →",
                     ctaColor: "text-indigo-700",
                     iconBg: "bg-indigo-50 text-indigo-700",
-                    icon: "fa-solid fa-building",
+                    icon: "fa-solid fa-building-user",
                     subtitle: "Empresas",
                 },
             ],
@@ -543,18 +542,18 @@ const menus = computed(() => {
         {
             key: "reports",
             label: "Reportes",
-            icon: "fa-solid fa-bug",
+            icon: "fa-solid fa-chart-column",
             variant: "mega",
             footerText: "Ver reportes y datos generados",
             items: [
                 {
                     key: "report-ots",
                     title: "Reporte de OTS",
-                    desc: "Módulo de reporte de ots",
+                    desc: "Módulo de reporte de OTS",
                     cta: "Ir →",
                     ctaColor: "text-blue-700",
                     iconBg: "bg-blue-50 text-blue-700",
-                    icon: "fa-solid fa-arrows-turn-to-dots",
+                    icon: "fa-solid fa-file-lines",
                     subtitle: "Reporte de OTS",
                 }
             ]
@@ -562,7 +561,7 @@ const menus = computed(() => {
         {
             key: "settings",
             label: "Configuración",
-            icon: "fa-solid fa-gear",
+            icon: "fa-solid fa-sliders",
             variant: "mega",
             footerText: "Configura usuarios, roles, y catálogos del sistema.",
             items: [
@@ -573,7 +572,7 @@ const menus = computed(() => {
                     cta: "Ir →",
                     ctaColor: "text-blue-700",
                     iconBg: "bg-blue-50 text-blue-700",
-                    icon: "fa-solid fa-user-graduate",
+                    icon: "fa-solid fa-user-tie",
                     subtitle: "Profesionales",
                 },
                 {
@@ -583,7 +582,7 @@ const menus = computed(() => {
                     cta: "Ir →",
                     ctaColor: "text-emerald-700",
                     iconBg: "bg-emerald-50 text-emerald-700",
-                    icon: "fa-solid fa-user",
+                    icon: "fa-solid fa-users",
                     subtitle: "Usuarios",
                 },
                 {
@@ -593,7 +592,7 @@ const menus = computed(() => {
                     cta: "Ver Más →",
                     ctaColor: "text-amber-700",
                     iconBg: "bg-amber-50 text-amber-700",
-                    icon: "fa-solid fa-microscope",
+                    icon: "fa-solid fa-vials",
                     subtitle: "Laboratorio",
                     children: [
                         {
@@ -601,28 +600,28 @@ const menus = computed(() => {
                             title: "Analisis de Laboratorio",
                             desc: "Modulo de analisis de laboratorio",
                             iconBg: "bg-purple-50 text-purple-700",
-                            icon: "fa-solid fa-flask",
+                            icon: "fa-solid fa-flask-vial",
                         },
                         {
                             key: "matriz",
                             title: "Matriz",
                             desc: "Modulo de matrices",
                             iconBg: "bg-orange-50 text-orange-700",
-                            icon: "fa-solid fa-qrcode",
+                            icon: "fa-solid fa-table-cells-large",
                         },
                         {
                             key: "essays",
                             title: "Ensayos",
-                            desc: "Modulo de unidad de medida",
+                            desc: "Modulo de ensayos",
                             iconBg: "bg-blue-50 text-blue-700",
-                            icon: "fa-solid fa-file-half-dashed",
+                            icon: "fa-solid fa-clipboard-check",
                         },
                         {
                             key: "methodologies",
                             title: "Metodologias",
                             desc: "Modulo de metodologias",
                             iconBg: "bg-red-50 text-red-700",
-                            icon: "fa-solid fa-note-sticky",
+                            icon: "fa-solid fa-list-check",
                         },
                         {
                             key: "units-measurement",
@@ -636,7 +635,7 @@ const menus = computed(() => {
                             title: "Condiciones",
                             desc: "Modulo de condiciones",
                             iconBg: "bg-indigo-50 text-indigo-700",
-                            icon: "fa-solid fa-compress",
+                            icon: "fa-solid fa-sliders",
                         },
                     ],
                 },
@@ -655,36 +654,35 @@ const menus = computed(() => {
                             title: "Establecimientos",
                             desc: "Modulo de establecimientos",
                             iconBg: "bg-orange-50 text-orange-700",
-                            icon: "fa-solid fa-sign-hanging",
+                            icon: "fa-solid fa-building-user",
                         },
                         {
                             key: "environments",
                             title: "Ambientes",
                             desc: "Modulo de ambientes",
                             iconBg: "bg-sky-50 text-sky-700",
-                            icon: "fa-solid fa-solar-panel",
+                            icon: "fa-solid fa-seedling",
                         },
                         {
                             key: "services",
                             title: "Servicios",
                             desc: "Modulo de servicios",
                             iconBg: "bg-red-50 text-red-700",
-                            icon: "fa-solid fa-clipboard-list",
+                            icon: "fa-solid fa-handshake-angle",
                         },
                         {
                             key: "logistic-cats",
                             title: "Gastos Logisticos",
                             desc: "Modulo de gastos logisticos",
                             iconBg: "bg-green-50 text-green-700",
-                            icon: "fa-solid fa-coins",
+                            icon: "fa-solid fa-money-bill-wave",
                         },
                     ],
                 },
             ],
-        },
+        }
     ];
 
-    // Inicializa keys del mobileAcc dinámicamente para no olvidarte
     for (const m of data) {
         if (mobileAcc[m.key] === undefined) mobileAcc[m.key] = false;
         if (mobileSubs[m.key] === undefined) mobileSubs[m.key] = {};

@@ -218,7 +218,8 @@ class ReceptionApiController extends Controller
             $payload = $this->buildPayload($ot);
 
             $pdf = Pdf::loadView('pdf.chain-custody.main', $payload)
-                ->setPaper('a4', 'portrait');
+                ->setPaper('a4', 'portrait')
+                ->setOption('isRemoteEnabled', true);
 
             return $pdf->stream('orden_trabajo_' . $ot->id . '.pdf');
         } catch (Exception $e) {
@@ -237,6 +238,22 @@ class ReceptionApiController extends Controller
         $date = $carbon->toDateString();
         $hour = $carbon->toTimeString();
 
+        $rows = [];
+
+        foreach ($ot->content as $value) {
+            $content = $value['content'] ?? [];
+
+            $codeLab = $content['code_lab'] ?? null;
+            $parameters = $content['parameters'] ?? [];
+
+            $rows[] = array_values(array_filter([
+                ...(is_array($codeLab) ? $codeLab : [$codeLab]),
+                ...$parameters,
+            ]));
+        }
+
+        $maxColumns = collect($rows)->map(fn($row) => count($row))->max() ?? 1;
+
         return [
             'os' => $ot?->os ?? '-',
             'number_report' => $firstOt['number_report'] ?? '-',
@@ -244,7 +261,9 @@ class ReceptionApiController extends Controller
             'matriz' => $firstOt['matriz'] ?? '-',
             'date_agreed' => $date ?? '-',
             'hour' => $hour ?? '-',
-            'created_at' => optional($ot?->created_at)->format('Y-m-d')
+            'created_at' => optional($ot?->created_at)->format('Y-m-d'),
+            'rows' => $rows,
+            'maxColumns' => $maxColumns,
         ];
     }
 }

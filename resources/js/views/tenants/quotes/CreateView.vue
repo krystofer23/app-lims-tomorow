@@ -1,428 +1,633 @@
 <template>
-    <div class="w-full space-y-6">
-        <div
-            class="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-            <div class="flex items-start gap-4">
+    <div
+        class="flex flex-col gap-4 border-b border-slate-200/80 bg-white px-5 py-4   lg:flex-row lg:items-center lg:justify-between lg:px-6">
+        <div class="min-w-0">
+            <div class="flex items-center gap-3">
                 <div
-                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100">
-                    <i class="fa-solid fa-file-invoice-dollar text-xl"></i>
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-100">
+                    <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
                 </div>
 
-                <div>
-                    <h2 class="text-xl font-bold text-slate-900">
-                        {{ form.id ? 'Editar cotización' : 'Registrar cotización' }}
-                    </h2>
-                    <p class="mt-1 text-sm text-slate-500">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h1 class="truncate text-lg font-bold tracking-tight text-slate-900">
+                            {{ form.id ? 'Editar cotización' : 'Registrar cotización' }}
+                        </h1>
+                    </div>
+
+                    <p class="mt-0.5 truncate text-xs text-slate-500">
                         Completa la información general, agrega conceptos y revisa el resumen económico antes de
                         guardar.
                     </p>
                 </div>
             </div>
-
-            <div class="flex flex-wrap">
-                <el-button class="!rounded-xl !px-5" @click="onCancel">
-                    <i class="fa-solid fa-arrow-left me-2"></i>
-                    Volver
-                </el-button>
-
-                <el-button type="primary"
-                    class="!rounded-xl !border-emerald-500 !bg-emerald-500 !px-5 hover:!border-emerald-600 hover:!bg-emerald-600"
-                    :loading="loadingSubmit" @click="onSubmit">
-                    <i class="fa-solid fa-floppy-disk me-2"></i>
-                    {{ form.id ? 'Guardar cambios' : 'Guardar cotización' }}
-                </el-button>
-            </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Fecha de atención</p>
-                <p class="mt-2 text-sm font-semibold text-slate-800">
-                    {{ form.date_attention || 'Sin fecha' }}
-                </p>
-            </div>
+        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+            <el-button class="!rounded-xl !px-5 !h-9" @click="onCancel">
+                <i class="fa-solid fa-arrow-left me-2"></i>
+                Volver
+            </el-button>
 
-            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Conceptos agregados</p>
-                <p class="mt-2 text-sm font-semibold text-slate-800">
-                    {{ form.items.length + form.other_expenses.length }}
-                </p>
-            </div>
+            <el-button :loading="loadingSubmit" @click="onSubmit" type="primary"
+                class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
+                <i class="fa-solid fa-file-invoice-dollar mr-2"></i>
+                {{ form.id ? 'Guardar cambios' : 'Guardar cotización' }}
+            </el-button>
+        </div>
+    </div>
 
-            <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
-                <p class="text-xs font-medium uppercase tracking-wide text-emerald-600">Total actual</p>
-                <p class="mt-2 text-xl font-bold text-emerald-700">
-                    S/ {{ formatMoney(total) }}
-                </p>
-            </div>
-            <div class="w-full max-w-md rounded-xl bg-blue-50 border border-blue-100 p-4">
-                <div class="mb-2">
-                    <p class="text-sm font-semibold text-blue-900">
-                        Frecuencia de evaluación
+    <div class="bg-white p-5 md:p-6 space-y-6">
+        <div class="w-full space-y-6">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div class="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wide text-slate-400">
+                                Fecha de atención
+                            </p>
+
+                            <p class="mt-2 text-base font-bold text-slate-800">
+                                {{ form.date_attention || 'Sin fecha' }}
+                            </p>
+                        </div>
+
+                        <div
+                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                            <i class="fa-regular fa-calendar-days text-lg"></i>
+                        </div>
+                    </div>
+
+                    <div class="pointer-events-none absolute -bottom-8 -right-8 h-24 w-24 rounded-full bg-slate-100/70">
+                    </div>
+                </div>
+
+                <div class="group relative overflow-hidden rounded-2xl border border-indigo-100 bg-white p-5  ">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-wide text-indigo-400">
+                                Conceptos agregados
+                            </p>
+
+                            <p class="mt-2 text-2xl font-black text-indigo-700">
+                                {{ form.items.length + form.other_expenses.length }}
+                            </p>
+                        </div>
+
+                        <div
+                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                            <i class="fa-solid fa-layer-group text-lg"></i>
+                        </div>
+                    </div>
+
+                    <p class="mt-3 text-xs text-slate-400">
+                        Incluye ítems y gastos adicionales.
                     </p>
                 </div>
 
-                <el-select size="small" v-model="frequency" placeholder="Selecciona una frecuencia" class="w-full"
-                    clearable filterable>
-                    <el-option v-for="item in frequencies" :key="item.value" :label="item.label" :value="item.value" />
-                </el-select>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
-            <div class="xl:col-span-4 space-y-6">
-                <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="mb-5 flex items-start gap-3">
-                        <div
-                            class="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600 ring-1 ring-sky-100">
-                            <i class="fa-solid fa-building-circle-check"></i>
-                        </div>
+                <!-- Total actual -->
+                <div
+                    class="group relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5  ">
+                    <div class="flex items-start justify-between gap-3">
                         <div>
-                            <h3 class="text-base font-semibold text-slate-900">Datos generales</h3>
-                            <p class="mt-1 text-sm text-slate-500">
-                                Información principal de la cotización.
+                            <p class="text-xs font-bold uppercase tracking-wide text-emerald-600">
+                                Total actual
+                            </p>
+
+                            <p class="mt-2 text-2xl font-black text-emerald-700">
+                                S/ {{ formatMoney(total) }}
+                            </p>
+                        </div>
+
+                        <div
+                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                            <i class="fa-solid fa-coins text-lg"></i>
+                        </div>
+                    </div>
+
+                    <p class="mt-3 text-xs text-emerald-600/80">
+                        Monto calculado según conceptos registrados.
+                    </p>
+                </div>
+
+                <!-- Frecuencia de evaluación -->
+                <div class="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5  ">
+                    <div class="mb-3 flex items-center gap-3">
+                        <div
+                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+                            <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                        </div>
+
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold uppercase tracking-wide text-blue-600">
+                                Frecuencia
+                            </p>
+
+                            <p class="truncate text-sm font-semibold text-blue-900">
+                                Frecuencia de evaluación
                             </p>
                         </div>
                     </div>
 
-                    <div class="space-y-5">
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                Empresa
-                            </label>
-                            <el-select :remote-method="remoteMethodCompany" :loading="loadingCompany"
-                                v-model="form.company_id" filterable class="w-full" placeholder="Selecciona una empresa"
-                                size="large">
-                                <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
-                                    :value="company.id" />
-                            </el-select>
-                        </div>
-
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                Contacto
-                            </label>
-                            <el-select :loading="loadingContacts" clearable v-model="form.contact_id" filterable
-                                class="w-full" placeholder="Selecciona una empresa" size="large">
-                                <el-option v-for="contact in contacts" :key="contact.id"
-                                    :label="contact?.user?.full_name + ' | ' + contact?.type" :value="contact.id" />
-                            </el-select>
-                        </div>
-
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                Dirección
-                            </label>
-                            <el-input v-model="form.direction" placeholder="Ej: Av. Javier Prado 123" size="large" />
-                        </div>
-
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                Fecha de atención
-                            </label>
-                            <el-date-picker v-model="form.date_attention" type="date" class="!w-full"
-                                placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD"
-                                size="large" />
-                        </div>
-
-                        <div>
-                            <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                Referencia
-                            </label>
-                            <el-input v-model="form.reference" type="textarea" :autosize="{ minRows: 4, maxRows: 5 }"
-                                placeholder="Detalle breve o referencia de la cotización" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="mb-5 flex items-start gap-3">
-                        <div
-                            class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100">
-                            <i class="fa-solid fa-wallet"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-semibold text-slate-900">Resumen económico</h3>
-                            <p class="mt-1 text-sm text-slate-500">
-                                Totales actualizados automáticamente.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                            <span class="text-sm text-slate-600">Servicios y matrices</span>
-                            <span class="text-sm font-semibold text-slate-800">S/ {{ formatMoney(itemsTotal) }}</span>
-                        </div>
-
-                        <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                            <span class="text-sm text-slate-600">Otros gastos</span>
-                            <span class="text-sm font-semibold text-slate-800">S/ {{ formatMoney(otherExpensesTotal)
-                            }}</span>
-                        </div>
-
-                        <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                            <span class="text-sm text-slate-600">Subtotal</span>
-                            <span class="text-sm font-semibold text-slate-800">S/ {{ formatMoney(subtotal) }}</span>
-                        </div>
-
-                        <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                            <span class="text-sm text-slate-600">IGV</span>
-                            <span class="text-sm font-semibold text-slate-800">S/ {{ formatMoney(igv) }}</span>
-                        </div>
-
-                        <div
-                            class="flex items-center justify-between rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-4">
-                            <span class="text-sm font-semibold text-emerald-800">Total</span>
-                            <span class="text-xl font-bold text-emerald-700">S/ {{ formatMoney(total) }}</span>
-                        </div>
-                    </div>
+                    <el-select size="small" v-model="frequency" placeholder="Selecciona una frecuencia" class="!w-full"
+                        clearable filterable>
+                        <el-option v-for="item in frequencies" :key="item.value" :label="item.label"
+                            :value="item.value" />
+                    </el-select>
                 </div>
             </div>
 
-            <div class="xl:col-span-8 space-y-6">
-                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    <div class="border-b border-slate-100 px-5 py-4">
-                        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                <!-- COLUMNA IZQUIERDA -->
+                <div class="space-y-6 xl:col-span-4">
+                    <!-- DATOS GENERALES -->
+                    <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white  ">
+                        <div class="border-b border-slate-100 bg-gradient-to-r from-sky-50 to-white px-6 py-5">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-500 text-white shadow-lg shadow-sky-100">
+                                    <i class="fa-solid fa-building-circle-check text-lg"></i>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900">
+                                        Datos generales
+                                    </h3>
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        Información principal de la cotización.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-5 p-6">
                             <div>
-                                <h3 class="text-base font-semibold text-slate-900">
-                                    Servicios y matrices
-                                </h3>
-                                <p class="mt-1 text-sm text-slate-500">
-                                    Agrega los conceptos principales de la cotización.
-                                </p>
+                                <label class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <i class="fa-solid fa-building text-xs text-slate-400"></i>
+                                    Empresa
+                                </label>
+
+                                <el-select :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                                    v-model="form.company_id" filterable remote class="!w-full"
+                                    placeholder="Selecciona una empresa" size="large">
+                                    <el-option v-for="company in companies" :key="company.id"
+                                        :label="company.business_name" :value="company.id" />
+                                </el-select>
                             </div>
 
-                            <div class="flex flex-wrap gap-2">
-                                <el-button class="!rounded-xl" plain type="primary" @click="showMatrixModal = true">
-                                    <i class="fa-solid fa-layer-group me-2"></i>
-                                    Agregar matrices
-                                </el-button>
+                            <div>
+                                <label class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <i class="fa-solid fa-address-book text-xs text-slate-400"></i>
+                                    Contacto
+                                </label>
 
-                                <el-button class="!rounded-xl" plain type="success" @click="showServiceModal = true">
-                                    <i class="fa-solid fa-briefcase-medical me-2"></i>
-                                    Agregar servicios
-                                </el-button>
+                                <el-select :loading="loadingContacts" clearable v-model="form.contact_id" filterable
+                                    class="!w-full" placeholder="Selecciona un contacto" size="large">
+                                    <el-option v-for="contact in contacts" :key="contact.id"
+                                        :label="contact?.user?.full_name + ' | ' + contact?.type" :value="contact.id" />
+                                </el-select>
+                            </div>
+
+                            <div>
+                                <label class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <i class="fa-solid fa-location-dot text-xs text-slate-400"></i>
+                                    Dirección
+                                </label>
+
+                                <el-input v-model="form.direction" placeholder="Ej: Av. Javier Prado 123"
+                                    size="large" />
+                            </div>
+
+                            <div>
+                                <label class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <i class="fa-regular fa-calendar-days text-xs text-slate-400"></i>
+                                    Fecha de atención
+                                </label>
+
+                                <el-date-picker v-model="form.date_attention" type="date" class="!w-full"
+                                    placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD"
+                                    size="large" />
+                            </div>
+
+                            <div>
+                                <label class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                    <i class="fa-regular fa-message text-xs text-slate-400"></i>
+                                    Referencia
+                                </label>
+
+                                <el-input v-model="form.reference" type="textarea"
+                                    :autosize="{ minRows: 4, maxRows: 5 }"
+                                    placeholder="Detalle breve o referencia de la cotización" />
                             </div>
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">#</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Tipo</th>
-                                    <th class="px-4 py-3 text-left font-semibold text-slate-600">Concepto</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-slate-600">Cantidad/N° de
-                                        muestras</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-slate-600">P. Unit.</th>
-                                    <th class="px-4 py-3 text-center font-semibold text-slate-600">Importe</th>
-                                    <th class="px-4 py-3 text-right font-semibold text-slate-600">Acción</th>
-                                </tr>
-                            </thead>
+                    <!-- RESUMEN ECONÓMICO -->
+                    <div class="overflow-hidden rounded-3xl border border-emerald-100 bg-white  ">
+                        <div class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-white px-6 py-5">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-100">
+                                    <i class="fa-solid fa-wallet text-lg"></i>
+                                </div>
 
-                            <tbody class="divide-y divide-slate-100 bg-white">
-                                <tr v-for="(row, index) in form.items" :key="index"
-                                    @click="toggleRowSelection(row, $event)" class="transition hover:bg-slate-50">
-                                    <td :class="row?.item?.bg" class="px-4 py-4 text-slate-700">
-                                        <div class="gap-2 items-center flex">
-                                            <el-checkbox v-model="row.select" class="!m-0 !p-0"></el-checkbox>
-                                            {{ index + 1 }}
-                                        </div>
-                                    </td>
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900">
+                                        Resumen económico
+                                    </h3>
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        Totales actualizados automáticamente.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <td :class="row?.item?.bg" class="px-4 py-4">
-                                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :class="row.type === 'matriz'
-                                            ? 'bg-sky-50 text-sky-700'
-                                            : 'bg-emerald-50 text-emerald-700'">
-                                            {{ row.type === 'matriz' ? 'Matriz' : 'Servicio' }}
-                                        </span>
+                        <div class="space-y-3 p-6">
+                            <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sky-600">
+                                        <i class="fa-solid fa-layer-group text-sm"></i>
+                                    </div>
+                                    <span class="text-sm font-medium text-slate-600">
+                                        Servicios y matrices
+                                    </span>
+                                </div>
 
-                                        <span v-if="row.type === 'service'"
-                                            class="mt-3 block font-medium text-slate-600">Dias</span>
-                                        <el-input v-if="row.type === 'service'" v-model="row.item.days" size="small"
-                                            placeholder="Dias" />
-                                    </td>
+                                <span class="text-sm font-bold text-slate-800">
+                                    S/ {{ formatMoney(itemsTotal) }}
+                                </span>
+                            </div>
 
-                                    <td :class="row?.item?.bg" class="px-4 py-4 text-slate-700">
-                                        <p v-tippy="row?.item?.description || '-'" class="font-semibold text-slate-800">
-                                            {{ row?.item?.description || '-' }}
+                            <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-amber-600">
+                                        <i class="fa-solid fa-receipt text-sm"></i>
+                                    </div>
+                                    <span class="text-sm font-medium text-slate-600">
+                                        Otros gastos
+                                    </span>
+                                </div>
+
+                                <span class="text-sm font-bold text-slate-800">
+                                    S/ {{ formatMoney(otherExpensesTotal) }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                                <span class="text-sm font-medium text-slate-600">Subtotal</span>
+                                <span class="text-sm font-bold text-slate-800">
+                                    S/ {{ formatMoney(subtotal) }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+                                <span class="text-sm font-medium text-slate-600">IGV</span>
+                                <span class="text-sm font-bold text-slate-800">
+                                    S/ {{ formatMoney(igv) }}
+                                </span>
+                            </div>
+
+                            <div
+                                class="relative overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-500 to-teal-500 px-5 py-5 text-white shadow-lg shadow-emerald-100">
+                                <div class="relative z-10 flex items-center justify-between gap-4">
+                                    <div>
+                                        <p class="text-sm font-semibold text-emerald-50">
+                                            Total
                                         </p>
-
-                                        <p v-if="row?.item?.methodologie?.description"
-                                            v-tippy="row?.item?.methodologie?.description || 'No registrada'"
-                                            class="mt-1 text-xs text-slate-500 line-clamp-3">
-                                            Metodología:
-                                            {{ row?.item?.methodologie?.description || 'No registrada' }}
+                                        <p class="mt-1 text-xs text-emerald-50/80">
+                                            Importe final de la cotización
                                         </p>
-                                    </td>
+                                    </div>
 
-                                    <td :class="row?.item?.bg" class="px-4 py-4 text-center">
-                                        <el-input v-if="row?.type === 'matriz'" v-model="row.item.number_samples"
-                                            size="small" class="!w-[70px]" />
-                                        <el-input v-else v-model="row.item.amount" size="small" class="!w-[110px]" />
-                                    </td>
+                                    <span class="text-2xl font-black">
+                                        S/ {{ formatMoney(total) }}
+                                    </span>
+                                </div>
 
-                                    <td :class="row?.item?.bg" class="px-4 py-4 text-right">
-                                        <el-input v-model="row.item.unit_price" size="small" class="!w-[100px]" />
-                                    </td>
+                                <div class="absolute -bottom-10 -right-10 h-28 w-28 rounded-full bg-white/10"></div>
+                                <div class="absolute -top-12 right-10 h-24 w-24 rounded-full bg-white/10"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                    <td :class="row?.item?.bg" class="px-4 py-4 text-right">
-                                        <el-input v-model="row.item.price" size="small" disabled class="!w-[100px]" />
-                                    </td>
+                <div class="space-y-6 xl:col-span-8">
+                    <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white  ">
+                        <div class="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-5">
+                            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+                                        <i class="fa-solid fa-clipboard-list text-lg"></i>
+                                    </div>
 
-                                    <td :class="row?.item?.bg" class="px-4 py-4 text-right relative">
-                                        <el-button @click="itemDelete(index)" type="danger" plain size="small"
-                                            class="!rounded-lg">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </el-button>
+                                    <div>
+                                        <h3 class="text-base font-bold text-slate-900">
+                                            Servicios y matrices
+                                        </h3>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Agrega los conceptos principales de la cotización.
+                                        </p>
+                                    </div>
+                                </div>
 
-                                        <div class="absolute top-0 right-1 flex gap-2"
-                                            v-if="row?.item?.frequency_label">
-                                            <span
-                                                class="bg-[#1abc9c] px-2 pt-1 text-white rounded-lg text-xs font-medium w-full h-[24px] truncate">
-                                                {{ row?.item?.frequency_label }}
+                                <div class="flex gap-2">
+                                    <el-button class="!rounded-xl" plain type="primary" @click="showMatrixModal = true">
+                                        <i class="fa-solid fa-layer-group me-2"></i>
+                                        Agregar matrices
+                                    </el-button>
+
+                                    <el-button class="!rounded-xl" plain type="success"
+                                        @click="showServiceModal = true">
+                                        <i class="fa-solid fa-briefcase-medical me-2"></i>
+                                        Agregar servicios
+                                    </el-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50/80">
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            #</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Tipo</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Concepto</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Cant./Muestras</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            P. Unit.</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Importe</th>
+                                        <th
+                                            class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Acción</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="divide-y divide-slate-100 bg-white">
+                                    <tr v-for="(row, index) in form.items" :key="index"
+                                        @click="toggleRowSelection(row, $event)"
+                                        class="transition hover:bg-slate-50/80">
+                                        <td :class="row?.item?.bg" class="px-4 py-4 text-slate-700">
+                                            <div class="flex items-center gap-3">
+                                                <el-checkbox v-model="row.select" class="!m-0 !p-0" />
+                                                <span
+                                                    class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-600">
+                                                    {{ index + 1 }}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-4 py-4">
+                                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-bold" :class="row.type === 'matriz'
+                                                ? 'bg-sky-50 text-sky-700 ring-1 ring-sky-100'
+                                                : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100'">
+                                                {{ row.type === 'matriz' ? 'Matriz' : 'Servicio' }}
                                             </span>
-                                            <el-button @click="() => {
-                                                row.item.select = null
-                                                row.item.bg = null
-                                                row.item.frequency_label = null
-                                            }" plain size="small" class="!rounded-lg" type="warning"
-                                                v-tippy="'Remover frecuencia'">
-                                                <i class="fa-solid fa-eraser"></i>
+
+                                            <div v-if="row.type === 'service'" class="mt-3">
+                                                <span class="mb-1 block text-xs font-semibold text-slate-500">
+                                                    Días
+                                                </span>
+                                                <el-input v-model="row.item.days" size="small" placeholder="Días"
+                                                    class="!w-[90px]" />
+                                            </div>
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-4 py-4 text-slate-700">
+                                            <p v-tippy="row?.item?.description || '-'"
+                                                class="max-w-[280px] truncate font-bold text-slate-800">
+                                                {{ row?.item?.description || '-' }}
+                                            </p>
+
+                                            <p v-if="row?.item?.methodologie?.description"
+                                                v-tippy="row?.item?.methodologie?.description || 'No registrada'"
+                                                class="mt-1 max-w-[320px] line-clamp-2 text-xs leading-5 text-slate-500">
+                                                <span class="font-semibold text-slate-600">Metodología:</span>
+                                                {{ row?.item?.methodologie?.description || 'No registrada' }}
+                                            </p>
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-4 py-4 text-center">
+                                            <el-input v-if="row?.type === 'matriz'" v-model="row.item.number_samples"
+                                                size="small" class="!w-[90px]" />
+
+                                            <el-input v-else v-model="row.item.amount" size="small" class="!w-[90px]" />
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-4 py-4 text-center">
+                                            <el-input v-model="row.item.unit_price" size="small" class="!w-[105px]" />
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-4 py-4 text-center">
+                                            <el-input v-model="row.item.price" size="small" disabled
+                                                class="!w-[110px]" />
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="relative px-4 py-4 text-right">
+                                            <el-button @click.stop="itemDelete(index)" type="danger" plain size="small"
+                                                class="!rounded-xl">
+                                                <i class="fa-solid fa-trash-can"></i>
                                             </el-button>
-                                        </div>
-                                    </td>
-                                </tr>
 
-                                <tr v-if="form.items.length === 0">
-                                    <td colspan="7" class="px-4 py-12 text-center">
-                                        <div class="flex flex-col items-center justify-center text-slate-400">
-                                            <div
-                                                class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
-                                                <i class="fa-solid fa-folder-open text-lg"></i>
+                                            <div v-if="row?.item?.frequency_label"
+                                                class="absolute right-2 top-1 flex items-center gap-1">
+                                                <span
+                                                    class="max-w-[120px] truncate rounded-full bg-teal-500 px-2.5 py-1 text-[11px] font-bold text-white  ">
+                                                    {{ row?.item?.frequency_label }}
+                                                </span>
+
+                                                <el-button @click.stop="() => {
+                                                    row.item.select = null
+                                                    row.item.bg = null
+                                                    row.item.frequency_label = null
+                                                }" plain size="small" class="!rounded-lg" type="warning"
+                                                    v-tippy="'Remover frecuencia'">
+                                                    <i class="fa-solid fa-eraser"></i>
+                                                </el-button>
                                             </div>
-                                            <p class="text-sm font-semibold text-slate-500">
-                                                Aún no agregaste servicios ni matrices
-                                            </p>
-                                            <span class="mt-1 text-xs text-slate-400">
-                                                Usa los botones superiores para comenzar
-                                            </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                        </td>
+                                    </tr>
 
-                <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    <div class="border-b border-slate-100 px-5 py-4">
-                        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <div>
-                                <h3 class="text-base font-semibold text-slate-900">
-                                    Otros gastos
-                                </h3>
-                                <p class="mt-1 text-sm text-slate-500">
-                                    Registra gastos adicionales como movilidad, viáticos, materiales u otros conceptos.
-                                </p>
+                                    <tr v-if="form.items.length === 0">
+                                        <td colspan="7" class="px-4 py-14 text-center">
+                                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                                <div
+                                                    class="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-slate-400">
+                                                    <i class="fa-solid fa-folder-open text-xl"></i>
+                                                </div>
+
+                                                <p class="text-sm font-bold text-slate-600">
+                                                    Aún no agregaste servicios ni matrices
+                                                </p>
+
+                                                <span class="mt-1 text-xs text-slate-400">
+                                                    Usa los botones superiores para comenzar.
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- OTROS GASTOS -->
+                    <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white  ">
+                        <div class="border-b border-slate-100 bg-gradient-to-r from-amber-50 to-white px-6 py-5">
+                            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-100">
+                                        <i class="fa-solid fa-receipt text-lg"></i>
+                                    </div>
+
+                                    <div>
+                                        <h3 class="text-base font-bold text-slate-900">
+                                            Otros gastos
+                                        </h3>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Registra movilidad, viáticos, materiales u otros conceptos.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <el-button class="!rounded-xl" plain type="warning" @click="state = true">
+                                    <i class="fa-solid fa-plus me-2"></i>
+                                    Agregar gasto
+                                </el-button>
                             </div>
-
-                            <el-button class="!rounded-xl" plain type="warning" @click="() => {
-                                state = true
-                            }">
-                                <i class="fa-solid fa-plus me-2"></i>
-                                Agregar gasto
-                            </el-button>
                         </div>
-                    </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead class="bg-slate-50">
-                                <tr>
-                                    <th class="ps-4 pe-3 py-3 text-left font-semibold text-slate-600">#</th>
-                                    <th class="ps-4 pe-3 py-3 text-left font-semibold text-slate-600">Descripción</th>
-                                    <th class="ps-4 pe-3 py-3 text-center font-semibold text-slate-600">Dias</th>
-                                    <th class="ps-4 pe-3 py-3 text-center font-semibold text-slate-600">Cantidad</th>
-                                    <th class="ps-4 pe-3 py-3 text-right font-semibold text-slate-600">P. Unit.</th>
-                                    <th class="ps-4 pe-3 py-3 text-right font-semibold text-slate-600">Importe</th>
-                                    <th class="ps-4 pe-3 py-3 text-right font-semibold text-slate-600">Acción</th>
-                                </tr>
-                            </thead>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50/80">
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            #</th>
+                                        <th
+                                            class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Descripción</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Días</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Cantidad</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            P. Unit.</th>
+                                        <th
+                                            class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Importe</th>
+                                        <th
+                                            class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-slate-500">
+                                            Acción</th>
+                                    </tr>
+                                </thead>
 
-                            <tbody class="divide-y divide-slate-100 bg-white">
-                                <tr v-for="(expense, index) in form.other_expenses" :key="index"
-                                    class="transition hover:bg-slate-50">
-                                    <td class="ps-4 pe-3 py-4 text-slate-700">{{ index + 1 }}</td>
-
-                                    <td class="px-3 py-4">
-                                        <el-input v-model="expense.description" size="small"
-                                            placeholder="Ej: Movilidad, viáticos, materiales..." />
-                                    </td>
-
-                                    <td class="px-3 py-4 text-center">
-                                        <el-input v-model="expense.days" size="small" class="!w-[60px]" />
-                                    </td>
-
-                                    <td class="px-3 py-4 text-center">
-                                        <el-input v-model="expense.amount" size="small" class="!w-[60px]" />
-                                    </td>
-
-                                    <td class="px-3 py-4 text-right">
-                                        <el-input v-model="expense.unit_price" size="small" class="!w-[60px]" />
-                                    </td>
-
-                                    <td class="px-3 py-4 text-right">
-                                        <el-input v-model="expense.price" size="small" disabled class="!w-[120px]" />
-                                    </td>
-
-                                    <td class="px-3 py-4 text-right">
-                                        <el-button @click="removeOtherExpense(index)" type="danger" plain size="small"
-                                            class="!rounded-lg">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </el-button>
-                                    </td>
-                                </tr>
-
-                                <tr v-if="form.other_expenses.length === 0">
-                                    <td colspan="6" class="px-4 py-12 text-center">
-                                        <div class="flex flex-col items-center justify-center text-slate-400">
-                                            <div
-                                                class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
-                                                <i class="fa-solid fa-receipt text-lg"></i>
-                                            </div>
-                                            <p class="text-sm font-semibold text-slate-500">
-                                                No hay otros gastos registrados
-                                            </p>
-                                            <span class="mt-1 text-xs text-slate-400">
-                                                Agrega gastos solo si aplican a esta cotización
+                                <tbody class="divide-y divide-slate-100 bg-white">
+                                    <tr v-for="(expense, index) in form.other_expenses" :key="index"
+                                        class="transition hover:bg-slate-50/80">
+                                        <td class="px-4 py-4 text-slate-700">
+                                            <span
+                                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-600">
+                                                {{ index + 1 }}
                                             </span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                        </td>
 
-                <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <div class="mb-4 flex items-start gap-3">
-                        <div
-                            class="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100">
-                            <i class="fa-solid fa-note-sticky"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-semibold text-slate-900">Observaciones</h3>
-                            <p class="mt-1 text-sm text-slate-500">
-                                Agrega indicaciones, condiciones o comentarios importantes de la cotización.
-                            </p>
+                                        <td class="px-4 py-4">
+                                            <el-input v-model="expense.description" size="small"
+                                                placeholder="Ej: Movilidad, viáticos, materiales..."
+                                                class="!min-w-[240px]" />
+                                        </td>
+
+                                        <td class="px-4 py-4 text-center">
+                                            <el-input v-model="expense.days" size="small" class="!w-[75px]" />
+                                        </td>
+
+                                        <td class="px-4 py-4 text-center">
+                                            <el-input v-model="expense.amount" size="small" class="!w-[80px]" />
+                                        </td>
+
+                                        <td class="px-4 py-4 text-center">
+                                            <el-input v-model="expense.unit_price" size="small" class="!w-[90px]" />
+                                        </td>
+
+                                        <td class="px-4 py-4 text-center">
+                                            <el-input v-model="expense.price" size="small" disabled
+                                                class="!w-[110px]" />
+                                        </td>
+
+                                        <td class="px-4 py-4 text-right">
+                                            <el-button @click="removeOtherExpense(index)" type="danger" plain
+                                                size="small" class="!rounded-xl">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </el-button>
+                                        </td>
+                                    </tr>
+
+                                    <tr v-if="form.other_expenses.length === 0">
+                                        <td colspan="7" class="px-4 py-14 text-center">
+                                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                                <div
+                                                    class="mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-amber-50 text-amber-400">
+                                                    <i class="fa-solid fa-receipt text-xl"></i>
+                                                </div>
+
+                                                <p class="text-sm font-bold text-slate-600">
+                                                    No hay otros gastos registrados
+                                                </p>
+
+                                                <span class="mt-1 text-xs text-slate-400">
+                                                    Agrega gastos solo si aplican a esta cotización.
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <el-input v-model="form.observations" type="textarea" :autosize="{ minRows: 5, maxRows: 7 }"
-                        placeholder="Ej: La cotización está sujeta a disponibilidad, tiempos de atención, condiciones de muestreo u observaciones comerciales." />
+                    <!-- OBSERVACIONES -->
+                    <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white  ">
+                        <div class="border-b border-slate-100 bg-gradient-to-r from-violet-50 to-white px-6 py-5">
+                            <div class="flex items-start gap-4">
+                                <div
+                                    class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-600 ring-1 ring-violet-100">
+                                    <i class="fa-solid fa-note-sticky text-lg"></i>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900">
+                                        Observaciones
+                                    </h3>
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        Agrega indicaciones, condiciones o comentarios importantes.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            <el-input v-model="form.observations" type="textarea" :autosize="{ minRows: 5, maxRows: 7 }"
+                                placeholder="Ej: La cotización está sujeta a disponibilidad, tiempos de atención, condiciones de muestreo u observaciones comerciales." />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -716,7 +921,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
-s:deep(.el-input-number .el-input__wrapper) {
+:deep(.el-input-number .el-input__wrapper) {
     width: 100%;
+}
+
+:deep(.el-select__wrapper) {
+    border-radius: 12px !important;
 }
 </style>

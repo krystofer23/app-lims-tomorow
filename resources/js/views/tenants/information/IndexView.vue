@@ -1,95 +1,76 @@
 <template>
     <div
-        class="h-[70px] flex flex-col gap-5 border-b border-slate-200 bg-gradient-to-r from-slate-50 via-white to-emerald-50/60 px-6 py-6 lg:flex-row lg:items-center lg:justify-between">
+        class="flex flex-col gap-4 border-b border-slate-200/80 bg-white px-5 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between lg:px-6">
         <div class="min-w-0">
             <div class="flex items-center gap-3">
                 <div
-                    class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md shadow-emerald-100">
-                    <i class="fa-regular fa-file-lines text-lg"></i>
+                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-100">
+                    <i class="fa-solid fa-file-shield text-lg"></i>
                 </div>
 
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-slate-800">
-                        Módulo de informes
-                    </h1>
-                    <p class="-mt-1 text-xs text-slate-500">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2">
+                        <h1 class="truncate text-lg font-bold tracking-tight text-slate-900">
+                            Módulo de informes
+                        </h1>
+                    </div>
+
+                    <p class="mt-0.5 truncate text-xs text-slate-500">
                         Gestiona informes en base a las órdenes de servicio
                     </p>
                 </div>
             </div>
         </div>
 
-        <div class="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
-            <el-input v-model="filters.search" placeholder="Buscar por razón social, cadena o informe" clearable
-                class="!w-full sm:!w-[340px]">
+        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+            <el-input v-model="filters.search" placeholder="Buscar razón social, cadena o informe..." clearable
+                class="!w-full sm:!w-[360px]">
                 <template #prefix>
-                    <el-icon>
-                        <Search />
+                    <el-icon class="text-slate-400">
+                        <search />
                     </el-icon>
                 </template>
             </el-input>
 
-            <el-button type="primary"
-                class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90"
-                @click="generateInformation">
-                <i class="fa-regular fa-file-lines mr-2"></i>
-                Generar informe
+            <el-button @click="generateInformation" type="primary"
+                class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
+                <i class="fa-solid fa-file-shield mr-2"></i>
+                Generar Informe
             </el-button>
         </div>
     </div>
 
-    <div class="bg-white">
-        <div class="p-5 md:p-6">
-            <div class="rounded-2xl border border-slate-200 bg-slate-50/70 p-1">
-                <el-collapse v-model="activeNames" class="custom-collapse">
-                    <el-collapse-item name="1">
-                        <template #title>
-                            <div class="flex items-center gap-2 text-slate-700">
-                                <div
-                                    class="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                                    <i class="fa-solid fa-filter text-sm text-emerald-500"></i>
-                                </div>
-                                <span class="font-semibold">Filtros</span>
-                            </div>
-                        </template>
-
-                        <template #default>
-                            <div class="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
-                                <div class="grid grid-cols-12 gap-4">
-                                    <div class="col-span-12 md:col-span-6 xl:col-span-3">
-                                        <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                            Empresa
-                                        </label>
-                                        <el-select placeholder="Seleccionar empresa" class="!w-full" />
-                                    </div>
-
-                                    <div class="col-span-12 md:col-span-6 xl:col-span-3">
-                                        <label class="mb-2 block text-sm font-semibold text-slate-700">
-                                            Orden de servicio
-                                        </label>
-                                        <el-select placeholder="Seleccionar orden" class="!w-full" />
-                                    </div>
-
-                                    <div class="col-span-12 xl:col-span-4 flex flex-col sm:flex-row sm:items-end">
-                                        <el-button v-tippy="'Filtrar'"
-                                            class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
-                                            <i class="fa-solid fa-magnifying-glass mr-2"></i>
-                                            Filtrar
-                                        </el-button>
-
-                                        <el-button v-tippy="'Limpiar filtros'"
-                                            class="!h-9 !rounded-xl !border-slate-200 !bg-white !px-5 !font-medium !text-slate-600 hover:!border-slate-300 hover:!text-slate-800">
-                                            <i class="fa-solid fa-filter-circle-xmark mr-2"></i>
-                                            Limpiar
-                                        </el-button>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </el-collapse-item>
-                </el-collapse>
-            </div>
-        </div>
+    <div class="bg-white p-5 md:p-6 space-y-6">
+        <el-collapse class="mb-5">
+            <el-collapse-item name="1">
+                <template #title>
+                    <i class="fa-solid fa-filter"></i> Filtros
+                </template>
+                <template #default>
+                    <!-- <div class="grid grid-cols-12 w-full gap-3">
+                        <div class="col-span-3">
+                            <p class="font-medium">Comercial</p>
+                            <el-select v-model="filters.comercial_id" placeholder="Seleccionar" class="!w-full"
+                                size="small" clearable>
+                                <el-option v-for="row in comerciales"></el-option>
+                            </el-select>
+                        </div>
+                        <div class="col-span-3">
+                            <p class="font-medium">Empresa</p>
+                            <el-select v-model="filters.company_id" placeholder="Seleccionar" class="!w-full"
+                                size="small" clearable>
+                                <el-option v-for="row in companies" :label="row.business_name"
+                                    :value="row.id"></el-option>
+                            </el-select>
+                        </div>
+                        <div class="col-span-3">
+                            <p class="font-medium">OS Generada</p>
+                            <el-switch v-model="filters.is_os" size="small"></el-switch>
+                        </div>
+                    </div> -->
+                </template>
+            </el-collapse-item>
+        </el-collapse>
     </div>
 
     <el-dialog v-model="state" width="820px" class="search-os-dialog !rounded-2xl" align-center destroy-on-close>
@@ -276,95 +257,44 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.search-os-dialog :deep(.el-dialog) {
-    border-radius: 1rem;
-    padding: 0.25rem;
-}
-
-.search-os-dialog :deep(.el-dialog__header) {
-    margin-right: 0;
-    padding: 1.25rem 1.25rem 0.5rem 1.25rem;
-}
-
-.search-os-dialog :deep(.el-dialog__body) {
-    padding: 1rem 1.25rem 1.25rem 1.25rem;
-}
-
-.search-os-dialog :deep(.el-dialog__headerbtn) {
-    top: 1.1rem;
-    right: 1rem;
-}
-
-.search-os-dialog :deep(.el-dialog__headerbtn .el-dialog__close) {
-    color: #64748b;
-    font-size: 18px;
-}
-
-.search-os-dialog :deep(.el-dialog__headerbtn:hover .el-dialog__close) {
-    color: #10b981;
-}
-
-.custom-input :deep(.el-input__wrapper) {
-    min-height: 44px;
-    border-radius: 0.9rem;
-    box-shadow: none;
-    border: 1px solid #e2e8f0;
-    background-color: white;
-}
-
-.custom-input :deep(.el-input__wrapper:hover) {
-    border-color: #cbd5e1;
-}
-
-.custom-input :deep(.is-focus) {
-    border-color: #34d399 !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12) !important;
-}
-
-.custom-search-btn {
-    font-weight: 600;
-    box-shadow: 0 10px 20px -12px rgba(16, 185, 129, 0.9);
-}
-
-.custom-table :deep(.el-table__header th) {
-    background-color: #f8fafc !important;
+:deep(.el-table th.el-table__cell) {
+    background: #f8fafc;
     color: #334155;
     font-weight: 700;
 }
 
-.custom-table :deep(.el-table__row td) {
+:deep(.el-table td.el-table__cell),
+:deep(.el-table th.el-table__cell) {
+    padding: 14px 0;
+}
+
+:deep(.el-popover) {
+    border-radius: 10px !important;
+}
+
+:deep(.custom-table .el-table__cell) {
     padding-top: 14px;
     padding-bottom: 14px;
+    vertical-align: middle;
 }
 
-.custom-table :deep(.el-table__empty-block) {
-    min-height: 180px;
+:deep(.custom-table .el-table__row:hover > td.el-table__cell) {
+    background-color: #f8fafc !important;
 }
 
-.custom-table :deep(.el-table__empty-text) {
-    color: #94a3b8;
-    font-size: 14px;
+:deep(.custom-table .el-table__inner-wrapper::before) {
+    display: none;
 }
 
-:deep(.custom-collapse) {
-    border: none;
-    background: transparent;
+:deep(.custom-table th.el-table__cell) {
+    border-bottom: 1px solid #e2e8f0 !important;
 }
 
-:deep(.custom-collapse .el-collapse-item__header) {
-    border: none;
-    background: transparent;
-    height: auto;
-    line-height: normal;
-    padding: 0.5rem 0.75rem;
+:deep(.custom-table td.el-table__cell) {
+    border-bottom: 1px solid #f1f5f9 !important;
 }
 
-:deep(.custom-collapse .el-collapse-item__wrap) {
-    border: none;
-    background: transparent;
-}
-
-:deep(.custom-collapse .el-collapse-item__content) {
-    padding-bottom: 0;
+:deep(.el-input__wrapper) {
+    border-radius: 10px !important;
 }
 </style>
