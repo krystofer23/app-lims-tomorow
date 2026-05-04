@@ -51,7 +51,7 @@ class ServiceApiController extends Controller
             DB::beginTransaction();
             $input = $request->all();
 
-            $service = Services::find($id);
+            $service = Services::findOrFail($id);
             $service->update([
                 'description' => $input['description'] ?? null,
                 'days' => $input['days'] ?? null,
@@ -73,7 +73,7 @@ class ServiceApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $service = Services::find($id);
+            $service = Services::findOrFail($id);
             $service->delete();
 
             DB::commit();

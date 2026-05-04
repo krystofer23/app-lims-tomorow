@@ -71,7 +71,7 @@ class UserApiController extends Controller
 
             $input = $request->all();
 
-            $user = User::find($id);
+            $user = User::findOrFail($id);
             $user->update([
                 'name' => $input['name'],
                 'last_name_first' => $input['last_name_first'],
@@ -108,7 +108,7 @@ class UserApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $user = User::find($id);
+            $user = User::findOrFail($id);
             $user->syncRoles([]);
             $user->delete();
 

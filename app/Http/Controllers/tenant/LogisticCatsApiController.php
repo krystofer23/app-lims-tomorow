@@ -50,7 +50,7 @@ class LogisticCatsApiController extends Controller
 
             $input = $request->all();
 
-            $logisticCats = LogisticCats::find($id);
+            $logisticCats = LogisticCats::findOrFail($id);
 
             $logisticCats->update([
                 'description' => $input['description'],
@@ -70,7 +70,7 @@ class LogisticCatsApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $logisticCats = LogisticCats::find($id);
+            $logisticCats = LogisticCats::findOrFail($id);
             $logisticCats->destroy();
 
             DB::commit();

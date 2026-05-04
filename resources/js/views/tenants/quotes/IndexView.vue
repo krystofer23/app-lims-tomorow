@@ -52,7 +52,7 @@
                             <p class="font-medium">Comercial</p>
                             <el-select v-model="filters.comercial_id" placeholder="Seleccionar" class="!w-full"
                                 size="small" clearable>
-                                <el-option v-for="row in comerciales"></el-option>
+                                <el-option :label="row.full_name" :value="row.id" v-for="row in users"></el-option>
                             </el-select>
                         </div>
                         <div class="col-span-3">
@@ -246,7 +246,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import tenant from '../../../stores/tenant';
 import { useListStore } from '../../../stores/list';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
@@ -260,6 +260,7 @@ const listStore = useListStore()
 const confirmRef = ref(null)
 const companies = computed(() => listStore.companies)
 const comerciales = computed(() => listStore.comerciales)
+const users = computed(() => listStore.users)
 
 const formatDate = (iso) => {
     const d = new Date(iso);
@@ -272,7 +273,7 @@ const formatTime = (iso) => {
 }
 
 const filters = ref({
-    q: null,
+    search: null,
     comercial_id: null,
     company_id: null,
     is_os: null
@@ -291,7 +292,9 @@ const getQuotes = async (page = 1) => {
     loading.value = true
 
     try {
-        const { data } = await tenant.get(`quote?page=${page}`)
+        const { data } = await tenant.get(`quote?page=${page}`, {
+            params: filters.value
+        })
 
         if (data.data) {
             quotes.value = data.data.data
@@ -389,9 +392,14 @@ async function handleDelete(row) {
     }
 }
 
+watch(() => filters.value, (newVal) => {
+    getQuotes()
+}, { deep: true })
+
 onMounted(async () => {
     await getQuotes()
     await listStore.getCompanies()
+    await listStore.getUsers()
 })
 </script>
 

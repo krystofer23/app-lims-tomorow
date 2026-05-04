@@ -47,7 +47,7 @@
                     <i class="fa-solid fa-filter"></i> Filtros
                 </template>
                 <template #default>
-                    <!-- <div class="grid grid-cols-12 w-full gap-3">
+                    <div class="grid grid-cols-12 w-full gap-3">
                         <div class="col-span-3">
                             <p class="font-medium">Comercial</p>
                             <el-select v-model="filters.comercial_id" placeholder="Seleccionar" class="!w-full"
@@ -67,7 +67,7 @@
                             <p class="font-medium">OS Generada</p>
                             <el-switch v-model="filters.is_os" size="small"></el-switch>
                         </div>
-                    </div> -->
+                    </div>
                 </template>
             </el-collapse-item>
         </el-collapse>
@@ -89,6 +89,12 @@
                 <el-table-column label="Elaborado por">
                     <template #default="{ row }">
                         {{ row?.user?.full_name }}
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="OS">
+                    <template #default="{ row }">
+                        {{ row?.code }}
                     </template>
                 </el-table-column>
 

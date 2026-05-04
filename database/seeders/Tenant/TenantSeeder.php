@@ -3,6 +3,7 @@
 namespace Database\Seeders\Tenant;
 
 use App\Models\tenant\User;
+use Database\Seeders\ParameterSeeder;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Database\Seeder;
 
@@ -11,7 +12,8 @@ class TenantSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RolesSeeder::class
+            RolesSeeder::class,
+            ParameterSeeder::class
         ]);
 
         $user = User::create([

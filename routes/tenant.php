@@ -147,6 +147,8 @@ Route::middleware([
                 Route::get('services', 'services');
                 Route::get('contacts', 'contacts');
                 Route::get('teams', 'teams');
+                Route::get('parameters', 'parameters');
+                Route::get('users', 'users');
             });
 
             Route::controller(MatrizApiController::class)->prefix('matriz')->group(function () {

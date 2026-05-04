@@ -12,6 +12,9 @@ export const useListStore = defineStore("listStore", () => {
     const services = ref([])
     const comerciales = ref([])
 
+    const parameters = ref([])
+    const users = ref([])
+
     const contacts = ref([])
     const loadingContacts = ref(false)
 
@@ -265,9 +268,40 @@ export const useListStore = defineStore("listStore", () => {
         }
     }
 
+    const getParameters = async () => {
+        try {
+            const { data } = await tenant.get(`list/parameters`)
+
+            if (data.data) {
+                parameters.value = data.data
+            }
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+    }
+
+    const getUsers = async (q) => {
+        try {
+            const { data } = await tenant.get(`list/users`, {
+                params: {
+                    search: q
+                }
+            })
+
+            if (data.data) {
+                users.value = data.data.data
+            }
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+    }
+
     return {
         conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService, comerciales,
         getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices, contacts, loadingContacts, getContacts, loadingTeam,
-        teams, paginationTeam, getTeams, loadingOrderService, ordersServices, paginationOrderService, getOrderServices
+        teams, paginationTeam, getTeams, loadingOrderService, ordersServices, paginationOrderService, getOrderServices, getParameters, parameters,
+        getUsers, users
     }
 })

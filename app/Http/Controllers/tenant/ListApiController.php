@@ -9,8 +9,10 @@ use App\Models\tenant\ContactCompanies;
 use App\Models\tenant\Essays;
 use App\Models\tenant\Matriz;
 use App\Models\tenant\Methodologies;
+use App\Models\tenant\Parameters;
 use App\Models\tenant\Services;
 use App\Models\tenant\UnitsMeasurement;
+use App\Models\Tenant\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -167,6 +169,40 @@ class ListApiController extends Controller
             }
 
             return response()->json($response->json());
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function parameters(Request $request): JsonResponse
+    {
+        try {
+            $data = Parameters::query()
+                ->where('type', 'reception')
+                ->first()
+                ?->content;
+
+            return $this->sendResponse($data, 'Enviando parametros');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function users(Request $request): JsonResponse
+    {
+        try {
+            $search = $request->input('search');
+
+            $data = User::query()
+                ->when($request->filled('search'), function ($q) use ($search) {
+                    $q->where(function ($query) use ($search) {
+                        $query->where('full_name', 'LIKE', "%{$search}%")
+                            ->orWhere('document_number', 'LIKE', "%{$search}%");
+                    });
+                })
+                ->paginate(20);
+
+            return $this->sendResponse($data, 'Enviando usuarios');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }

@@ -22,6 +22,11 @@ class QuotesApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            $search = $request->input('search');
+            $comercialId = $request->input('comercial_id');
+            $companyId = $request->input('company_id');
+            $isOs = $request->boolean('is_os');
+
             $data = Quotes::query()
                 ->with([
                     'company',
@@ -29,11 +34,24 @@ class QuotesApiController extends Controller
                     'validator',
                     'itemsQuotes',
                     'contact.user',
-                    'orderService'
+                    'orderService',
                 ])
+                ->when($search, function ($q) use ($search) {
+                    $q->where(function ($query) use ($search) {
+                        $query
+                            ->whereHas('company', function ($company) use ($search) {
+                                $company->where('business_name', 'LIKE', "%{$search}%")
+                                    ->orWhere('ruc', 'LIKE', "%{$search}%");
+                            });
+                    });
+                })
+                ->when($comercialId, fn($q) => $q->where('user_id', $comercialId))
+                ->when($companyId, fn($q) => $q->where('company_id', $companyId))
+                ->when($isOs, fn($q) => $q->whereHas('orderService'))
+                ->latest()
                 ->paginate(15);
 
-            return $this->sendResponse($data, 'Enviandos cotizaciones');
+            return $this->sendResponse($data, 'Cotizaciones enviadas correctamente');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
@@ -207,7 +225,7 @@ class QuotesApiController extends Controller
                 return $this->sendError('No hay un usuario autenticado');
             }
 
-            $quote = Quotes::find($id);
+            $quote = Quotes::findOrFail($id);
 
             if (!$quote) {
                 DB::rollBack();
@@ -303,7 +321,7 @@ class QuotesApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $quote = Quotes::find($id);
+            $quote = Quotes::findOrFail($id);
 
             if (!$quote) {
                 DB::rollBack();
