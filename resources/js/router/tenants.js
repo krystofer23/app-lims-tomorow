@@ -2,8 +2,7 @@ const requireAuth = (to, from, next) => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") ?? "null");
 
-
-    if (!token || !user) return next("/guest-gate");
+    if (!token || !user) return next("/login");
 
     return next();
 };

@@ -1,7 +1,7 @@
 <template>
     <div class="fixed left-0 right-0 top-0 z-[100] flex h-[100dvh] w-full items-center justify-center bg-slate-50 px-4">
-        <div class="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl shadow-slate-200/70">
-            <div class="mb-8">
+        <div class="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-200/70">
+            <div class="mb-3">
                 <div
                     class="mb-4 inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
                     GreenLab
@@ -31,7 +31,10 @@
                         <select v-model="form.role"
                             class="w-full appearance-none bg-transparent px-3 py-4 text-sm text-slate-800 focus:outline-none">
                             <option disabled value="">Selecciona un rol</option>
-                            <option value="admin">Super Admin</option>
+                            <option value="Super Admin">Super Admin</option>
+                            <option value="Comercial">Comercial</option>
+                            <option value="Recepción">Recepción</option>
+                            <option value="Profesional">Profesional</option>
                         </select>
 
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none"
@@ -71,17 +74,24 @@
                         </a>
                     </div>
 
-                    <div
-                        class="group flex items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 transition duration-300 focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5 text-slate-400 transition group-focus-within:text-emerald-500" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2zm3-10V9a3 3 0 016 0v2H9z" />
-                        </svg>
+                    <div class="flex gap-3 items-center w-full">
+                        <div
+                            class="group flex items-center rounded-2xl w-full border border-slate-200 bg-slate-50 px-4 transition duration-300 focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-100">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-slate-400 transition group-focus-within:text-emerald-500"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2zm3-10V9a3 3 0 016 0v2H9z" />
+                            </svg>
 
-                        <input v-model="form.password" type="password" placeholder="Ingresa tu contraseña"
-                            class="w-full bg-transparent px-3 py-4 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none" />
+                            <input v-model="form.password" :type="type ? 'password' : 'text'" placeholder="Ingresa tu contraseña"
+                                class="w-full bg-transparent px-3 py-4 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none" />
+                        </div>
+
+                        <div>
+                            <i @click="type = !type" v-if="type" class="fa-regular cursor-pointer fa-eye"></i>
+                            <i @click="type = !type" v-else class="fa-regular cursor-pointer fa-eye-slash"></i>
+                        </div>
                     </div>
                 </div>
 
@@ -113,13 +123,6 @@
                         class="absolute inset-0 -translate-x-full bg-white/20 transition duration-500 group-hover:translate-x-0"></span>
                 </button>
             </form>
-
-            <p class="mt-8 text-center text-sm text-slate-500">
-                ¿Aún no tienes cuenta?
-                <a href="#" class="font-semibold text-emerald-600 transition hover:text-emerald-500">
-                    Solicitar acceso
-                </a>
-            </p>
         </div>
     </div>
 </template>
@@ -127,9 +130,10 @@
 <script setup>
 import { useAuthStore } from '../../stores/auth';
 import { ElNotification } from 'element-plus';
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 
 const authStore = useAuthStore()
+const type = ref(true)
 
 const form = reactive({
     role: null,
@@ -145,7 +149,7 @@ const onSubmit = async () => {
         ElNotification.error('Ingrese su contraseña');
     }
 
-    if (form.email && form.password) {
+    if (form.email && form.password && form.role) {
         authStore.login(form.email, form.password, form.role);
     }
 }

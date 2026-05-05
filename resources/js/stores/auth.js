@@ -70,7 +70,7 @@ export const useAuthStore = defineStore("authStore", () => {
 
     const logout = async () => {
         try {
-            const { data } = await api.post(`auth/logout`);
+            const { data } = await tenant.post(`auth/logout`);
             ElNotification.success(data.message);
 
             localStorage.removeItem('token')

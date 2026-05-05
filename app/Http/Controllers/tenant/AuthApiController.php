@@ -4,6 +4,7 @@ namespace App\Http\Controllers\tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Models\Tenant\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,10 +20,11 @@ class AuthApiController extends Controller
             $credentials = $request->only(['email', 'password']);
 
             if (! $token = Auth::attempt($credentials)) {
-                return $this->sendError('Unauthorized');
+                return $this->sendError('Credenciales incorrectas', 401);
             }
 
             $user = Auth::user();
+            $user->load(['roles', 'permissions']);
 
             return $this->sendResponse([
                 'user' => $user,

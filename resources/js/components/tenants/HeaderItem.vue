@@ -186,7 +186,7 @@
                                         </a>
                                         <div class="my-2 h-px bg-slate-200"></div>
                                         <a href="#" class="block rounded-2xl px-3 py-3 hover:bg-red-50"
-                                            @click.prevent="closeAll">
+                                            @click.prevent="authStore.logout">
                                             <p class="text-sm font-medium text-red-600">Cerrar sesión</p>
                                             <p class="text-xs text-red-500">Salir de tu cuenta.</p>
                                         </a>
@@ -388,9 +388,11 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "../../stores/auth";
 
 const q = ref("");
 const searchRef = ref(null);
+const authStore = useAuthStore()
 
 const headerRef = ref(null);
 
