@@ -208,7 +208,7 @@
                                     <i class="fa-regular fa-pen-to-square"></i>
                                 </el-button>
 
-                                <el-button @click="handleDelete" v-tippy="'Eliminar'" size="small" type="danger">
+                                <el-button @click="handleDelete(row)" v-tippy="'Eliminar'" size="small" type="danger">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </el-button>
                             </el-button-group>
