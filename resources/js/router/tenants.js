@@ -1,30 +1,9 @@
 const requireAuth = (to, from, next) => {
     const token = localStorage.getItem("token");
-
-    let user = null;
-
-    try {
-        user = JSON.parse(localStorage.getItem("user") ?? "null");
-    } catch (e) {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        return next("/login");
-    }
-
-    if (!token || !user) {
-        return next("/login");
-    }
-
-    return next();
-};
-
-const redirectIfAuthenticated = (to, from, next) => {
-    const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") ?? "null");
 
-    if (token && user) {
-        return next("/");
-    }
+
+    if (!token || !user) return next("/guest-gate");
 
     return next();
 };
@@ -34,154 +13,138 @@ export const routesTenants = [
         path: '/',
         name: 'home',
         component: () => import('../views/tenants/HomeView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/login',
         name: 'login',
         component: () => import('../views/tenants/LoginView.vue'),
-        meta: { scope: 'tenant', requireAuth: false },
-        beforeEnter: redirectIfAuthenticated,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/quotes',
         name: 'quotes',
         component: () => import('../views/tenants/quotes/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/quote-create',
         name: 'quote-create',
         component: () => import('../views/tenants/quotes/CreateView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/quote-update/:id',
         name: 'quote-update',
         component: () => import('../views/tenants/quotes/CreateView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/services',
         name: 'services',
         component: () => import('../views/tenants/services/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/companies',
         name: 'companies',
         component: () => import('../views/tenants/companies/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/company-create',
         name: 'company-create',
         component: () => import('../views/tenants/companies/CreateView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/company-update/:id',
         name: 'company-update',
         component: () => import('../views/tenants/companies/UpdateView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/matriz',
         name: 'matriz',
         component: () => import('../views/tenants/matriz/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/essays',
         name: 'essays',
         component: () => import('../views/tenants/essays/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/conditions',
         name: 'conditions',
         component: () => import('../views/tenants/conditions/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/methodologies',
         name: 'methodologies',
         component: () => import('../views/tenants/methodologies/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/units-measurement',
         name: 'units-measurement',
         component: () => import('../views/tenants/units-measurement/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/logistic-cats',
         name: 'logistic-cats',
         component: () => import('../views/tenants/logistic-cats/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/users',
         name: 'users',
         component: () => import('../views/tenants/users/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/orders-services',
         name: 'orders-services',
         component: () => import('../views/tenants/order-services/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/orders-services-create',
         name: 'orders-services-create',
         component: () => import('../views/tenants/order-services/CreateView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/orders-services-update/:id',
         name: 'orders-services-update',
         component: () => import('../views/tenants/order-services/CreateView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/reception',
         name: 'reception',
         component: () => import('../views/tenants/reception/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/information',
         name: 'information',
         component: () => import('../views/tenants/information/IndexView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
     },
     {
         path: '/report-ots',
         name: 'report-ots',
         component: () => import('../views/tenants/reports/ReportOtsView.vue'),
-        meta: { scope: 'tenant', requireAuth: true },
-        beforeEnter: requireAuth,
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: 'import-test',
+        name: 'import-test',
+        component: () => import('../views/tenants/reports/ReportOtsView.vue'),
+        meta: { scope: 'tenant' }
     }
 ]

@@ -13,20 +13,18 @@ return new class extends Migration
     {
         Schema::create('matriz', function (Blueprint $table) {
             $table->id();
-            $table->text('category')->nullable();
-            $table->text('information')->nullable();
+            $table->string('type')->nullable();
+            $table->string('category')->nullable();
             $table->string('description')->nullable();
-            $table->string('type_matriz')->nullable();
-            $table->unsignedBigInteger('methodologie_id')->nullable();
-            $table->integer('number_samples')->nullable();
-            $table->foreign('methodologie_id')->references('id')->on('methodologies');
             $table->decimal('unit_price', 10, 2)->nullable();
-            $table->decimal('price', 10, 2)->nullable();
+            $table->boolean('other_company')->default(false);
 
-            $table->string('other_company')->nullable();
-            $table->string('other_company_name')->nullable();
-            $table->decimal('other_company_price', 10, 2)->nullable();
-            
+            $table->unsignedBigInteger('condition_id')->nullable();
+            $table->foreign('condition_id')->references('id')->on('conditions');
+
+            $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreign('company_id')->references('id')->on('companies');
+
             $table->timestamps();
             $table->softDeletes();
         });

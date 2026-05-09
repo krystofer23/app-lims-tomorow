@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('reviwed_id')->nullable();
             $table->unsignedBigInteger('company_id')->nullable();
+            $table->unsignedBigInteger('contact_id')->nullable();
             $table->foreign('quote_id')->references('id')->on('quotes');
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('reviwed_id')->references('id')->on('users');

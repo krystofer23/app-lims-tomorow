@@ -17,6 +17,7 @@ use App\Http\Controllers\tenant\QuotesApiController;
 use App\Http\Controllers\tenant\ReceptionApiController;
 use App\Http\Controllers\tenant\ReportOtsApiController;
 use App\Http\Controllers\tenant\ServiceApiController;
+use App\Http\Controllers\tenant\TestImportApiController;
 use App\Http\Controllers\tenant\UnitsMeasurementApiController;
 use App\Http\Controllers\tenant\UserApiController;
 use App\Http\Middleware\AllowExpiredTokenOnly;
@@ -66,14 +67,14 @@ Route::middleware([
 
         Route::middleware([JWTMiddleware::class])->group(function () {
 
-            Route::controller(ImportApiController::class)->prefix('import')->group(function () {
+            Route::controller(TestImportApiController::class)->prefix('import')->group(function () {
 
                 Route::post('', 'import');
             });
 
             Route::get('consulting-ruc/{ruc}', [ConsultingRucApiController::class, 'consulting']);
 
-            Route::controller(ReportOtsApiController::class)->prefix('report-ots')->group(function() {
+            Route::controller(ReportOtsApiController::class)->prefix('report-ots')->group(function () {
 
                 Route::get('', 'index');
             });

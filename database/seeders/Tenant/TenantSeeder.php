@@ -13,7 +13,6 @@ class TenantSeeder extends Seeder
     {
         $this->call([
             RolesSeeder::class,
-            ParameterSeeder::class
         ]);
 
         $user = User::create([

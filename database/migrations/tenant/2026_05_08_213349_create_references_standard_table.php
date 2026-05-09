@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parameters', function (Blueprint $table) {
+        Schema::create('references_standard', function (Blueprint $table) {
             $table->id();
-            $table->text('description');
+            $table->string('code')->nullable();
+            $table->string('title')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -24,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parameters');
+        Schema::dropIfExists('references_standard');
     }
 };

@@ -2,20 +2,17 @@
 
 namespace App\Models\tenant;
 
+use App\Models\TenantModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Parameters extends Model
+class Matrix extends TenantModel
 {
     use SoftDeletes;
 
-    protected $table = 'parameters';
+    protected $table = 'matrix';
 
     protected $fillable = [
         'description'
-    ];
-
-    protected $casts = [
-        'content' => 'array'
     ];
 }

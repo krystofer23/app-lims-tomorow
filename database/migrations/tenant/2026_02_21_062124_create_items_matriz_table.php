@@ -13,10 +13,14 @@ return new class extends Migration
     {
         Schema::create('items_matriz', function (Blueprint $table) {
             $table->id();
+
             $table->unsignedBigInteger('matriz_id')->nullable();
-            $table->unsignedBigInteger('essays_id')->nullable();
-            $table->foreign('matriz_id')->references('id')->on('matriz');
-            $table->foreign('essays_id')->references('id')->on('essays');
+            $table->unsignedBigInteger('parameter_id')->nullable();
+            $table->unsignedBigInteger('reference_id')->nullable();
+            $table->unsignedBigInteger('units_measurement_id')->nullable();
+            $table->string('lcm')->nullable();
+            $table->json('conditions');
+
             $table->timestamps();
             $table->softDeletes();
         });

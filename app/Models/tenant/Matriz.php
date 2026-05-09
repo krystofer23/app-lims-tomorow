@@ -15,17 +15,13 @@ class Matriz extends TenantModel
     protected $table = 'matriz';
 
     protected $fillable = [
-        'description',
-        'methodologie_id',
-        'number_samples',
-        'unit_price',
-        'price',
+        'type',
         'category',
-        'information', 
-        'type_matriz',
+        'description',
+        'unit_price',
+        'condition_id',
         'other_company',
-        'other_company_name',
-        'other_company_price'
+        'company_id',
     ];
 
     protected $casts = [
@@ -33,13 +29,18 @@ class Matriz extends TenantModel
         'other_company' => 'boolean'
     ];
 
-    public function methodologie(): BelongsTo
-    {
-        return $this->belongsTo(Methodologies::class, 'methodologie_id');
-    }
-
     public function itemsMatriz(): HasMany
     {
         return $this->hasMany(ItemsMatriz::class, 'matriz_id', 'id');
+    }
+
+    public function condition(): BelongsTo
+    {
+        return $this->belongsTo(Conditions::class, 'condition_id');
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

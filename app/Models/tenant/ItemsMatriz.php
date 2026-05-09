@@ -16,7 +16,11 @@ class ItemsMatriz extends TenantModel
 
     protected $fillable = [
         'matriz_id',
-        'essays_id',
+        'parameter_id',
+        'reference_id',
+        'units_measurement_id',
+        'lcm',
+        'conditions'
     ];
 
     protected $casts = [
@@ -26,10 +30,5 @@ class ItemsMatriz extends TenantModel
     public function matriz(): BelongsTo
     {
         return $this->belongsTo(Matriz::class, 'matriz_id');
-    }
-
-    public function essays(): BelongsTo
-    {
-        return $this->belongsTo(Essays::class, 'essays_id');
     }
 }
