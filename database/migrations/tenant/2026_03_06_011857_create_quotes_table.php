@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('version')->nullable();
             $table->string('code')->nullable();
             $table->decimal('items_total', 10, 2);
+            $table->decimal('services_total', 10, 2);
             $table->decimal('other_expenses_total', 10, 2);
             $table->decimal('igv', 10, 2);
             $table->decimal('subtotal', 10, 2);

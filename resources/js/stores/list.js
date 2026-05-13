@@ -298,10 +298,32 @@ export const useListStore = defineStore("listStore", () => {
         }
     }
 
+    const types = ref([])
+    const matrixs = ref([])
+
+    const getTypes = async () => {
+        try {
+            const { data } = await tenant.get(`list/types`)
+            if (data.data) types.value = data.data
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+    }
+    const getMatrixs = async () => {
+        try {
+            const { data } = await tenant.get(`list/matrixs`)
+            if (data.data) matrixs.value = data.data
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+    }
+
     return {
         conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService, comerciales,
         getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices, contacts, loadingContacts, getContacts, loadingTeam,
         teams, paginationTeam, getTeams, loadingOrderService, ordersServices, paginationOrderService, getOrderServices, getParameters, parameters,
-        getUsers, users
+        getUsers, users, types, matrixs, getTypes, getMatrixs
     }
 })

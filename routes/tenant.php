@@ -8,6 +8,7 @@ use App\Http\Controllers\tenant\ConditionsApiController;
 use App\Http\Controllers\tenant\ConsultingRucApiController;
 use App\Http\Controllers\tenant\EssaysApiController;
 use App\Http\Controllers\tenant\ImportApiController;
+use App\Http\Controllers\tenant\ItemsApiController;
 use App\Http\Controllers\tenant\ListApiController;
 use App\Http\Controllers\tenant\LogisticCatsApiController;
 use App\Http\Controllers\tenant\MatrizApiController;
@@ -66,6 +67,11 @@ Route::middleware([
         });
 
         Route::middleware([JWTMiddleware::class])->group(function () {
+
+            Route::controller(ItemsApiController::class)->prefix('items')->group(function ($q) {
+
+                Route::get('', 'index');
+            });
 
             Route::controller(TestImportApiController::class)->prefix('import')->group(function () {
 
@@ -139,6 +145,8 @@ Route::middleware([
 
             Route::controller(ListApiController::class)->prefix('list')->group(function () {
 
+                Route::get('types', 'types');
+                Route::get('matrixs', 'matrixs');
                 Route::get('matriz-description', 'matrizDescription');
                 Route::get('conditions', 'conditions');
                 Route::get('methodologies', 'methodologies');

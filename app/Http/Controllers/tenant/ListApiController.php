@@ -7,6 +7,8 @@ use App\Models\tenant\Company;
 use App\Models\tenant\Conditions;
 use App\Models\tenant\ContactCompanies;
 use App\Models\tenant\Essays;
+use App\Models\tenant\Item;
+use App\Models\tenant\Matrix;
 use App\Models\tenant\Matriz;
 use App\Models\tenant\Methodologies;
 use App\Models\tenant\Parameters;
@@ -14,6 +16,7 @@ use App\Models\tenant\Services;
 use App\Models\tenant\UnitsMeasurement;
 use App\Models\Tenant\User;
 use Exception;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -203,6 +206,35 @@ class ListApiController extends Controller
                 ->paginate(20);
 
             return $this->sendResponse($data, 'Enviando usuarios');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function types(): JsonResponse
+    {
+        try {
+            $types = Item::query()
+                ->distinct()
+                ->orderBy('type')
+                ->pluck('type')
+                ->values();
+
+            return $this->sendResponse($types, 'Enviando tipos únicos');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function matrixs(): JsonResponse
+    {
+        try {
+            $matrixs = Matrix::query()
+                ->select('id', 'description')
+                ->orderBy('description')
+                ->get();
+
+            return $this->sendResponse($matrixs, 'Enviando matrices únicas');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }

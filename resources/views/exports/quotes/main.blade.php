@@ -1,5 +1,5 @@
 @php
-use Carbon\Carbon;
+    use Carbon\Carbon;
 @endphp
 
 <table>
@@ -51,104 +51,109 @@ use Carbon\Carbon;
         <td colspan="10"></td>
     </tr>
 
-    @foreach($groupedMatrices as $group)
-    <tr>
-        <td colspan="10" style="font-weight:bold; background-color:#92d050;">
-            MATRIZ: {{ strtoupper($group['description']) }}
-            @if(!empty($group['frequency_label']))
-            [{{ $group['frequency_label'] }}]
-            @endif
-        </td>
-    </tr>
+    @foreach ($groupedMatrices as $group)
+        <tr>
+            <td colspan="10" style="font-weight:bold; background-color:#92d050;">
+                MATRIZ: {{ strtoupper($group['description']) }}
+                @if (!empty($group['frequency_label']))
+                    [{{ $group['frequency_label'] }}]
+                @endif
+            </td>
+        </tr>
 
-    <tr>
-        <td style="background: #ebf1de; font-weight:bold;">Matriz</td>
-        <td style="background: #ebf1de; font-weight:bold;">Ensayo</td>
-        <td colspan="2" style="background: #ebf1de; font-weight:bold;">METODOLOGÍA</td>
-        <td style="background: #ebf1de; font-weight:bold;">LCM</td>
-        <td style="background: #ebf1de; font-weight:bold;">UNIDAD</td>
-        <td style="background: #ebf1de; font-weight:bold;">N° MUESTRAS</td>
-        <td style="background: #ebf1de; font-weight:bold;">Condición</td>
-        <td style="background: #ebf1de; font-weight:bold;">Precio unit. (Soles)</td>
-        <td style="background: #ebf1de; font-weight:bold;">Precio (Soles)</td>
-    </tr>
+        <tr>
+            <td style="background: #ebf1de; font-weight:bold;">Matriz</td>
+            <td style="background: #ebf1de; font-weight:bold;">Ensayo</td>
+            <td colspan="2" style="background: #ebf1de; font-weight:bold;">METODOLOGÍA</td>
+            <td style="background: #ebf1de; font-weight:bold;">LCM</td>
+            <td style="background: #ebf1de; font-weight:bold;">UNIDAD</td>
+            <td style="background: #ebf1de; font-weight:bold;">N° MUESTRAS</td>
+            <td style="background: #ebf1de; font-weight:bold;">Condición</td>
+            <td style="background: #ebf1de; font-weight:bold;">Precio unit. (Soles)</td>
+            <td style="background: #ebf1de; font-weight:bold;">Precio (Soles)</td>
+        </tr>
 
-    @foreach($group['items'] as $matriz)
-    @php
-    $essays = data_get($matriz, 'item.essays', []);
-    $rowspan = max(count($essays), 1);
-    @endphp
+        @foreach ($group['items'] as $matriz)
+            @php
+                $matrizDescription = data_get($matriz, 'item.matrix.description', '-');
+                $essayDescription = data_get($matriz, 'item.parameter.description', '-');
 
-    @if(count($essays))
-    @foreach($essays as $index => $essay)
-    <tr>
-        @if($index === 0)
-        <td rowspan="{{ $rowspan }}">
-            {{ data_get($matriz, 'item.description', '-') }}
-        </td>
-        @endif
+                $methodologyCode = data_get($matriz, 'item.reference.code', '');
+                $methodologyTitle = data_get($matriz, 'item.reference.title', '');
 
-        <td>{{ data_get($essay, 'description', '-') }}</td>
+                $methodology = trim($methodologyCode . ' - ' . $methodologyTitle);
+                $methodology = $methodology !== '-' && $methodology !== '' ? $methodology : '-';
 
-        @if($index === 0)
-        <td colspan="2" rowspan="{{ $rowspan }}">
-            {{ data_get($matriz, 'item.methodologie.description', '-') }}
-        </td>
-        @endif
+                $lcm = data_get($matriz, 'item.lcm', '-');
+                $unit = data_get($matriz, 'item.unit_measurement.description', '-');
+                $samples = data_get($matriz, 'item.number_samples', $matriz->amount ?? '-');
+                $condition = data_get($matriz, 'item.condition.description', '-');
 
-        <td>{{ data_get($essay, 'lcm', '-') }}</td>
-        <td>{{ data_get($essay, 'units_measurement.description', '-') }}</td>
+                $priceUnitFmt = number_format(
+                    (float) ($matriz->price_unit ?? data_get($matriz, 'item.unit_price', 0)),
+                    2,
+                    ',',
+                    '.',
+                );
+                $totalFmt = number_format((float) ($matriz->total ?? data_get($matriz, 'item.price', 0)), 2, ',', '.');
+            @endphp
 
-        @if($index === 0)
-        <td rowspan="{{ $rowspan }}">
-            {{ data_get($matriz, 'item.number_samples', '-') }}
-        </td>
-        @endif
+            <tr>
+                <td style="vertical-align: top;">
+                    {{ $matrizDescription }}
+                </td>
 
-        <td>{{ data_get($essay, 'condition.description', '-') }}</td>
+                <td>
+                    {{ $essayDescription }}
+                </td>
 
-        @if($index === 0)
-        <td rowspan="{{ $rowspan }}">
-            {{ number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.') }}
-        </td>
-        <td rowspan="{{ $rowspan }}">
-            {{ number_format((float) ($matriz->total ?? 0), 2, ',', '.') }}
-        </td>
-        @endif
-    </tr>
-    @endforeach
-    @else
-    <tr>
-        <td>{{ data_get($matriz, 'item.description', '-') }}</td>
-        <td>-</td>
-        <td colspan="2">{{ data_get($matriz, 'item.methodologie.description', '-') }}</td>
-        <td>-</td>
-        <td>-</td>
-        <td>{{ data_get($matriz, 'item.number_samples', '-') }}</td>
-        <td>-</td>
-        <td>{{ number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.') }}</td>
-        <td>{{ number_format((float) ($matriz->total ?? 0), 2, ',', '.') }}</td>
-    </tr>
-    @endif
-    @endforeach
+                <td colspan="2">
+                    {{ $methodology }}
+                </td>
 
-    <tr>
-        <td colspan="7" style="font-size:12px; text-align:left; vertical-align:top;">
-            L.C.M.: Limite de cuantificación de Método
-            Se identifica Parametros Acreditados ante INACAL-DA
-            Se identifica Parametros Acreditados ante IAS (entidad conformante de ILAC, reconocida por INACAL)
-        </td>
-        <td colspan="2" style="font-weight:bold; background-color:#92d050;">
-            Total {{ $loop->iteration }} (Soles):
-        </td>
-        <td style="font-weight:bold;">
-            {{ number_format((float) $group['total'], 2, ',', '.') }}
-        </td>
-    </tr>
+                <td>
+                    {{ $lcm }}
+                </td>
 
-    <tr>
-        <td colspan="10"></td>
-    </tr>
+                <td>
+                    {{ $unit }}
+                </td>
+
+                <td class="text-center">
+                    {{ $samples }}
+                </td>
+
+                <td>
+                    {{ $condition }}
+                </td>
+
+                <td class="text-right">
+                    {{ $priceUnitFmt }}
+                </td>
+
+                <td class="text-right">
+                    {{ $totalFmt }}
+                </td>
+            </tr>
+        @endforeach
+
+        <tr>
+            <td colspan="7" style="font-size:12px; text-align:left; vertical-align:top;">
+                L.C.M.: Limite de cuantificación de Método
+                Se identifica Parametros Acreditados ante INACAL-DA
+                Se identifica Parametros Acreditados ante IAS (entidad conformante de ILAC, reconocida por INACAL)
+            </td>
+            <td colspan="2" style="font-weight:bold; background-color:#92d050;">
+                Total {{ $loop->iteration }} (Soles):
+            </td>
+            <td style="font-weight:bold;">
+                {{ number_format((float) $group['total'], 2, ',', '.') }}
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="10"></td>
+        </tr>
     @endforeach
 
     <tr>
@@ -165,14 +170,14 @@ use Carbon\Carbon;
         <td style="background: #ebf1de; font-weight:bold;">Precio (Soles)</td>
     </tr>
 
-    @foreach($services as $service)
-    <tr>
-        <td colspan="6">{{ data_get($service, 'item.description', '-') }}</td>
-        <td>{{ data_get($service, 'item.days', '-') }}</td>
-        <td>{{ data_get($service, 'item.amount', '-') }}</td>
-        <td>{{ number_format((float) data_get($service, 'item.unit_price', 0), 2, ',', '.') }}</td>
-        <td>{{ number_format((float) data_get($service, 'item.price', $service->total ?? 0), 2, ',', '.') }}</td>
-    </tr>
+    @foreach ($services as $service)
+        <tr>
+            <td colspan="6">{{ data_get($service, 'item.item.description', '-') }}</td>
+            <td>{{ data_get($service, 'item.item.days', '-') }}</td>
+            <td>{{ data_get($service, 'item.item.amount', $service->amount ?? '-') }}</td>
+            <td>{{ number_format((float) ($service->price_unit ?? data_get($service, 'item.item.unit_price', 0)), 2, ',', '.') }}</td>
+            <td>{{ number_format((float) ($service->total ?? data_get($service, 'item.price', 0)), 2, ',', '.') }}</td>
+        </tr>
     @endforeach
 
     <tr>
@@ -199,14 +204,15 @@ use Carbon\Carbon;
         <td style="background: #8db4e2;">COSTO UNIT.</td>
     </tr>
 
-    @foreach($other_expense as $otherexpense)
-    <tr>
-        <td colspan="6">{{ data_get($otherexpense, 'item.description', '-') }}</td>
-        <td>{{ data_get($otherexpense, 'item.days', '-') }}</td>
-        <td>{{ data_get($otherexpense, 'item.amount', '-') }}</td>
-        <td>{{ number_format((float) data_get($otherexpense, 'item.unit_price', 0), 2, ',', '.') }}</td>
-        <td>{{ number_format((float) data_get($otherexpense, 'item.price', $otherexpense->total ?? 0), 2, ',', '.') }}</td>
-    </tr>
+    @foreach ($other_expense as $otherexpense)
+        <tr>
+            <td colspan="6">{{ data_get($otherexpense, 'item.description', '-') }}</td>
+            <td>{{ data_get($otherexpense, 'item.days', '-') }}</td>
+            <td>{{ data_get($otherexpense, 'item.amount', '-') }}</td>
+            <td>{{ number_format((float) data_get($otherexpense, 'item.unit_price', 0), 2, ',', '.') }}</td>
+            <td>{{ number_format((float) data_get($otherexpense, 'item.price', $otherexpense->total ?? 0), 2, ',', '.') }}
+            </td>
+        </tr>
     @endforeach
 
     <tr>
@@ -253,7 +259,7 @@ use Carbon\Carbon;
     <tr>
         <td style="background: #92d050; font-weight: bold;" colspan="2">Realizado por: </td>
         <td colspan="2">
-            {{$quote->user?->full_name}}
+            {{ $quote->user?->full_name }}
         </td>
     </tr>
 

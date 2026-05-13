@@ -7,7 +7,7 @@ use App\Imports\TestImport;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Excel;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TestImportApiController extends Controller
 {

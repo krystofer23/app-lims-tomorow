@@ -3,7 +3,6 @@
 namespace App\Exports\Sheets;
 
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -25,16 +24,18 @@ class QuoteMainSheet implements FromView, WithTitle, WithEvents
         $quote = $this->quote;
         $company = $quote->company;
 
-        $matrices = $quote->itemsQuotes->where('type', 'matriz');
+        $matrices = $quote->itemsQuotes->where('type', 'matrix');
         $services = $quote->itemsQuotes->where('type', 'service');
         $other_expense = $quote->itemsQuotes->where('type', 'other_expense');
 
-        $ruc = strval($company->ruc);
+        $ruc = strval($company?->ruc ?? '');
 
         $groupedMatrices = $matrices
-            ->groupBy(function ($matriz) {
-                $description = data_get($matriz, 'item.description', 'Sin matriz');
-                $frequencyLabel = data_get($matriz, 'item.frequency_label');
+            ->groupBy(function ($matrix) {
+                $description = data_get($matrix, 'item.matrix.description', 'Sin matriz');
+
+                $frequencyLabel = data_get($matrix, 'item.frequency_label')
+                    ?? data_get($matrix, 'item.item.frequency_label');
 
                 return $description . '||' . ($frequencyLabel ?: 'SIN_FRECUENCIA');
             })
@@ -42,24 +43,36 @@ class QuoteMainSheet implements FromView, WithTitle, WithEvents
                 $first = $items->first();
 
                 return [
-                    'description' => data_get($first, 'item.description', 'Sin matriz'),
-                    'frequency_label' => data_get($first, 'item.frequency_label'),
+                    'description' => data_get($first, 'item.matrix.description', 'Sin matriz'),
+                    'frequency_label' => data_get($first, 'item.frequency_label')
+                        ?? data_get($first, 'item.item.frequency_label'),
                     'items' => $items,
                     'total' => $items->sum(fn($item) => (float) ($item->total ?? 0)),
                 ];
             })
             ->values();
 
+        $matricesTotal = $matrices->sum(fn($item) => (float) ($item->total ?? 0));
+
         $servicesTotal = $services->sum(function ($service) {
-            return (float) data_get($service, 'item.price', $service->total ?? 0);
+            return (float) (
+                $service->total
+                ?? data_get($service, 'item.price')
+                ?? data_get($service, 'item.item.price')
+                ?? 0
+            );
         });
 
         $otherExpenseTotal = $other_expense->sum(function ($otherexpense) {
-            return (float) data_get($otherexpense, 'item.price', $otherexpense->total ?? 0);
+            return (float) (
+                $otherexpense->total
+                ?? data_get($otherexpense, 'item.total')
+                ?? data_get($otherexpense, 'item.price')
+                ?? 0
+            );
         });
 
-        $matricesTotal = $groupedMatrices->sum('total');
-        $grandTotal = $matricesTotal + $servicesTotal;
+        $grandTotal = $matricesTotal + $servicesTotal + $otherExpenseTotal;
 
         return view('exports.quotes.main', [
             'quote' => $quote,

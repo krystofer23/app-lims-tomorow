@@ -1,5 +1,5 @@
 @php
-use Carbon\Carbon;
+    use Carbon\Carbon;
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -120,8 +120,6 @@ use Carbon\Carbon;
             vertical-align: top;
             border-top: none !important;
         }
-
-        
     </style>
 </head>
 
@@ -174,157 +172,112 @@ use Carbon\Carbon;
             <td colspan="10"></td>
         </tr>
 
-        @foreach($groupedMatrices as $group)
-        <tr>
-            <td colspan="10" class="section-green">
-                MATRIZ: {{ strtoupper($group['description']) }}
-                @if(!empty($group['frequency_label']))
-                [{{ $group['frequency_label'] }}]
-                @endif
-            </td>
-        </tr>
+        @foreach ($groupedMatrices as $group)
+            <tr>
+                <td colspan="10" class="section-green">
+                    MATRIZ: {{ strtoupper($group['description']) }}
+                    @if (!empty($group['frequency_label']))
+                        [{{ $group['frequency_label'] }}]
+                    @endif
+                </td>
+            </tr>
 
-        <tr>
-            <td class="header-soft">Matriz</td>
-            <td class="header-soft">Ensayo</td>
-            <td colspan="2" class="header-soft">METODOLOGÍA</td>
-            <td class="header-soft">LCM</td>
-            <td class="header-soft">UNIDAD</td>
-            <td class="header-soft">N° MUESTRAS</td>
-            <td class="header-soft">Condición</td>
-            <td class="header-soft">Precio unit. (Soles)</td>
-            <td class="header-soft">Precio (Soles)</td>
-        </tr>
+            <tr>
+                <td class="header-soft">Matriz</td>
+                <td class="header-soft">Ensayo</td>
+                <td colspan="2" class="header-soft">METODOLOGÍA</td>
+                <td class="header-soft">LCM</td>
+                <td class="header-soft">UNIDAD</td>
+                <td class="header-soft">N° MUESTRAS</td>
+                <td class="header-soft">Condición</td>
+                <td class="header-soft">Precio unit. (Soles)</td>
+                <td class="header-soft">Precio (Soles)</td>
+            </tr>
 
-        @foreach($group['items'] as $matriz)
-            @php
-                $essays = data_get($matriz, 'item.essays', []);
-                $matrizDescription = data_get($matriz, 'item.description', '-');
-                $methodology = data_get($matriz, 'item.methodologie.description', '-');
-                $samples = data_get($matriz, 'item.number_samples', '-');
-                $priceUnitFmt = number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.');
-                $totalFmt = number_format((float) ($matriz->total ?? 0), 2, ',', '.');
-                $rowspan = max(count($essays), 1);
-                $essayTextLength = collect($essays)->sum(function ($essay) {
-                    return strlen((string) data_get($essay, 'description', ''));
-                });
-                $contentLength = strlen((string) $matrizDescription)
-                    + strlen((string) $methodology)
-                    + $essayTextLength;
-                $useRealRowspan = count($essays) <= 6 && $contentLength <= 220;
-            @endphp
+            @foreach ($group['items'] as $matriz)
+                @php
+                    $matrizDescription = data_get($matriz, 'item.matrix.description', '-');
+                    $essayDescription = data_get($matriz, 'item.parameter.description', '-');
 
-            @if(count($essays))
-                @if($useRealRowspan)
-                    @foreach($essays as $index => $essay)
-                        <tr>
-                            @if($index === 0)
-                                <td rowspan="{{ $rowspan }}" style="vertical-align: top;">
-                                    {{ $matrizDescription }}
-                                </td>
-                            @endif
+                    $methodologyCode = data_get($matriz, 'item.reference.code', '');
+                    $methodologyTitle = data_get($matriz, 'item.reference.title', '');
 
-                            <td>{{ data_get($essay, 'description', '-') }}</td>
+                    $methodology = trim($methodologyCode . ' - ' . $methodologyTitle);
+                    $methodology = $methodology !== '-' && $methodology !== '' ? $methodology : '-';
 
-                            @if($index === 0)
-                                <td colspan="2" rowspan="{{ $rowspan }}" style="vertical-align: top;">
-                                    {{ $methodology }}
-                                </td>
-                            @endif
+                    $lcm = data_get($matriz, 'item.lcm', '-');
+                    $unit = data_get($matriz, 'item.unit_measurement.description', '-');
+                    $samples = data_get($matriz, 'item.number_samples', $matriz->amount ?? '-');
+                    $condition = data_get($matriz, 'item.condition.description', '-');
 
-                            <td>{{ data_get($essay, 'lcm', '-') }}</td>
-                            <td>{{ data_get($essay, 'units_measurement.description', '-') }}</td>
+                    $priceUnitFmt = number_format(
+                        (float) ($matriz->price_unit ?? data_get($matriz, 'item.unit_price', 0)),
+                        2,
+                        ',',
+                        '.',
+                    );
+                    $totalFmt = number_format(
+                        (float) ($matriz->total ?? data_get($matriz, 'item.price', 0)),
+                        2,
+                        ',',
+                        '.',
+                    );
+                @endphp
 
-                            @if($index === 0)
-                                <td rowspan="{{ $rowspan }}" class="text-center">
-                                    {{ $samples }}
-                                </td>
-                            @endif
-
-                            @if($index === 0)
-                                <td rowspan="{{ $rowspan }}" style="vertical-align: top;">
-                                    {{ data_get($essay, 'condition.description', '-') }}
-                                </td>
-                            @endif
-
-                            @if($index === 0)
-                                <td rowspan="{{ $rowspan }}" class="text-right">
-                                    {{ $priceUnitFmt }}
-                                </td>
-                                <td rowspan="{{ $rowspan }}" class="text-right">
-                                    {{ $totalFmt }}
-                                </td>
-                            @endif
-                        </tr>
-                    @endforeach
-                @else
-                    @foreach($essays as $index => $essay)
-                        @php
-                            $isFirst = ($index === 0);
-                            $isLast = ($index === count($essays) - 1);
-                            $mergeClass = $isFirst ? 'merge-start' : ($isLast ? 'merge-end' : 'merge-mid');
-                        @endphp
-                        <tr>
-                            <td class="{{ $mergeClass }}">
-                                {{ $isFirst ? $matrizDescription : '' }}
-                            </td>
-
-                            <td>{{ data_get($essay, 'description', '-') }}</td>
-
-                            <td colspan="2" class="{{ $mergeClass }}">
-                                {{ $isFirst ? $methodology : '' }}
-                            </td>
-
-                            <td>{{ data_get($essay, 'lcm', '-') }}</td>
-                            <td>{{ data_get($essay, 'units_measurement.description', '-') }}</td>
-
-                            <td class="text-center {{ $mergeClass }}">
-                                {{ $isFirst ? $samples : '' }}
-                            </td>
-
-                            <td>{{ data_get($essay, 'condition.description', '-') }}</td>
-
-                            <td class="text-right {{ $mergeClass }}">
-                                {{ $isFirst ? $priceUnitFmt : '' }}
-                            </td>
-                            <td class="text-right {{ $mergeClass }}">
-                                {{ $isFirst ? $totalFmt : '' }}
-                            </td>
-                        </tr>
-                    @endforeach
-                @endif
-            @else
                 <tr>
                     <td style="vertical-align: top;">
                         {{ $matrizDescription }}
                     </td>
-                    <td>-</td>
-                    <td colspan="2">{{ $methodology }}</td>
-                    <td>-</td>
-                    <td>-</td>
-                    <td class="text-center">{{ $samples }}</td>
-                    <td>-</td>
-                    <td class="text-right">{{ number_format((float) ($matriz->price_unit ?? 0), 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format((float) ($matriz->total ?? 0), 2, ',', '.') }}</td>
+
+                    <td>
+                        {{ $essayDescription }}
+                    </td>
+
+                    <td colspan="2">
+                        {{ $methodology }}
+                    </td>
+
+                    <td>
+                        {{ $lcm }}
+                    </td>
+
+                    <td>
+                        {{ $unit }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ $samples }}
+                    </td>
+
+                    <td>
+                        {{ $condition }}
+                    </td>
+
+                    <td class="text-right">
+                        {{ $priceUnitFmt }}
+                    </td>
+
+                    <td class="text-right">
+                        {{ $totalFmt }}
+                    </td>
                 </tr>
-            @endif
-        @endforeach
+            @endforeach
 
-        <tr>
-            <td colspan="7" class="notes">
-                L.C.M.: Límite de cuantificación de método.<br>
-                Se identifica parámetros acreditados ante INACAL-DA.<br>
-                Se identifica parámetros acreditados ante IAS.
-            </td>
-            <td colspan="2" class="section-green">Total {{ $loop->iteration }} (Soles):</td>
-            <td class="bold text-right">
-                {{ number_format((float) $group['total'], 2, ',', '.') }}
-            </td>
-        </tr>
+            <tr>
+                <td colspan="7" class="notes">
+                    L.C.M.: Límite de cuantificación de método.<br>
+                    Se identifica parámetros acreditados ante INACAL-DA.<br>
+                    Se identifica parámetros acreditados ante IAS.
+                </td>
+                <td colspan="2" class="section-green">Total {{ $loop->iteration }} (Soles):</td>
+                <td class="bold text-right">
+                    {{ number_format((float) $group['total'], 2, ',', '.') }}
+                </td>
+            </tr>
 
-        <tr class="spacer">
-            <td colspan="10"></td>
-        </tr>
+            <tr class="spacer">
+                <td colspan="10"></td>
+            </tr>
         @endforeach
 
         <tr>
@@ -339,14 +292,18 @@ use Carbon\Carbon;
             <td class="header-soft">Precio (Soles)</td>
         </tr>
 
-        @foreach($services as $service)
-        <tr>
-            <td colspan="6">{{ data_get($service, 'item.description', '-') }}</td>
-            <td class="text-center">{{ data_get($service, 'item.days', '-') }}</td>
-            <td class="text-center">{{ data_get($service, 'item.amount', '-') }}</td>
-            <td class="text-right">{{ number_format((float) data_get($service, 'item.unit_price', 0), 2, ',', '.') }}</td>
-            <td class="text-right">{{ number_format((float) data_get($service, 'item.price', $service->total ?? 0), 2, ',', '.') }}</td>
-        </tr>
+        @foreach ($services as $service)
+            <tr>
+                <td colspan="6">{{ data_get($service, 'item.item.description', '-') }}</td>
+                <td class="text-center">{{ data_get($service, 'item.item.days', '-') }}</td>
+                <td class="text-center">{{ data_get($service, 'item.item.amount', $service->amount ?? '-') }}</td>
+                <td class="text-right">
+                    {{ number_format((float) ($service->price_unit ?? data_get($service, 'item.item.unit_price', 0)), 2, ',', '.') }}
+                </td>
+                <td class="text-right">
+                    {{ number_format((float) ($service->total ?? data_get($service, 'item.price', 0)), 2, ',', '.') }}
+                </td>
+            </tr>
         @endforeach
 
         <tr>
@@ -371,14 +328,17 @@ use Carbon\Carbon;
             <td class="header-blue">PRECIO</td>
         </tr>
 
-        @foreach($other_expense as $otherexpense)
-        <tr>
-            <td colspan="6">{{ data_get($otherexpense, 'item.description', '-') }}</td>
-            <td class="text-center">{{ data_get($otherexpense, 'item.days', '-') }}</td>
-            <td class="text-center">{{ data_get($otherexpense, 'item.amount', '-') }}</td>
-            <td class="text-right">{{ number_format((float) data_get($otherexpense, 'item.unit_price', 0), 2, ',', '.') }}</td>
-            <td class="text-right">{{ number_format((float) data_get($otherexpense, 'item.price', $otherexpense->total ?? 0), 2, ',', '.') }}</td>
-        </tr>
+        @foreach ($other_expense as $otherexpense)
+            <tr>
+                <td colspan="6">{{ data_get($otherexpense, 'item.description', '-') }}</td>
+                <td class="text-center">{{ data_get($otherexpense, 'item.days', '-') }}</td>
+                <td class="text-center">{{ data_get($otherexpense, 'item.amount', '-') }}</td>
+                <td class="text-right">
+                    {{ number_format((float) data_get($otherexpense, 'item.unit_price', 0), 2, ',', '.') }}</td>
+                <td class="text-right">
+                    {{ number_format((float) data_get($otherexpense, 'item.price', $otherexpense->total ?? 0), 2, ',', '.') }}
+                </td>
+            </tr>
         @endforeach
 
         <tr>

@@ -26,6 +26,7 @@ class Quotes extends TenantModel
         'version',
         'code',
         'items_total',
+        'services_total',
         'other_expenses_total',
         'igv',
         'subtotal',
