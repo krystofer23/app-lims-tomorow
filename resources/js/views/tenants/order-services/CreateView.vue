@@ -204,39 +204,73 @@
                 </div>
 
                 <div class="space-y-4">
-                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <h4 class="text-sm font-semibold text-slate-900">
-                                Conceptos principales
-                            </h4>
-                            <p class="mt-1 text-sm text-slate-500">
-                                Agrega servicios y matrices de la orden.
-                            </p>
+                    <div class="border-b border-slate-100 bg-slate-50 px-4 py-3">
+                        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
+                                    <i class="fa-solid fa-clipboard-list text-sm"></i>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-800">
+                                        Matrices
+                                    </h3>
+                                    <p class="text-xs text-slate-500">
+                                        Conceptos principales de la cotización.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <el-button size="small" class="!rounded-lg" plain type="primary"
+                                    @click="showMatrixModal = true">
+                                    <i class="fa-solid fa-layer-group me-1"></i>
+                                    Agregar matrices
+                                </el-button>
+
+                                <!-- <el-button size="small" class="!rounded-lg" plain type="success"
+                                        @click="showServiceModal = true">
+                                        <i class="fa-solid fa-briefcase-medical me-1"></i>
+                                        Agregar servicios
+                                    </el-button> -->
+                            </div>
                         </div>
 
-                        <el-button class="!rounded-xl" plain type="primary" @click="showMatrixModal = true">
-                            <i class="fa-solid fa-layer-group me-2"></i>
-                            Agregar matrices
-                        </el-button>
-                    </div>
-
-                    <div class="overflow-hidden rounded-2xl border border-slate-200">
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-slate-200 text-sm">
-                                <thead class="bg-slate-50">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">#</th>
-                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">Tipo
+                            <table class="min-w-full text-xs">
+                                <thead>
+                                    <tr class="border-b border-slate-200 bg-slate-50">
+                                        <th
+                                            class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                            #
                                         </th>
-                                        <th class="px-4 py-3 text-left font-semibold text-slate-600">
-                                            Concepto</th>
-                                        <th class="px-4 py-3 text-center font-semibold text-slate-600">
-                                            Cantidad/N° de muestras
+                                        <th
+                                            class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                            Matriz
                                         </th>
-                                        <th class="px-4 py-3 text-center font-semibold text-slate-600">
-                                            Equipos
+                                        <th
+                                            class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                            Ensayo
                                         </th>
-                                        <th class="px-4 py-3 text-right font-semibold text-slate-600">
+                                        <th
+                                            class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                            Metodología
+                                        </th>
+                                        <th
+                                            class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                            N° de muestras
+                                        </th>
+                                        <th
+                                            class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                            P. Unit.
+                                        </th>
+                                        <th
+                                            class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                            Precio
+                                        </th>
+                                        <th
+                                            class="px-3 py-2 text-right text-[11px] font-bold uppercase tracking-wide text-slate-500">
                                             Acciones
                                         </th>
                                     </tr>
@@ -244,92 +278,88 @@
 
                                 <tbody class="divide-y divide-slate-100 bg-white">
                                     <tr v-for="(row, index) in form.items" :key="index"
-                                        class="transition hover:bg-slate-50" @click="toggleRowSelection(row, $event)">
-                                        <td :class="row?.item?.bg" class="px-4 py-4 text-slate-700">
-                                            <div class="gap-2 items-center flex">
+                                        @click="toggleRowSelection(row, $event)" class="transition hover:bg-slate-50">
+                                        <td :class="row?.item?.bg" class="px-3 py-2 text-slate-700">
+                                            <div class="flex items-center gap-2">
                                                 <el-checkbox v-model="row.select" class="!m-0 !p-0" />
-                                                {{ index + 1 }}
-                                            </div>
-                                        </td>
 
-                                        <td :class="row?.item?.bg" class="px-4 py-4">
-                                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                                                :class="row.type === 'matriz'
-                                                    ? 'bg-sky-50 text-sky-700'
-                                                    : 'bg-emerald-50 text-emerald-700'">
-                                                {{ row.type === 'matriz' ? 'Matriz' : 'Servicio' }}
-                                            </span>
-
-                                            <div v-if="row.type === 'service'" class="mt-3">
-                                                <span class="mb-1 block font-medium text-slate-600">Días</span>
-                                                <el-input v-model="row.item.days" size="small" placeholder="Días" />
-                                            </div>
-                                        </td>
-
-                                        <td :class="row?.item?.bg" class="px-4 py-4 text-slate-700">
-                                            <p v-tippy="row?.item?.description || '-'"
-                                                class="font-semibold text-slate-800">
-                                                {{ row?.item?.description || '-' }}
-                                            </p>
-
-                                            <p v-if="row?.item?.methodologie?.description"
-                                                v-tippy="row?.item?.methodologie?.description || 'No registrada'"
-                                                class="mt-1 text-xs text-slate-500 line-clamp-3">
-                                                Metodología:
-                                                {{ row?.item?.methodologie?.description || 'No registrada'
-                                                }}
-                                            </p>
-                                        </td>
-
-                                        <td :class="row?.item?.bg" class="px-4 py-4 text-center">
-                                            <el-input v-if="row?.type === 'matriz'" v-model="row.item.number_samples"
-                                                size="small" class="!w-[110px]" />
-                                            <el-input v-else v-model="row.item.amount" size="small"
-                                                class="!w-[110px]" />
-                                        </td>
-
-                                        <td :class="row?.item?.bg" class="px-4 py-4 text-center">
-                                            <el-button v-tippy="'Ver equipos'" @click="handleTeam(row)" size="small">
-                                                <i class="fa-solid fa-chart-diagram"></i>
-                                            </el-button>
-                                        </td>
-
-                                        <td :class="row?.item?.bg" class="px-4 py-4 text-right relative">
-                                            <el-button @click="itemDelete(index)" type="danger" plain size="small"
-                                                class="!rounded-lg">
-                                                <i class="fa-solid fa-trash-can"></i>
-                                            </el-button>
-
-                                            <div class="absolute top-0 right-1 flex gap-2"
-                                                v-if="row?.item?.frequency_label">
                                                 <span
-                                                    class="bg-[#1abc9c] px-2 pt-1 text-white rounded-lg text-xs font-medium w-full h-[24px] truncate">
+                                                    class="flex h-6 w-6 items-center justify-center rounded-md bg-slate-100 text-[11px] font-bold text-slate-600">
+                                                    {{ index + 1 }}
+                                                </span>
+                                            </div>
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-3 py-2">
+                                            {{ row?.matrix?.description }}
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-3 py-2 text-slate-700">
+                                            {{ row?.reference?.code }}
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-3 py-2 text-center">
+                                            {{ row?.reference?.title }}
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-3 py-2 text-center">
+                                            <el-input size="small" v-model="row.number_samples" />
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-3 py-2 text-center">
+                                            <el-input size="small" v-model="row.unit_price" />
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="px-3 py-2 text-center">
+                                            {{ row?.price }}
+                                        </td>
+
+                                        <td :class="row?.item?.bg" class="relative px-3 py-2 text-right">
+                                            <el-button-group size="small">
+                                                <el-button v-tippy="'Cambiar valores'" class="!rounded-l-lg">
+                                                    <i class="fa-brands fa-unity"></i>
+                                                </el-button>
+                                                <el-button @click.stop="itemDelete(index)" type="danger" plain
+                                                    size="small" class="!rounded-r-lg">
+                                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                                </el-button>
+                                            </el-button-group>
+
+                                            <div v-if="row?.item?.frequency_label"
+                                                class="absolute right-2 top-1 flex items-center gap-1">
+                                                <span
+                                                    class="max-w-[100px] truncate rounded-full bg-teal-500 px-2 py-0.5 text-[10px] font-bold text-white">
                                                     {{ row?.item?.frequency_label }}
                                                 </span>
-                                                <el-button @click="() => {
-                                                    row.item.select = null
-                                                    row.item.bg = null
-                                                    row.item.frequency_label = null
-                                                }" plain size="small" class="!rounded-lg" type="warning"
-                                                    v-tippy="'Remover frecuencia'">
-                                                    <i class="fa-solid fa-eraser"></i>
-                                                </el-button>
+
+                                                <el-button-group>
+                                                    <el-button @click.stop="() => {
+                                                        row.item.select = null
+                                                        row.item.bg = null
+                                                        row.item.frequency_label = null
+                                                    }" plain size="small" class="!rounded-md" type="warning"
+                                                        v-tippy="'Remover frecuencia'">
+                                                        <i class="fa-solid fa-eraser text-xs"></i>
+                                                    </el-button>
+                                                </el-button-group>
                                             </div>
                                         </td>
                                     </tr>
 
                                     <tr v-if="form.items.length === 0">
-                                        <td colspan="7" class="px-4 py-12 text-center">
+                                        <td colspan="7" class="px-4 py-10 text-center">
                                             <div class="flex flex-col items-center justify-center text-slate-400">
                                                 <div
-                                                    class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
+                                                    class="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
                                                     <i class="fa-solid fa-folder-open text-lg"></i>
                                                 </div>
-                                                <p class="text-sm font-semibold text-slate-500">
+
+                                                <p class="text-xs font-bold text-slate-600">
                                                     Aún no agregaste servicios ni matrices
                                                 </p>
-                                                <span class="mt-1 text-xs text-slate-400">
-                                                    Usa los botones superiores para comenzar
+
+                                                <span class="mt-1 text-[11px] text-slate-400">
+                                                    Usa los botones superiores para comenzar.
                                                 </span>
                                             </div>
                                         </td>

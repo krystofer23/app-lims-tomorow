@@ -5,6 +5,7 @@ namespace App\Http\Controllers\tenant;
 use App\Exports\OrderServiceExport;
 use App\Http\Controllers\Controller;
 use App\Models\tenant\Essays;
+use App\Models\tenant\Item;
 use App\Models\tenant\ItemsOrderService;
 use App\Models\tenant\Matriz;
 use App\Models\tenant\OrderService;
@@ -112,18 +113,16 @@ class OrderServiceApiController extends Controller
             ]);
 
             if (!empty($input['items']) && is_array($input['items'])) {
-                foreach ($input['items'] as $value) {
-                    $model = $value['type'] === 'matriz' ? Matriz::class : null;
-
+                foreach ($input['items'] as $item) {
                     ItemsOrderService::create([
                         'order_service_id' => $orderService->id,
-                        'filable_type' => $model,
-                        'filable_id' => $value['id'] ?? null,
-                        'item' => isset($value['item']) ? json_encode($value['item']) : null,
-                        'type' => $value['type'] ?? null,
-                        'amount' => $value['item']['number_samples'] ?? null,
-                        'price_unit' => $value['item']['unit_price'] ?? null,
-                        'total' => $value['item']['price'] ?? null,
+                        'filable_type' => Item::class,
+                        'filable_id' => $item['id'],
+                        'item' => $item,
+                        'type' => 'matrix',
+                        'amount' => $item['number_samples'],
+                        'price_unit' => $item['unit_price'] ?? 0,
+                        'total' => $item['price'] ?? 0,
                     ]);
                 }
             }
@@ -170,18 +169,16 @@ class OrderServiceApiController extends Controller
             ItemsOrderService::where('order_service_id', $orderService->id)->delete();
 
             if (!empty($input['items']) && is_array($input['items'])) {
-                foreach ($input['items'] as $value) {
-                    $model = $value['type'] === 'matriz' ? Matriz::class : null;
-
+                foreach ($input['items'] as $item) {
                     ItemsOrderService::create([
                         'order_service_id' => $orderService->id,
-                        'filable_type' => $model,
-                        'filable_id' => $value['id'] ?? null,
-                        'item' => isset($value['item']) ? json_encode($value['item']) : null,
-                        'type' => $value['type'] ?? null,
-                        'amount' => $value['item']['number_samples'] ?? null,
-                        'price_unit' => $value['item']['unit_price'] ?? null,
-                        'total' => $value['item']['price'] ?? null,
+                        'filable_type' => Item::class,
+                        'filable_id' => $item['id'],
+                        'item' => $item,
+                        'type' => 'matrix',
+                        'amount' => $item['number_samples'],
+                        'price_unit' => $item['unit_price'] ?? 0,
+                        'total' => $item['price'] ?? 0,
                     ]);
                 }
             }

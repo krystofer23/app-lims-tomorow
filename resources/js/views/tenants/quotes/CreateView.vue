@@ -781,16 +781,58 @@
     <logistic-cast-modal :items="form.other_expenses" :state="state" @close="() => {
         state = false
     }" />
+    
+    <el-dialog v-model="visibleValue" width="360px" align-center class="!rounded-2xl">
+        <template #header>
+            <div>
+                <h2 class="text-lg font-semibold text-gray-800">
+                    Configurar parámetro
+                </h2>
+                <p class="text-sm text-gray-500 mt-1">
+                    Selecciona la unidad de medida y el LCM correspondiente.
+                </p>
+            </div>
+        </template>
 
-    <el-dialog v-model="visibleValue" class="max-w-[300px] !rounded-lg">
-        <div class="mb-3">
-            <label class="font-medium mb-0.5">Unidad de medida</label>
-            <el-select placeholder=""></el-select>
+        <div class="space-y-5">
+            <div>
+                <el-button v-tippy="'Ver opciones'" size="small" type="primary" plain>
+                    <i class="fa-solid fa-table"></i>
+                </el-button>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Unidad de medida
+                </label>
+
+                <el-select placeholder="Seleccionar unidad" class="w-full" clearable filterable>
+                    <el-option label="mg/L" value="mg/L" />
+                    <el-option label="µg/m³" value="µg/m3" />
+                    <el-option label="%" value="%" />
+                </el-select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                    LCM
+                </label>
+
+                <el-input placeholder="LCM" />
+            </div>
         </div>
-        <div>
-            <label class="font-medium mb-0.5">LCM</label>
-            <el-select placeholder=""></el-select>
-        </div>
+
+        <template #footer>
+            <div class="flex justify-end pt-2">
+                <el-button class="!rounded-lg" @click="visibleValue = false">
+                    Cancelar
+                </el-button>
+
+                <el-button class="!rounded-lg" type="primary">
+                    Guardar
+                </el-button>
+            </div>
+        </template>
     </el-dialog>
 </template>
 
