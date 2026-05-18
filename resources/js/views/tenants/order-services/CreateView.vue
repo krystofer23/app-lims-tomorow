@@ -38,12 +38,12 @@
     </div>
 
     <div class="bg-white p-5 md:p-6 space-y-6">
-        <el-tabs v-model="activeTab" class="os-tabs">
+        <el-tabs v-model="activeTab" class="os-tabs !rounded-lg overflow-hidden" type="border-card">
             <el-tab-pane name="general">
                 <template #label>
                     <span class="flex items-center gap-2">
                         <i class="fa-solid fa-building-circle-check"></i>
-                        <span>Datos generales</span>
+                        <span>Datos del Cliente</span>
                     </span>
                 </template>
 
@@ -52,7 +52,7 @@
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Empresa
                         </label>
-                        <el-select :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                        <el-select clearable :remote-method="remoteMethodCompany" :loading="loadingCompany"
                             v-model="form.company_id" filterable class="w-full" placeholder="Selecciona una empresa"
                             size="large">
                             <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
@@ -72,7 +72,7 @@
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Contacto
                         </label>
-                        <el-select :loading="loadingContacts" clearable v-model="form.contact_id" filterable
+                        <el-select :loading="loadingContacts" clearable v-model="form.contact_company" filterable
                             class="w-full" placeholder="Selecciona un contacto" size="large">
                             <el-option v-for="contact in contacts" :key="contact.id"
                                 :label="contact?.user?.full_name + ' | ' + contact?.type" :value="contact.id" />
@@ -86,13 +86,13 @@
                         <el-input v-model="form.direction" placeholder="Ej: Av. Javier Prado 123" size="large" />
                     </div>
 
-                    <div class="md:col-span-2 xl:col-span-3">
+                    <!-- <div class="md:col-span-2 xl:col-span-3">
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Referencia
                         </label>
                         <el-input v-model="form.reference" type="textarea" :autosize="{ minRows: 3, maxRows: 4 }"
                             placeholder="Detalle breve o referencia de la orden de servicio" />
-                    </div>
+                    </div> -->
                 </div>
             </el-tab-pane>
 
@@ -100,58 +100,114 @@
                 <template #label>
                     <span class="flex items-center gap-2">
                         <i class="fa-solid fa-map-location-dot"></i>
-                        <span>Monitoreo</span>
+                        <span>Datos del Monitoreo</span>
                     </span>
                 </template>
 
-                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <div>
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-12">
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Cliente
+                        </label>
+                        <el-select clearable :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                            v-model="form.application_id" filterable class="w-full" placeholder="Selecciona una empresa"
+                            size="large">
+                            <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
+                                :value="company.id" />
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Contacto
+                        </label>
+                        <el-select :loading="loadingContacts" clearable v-model="form.contact_application" filterable
+                            class="w-full" placeholder="Selecciona un contacto" size="large">
+                            <el-option v-for="contact in contacts" :key="contact.id"
+                                :label="contact?.user?.full_name + ' | ' + contact?.type" :value="contact.id" />
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-4">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Departamento
+                        </label>
+                        <el-select clearable filterable v-model="form.department" size="large"
+                            placeholder="Seleccionar">
+                            <el-option v-for="row in departments" :label="row.departamento"
+                                :value="row.departamento"></el-option>
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-4">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Provincia
+                        </label>
+                        <el-select clearable filterable v-model="form.province" size="large" placeholder="Seleccionar">
+                            <el-option v-for="row in provinces" :label="row.provincia"
+                                :value="row.provincia"></el-option>
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-4">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Distrito
+                        </label>
+                        <el-select clearable filterable v-model="form.district" size="large" placeholder="Seleccionar">
+                            <el-option v-for="row in districts" :value="row.distrito" :label="row.distrito"></el-option>
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-4">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Ref. Sobre la ubicación
+                        </label>
+                        <el-input clearable v-model="form.reference" placeholder="Ej: Huánuco y Cerro de Pasco"
+                            size="large" />
+                    </div>
+
+                    <div class="col-span-4">
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Procedencia
                         </label>
                         <el-input v-model="form.origin" placeholder="Ej: Huánuco y Cerro de Pasco" size="large" />
                     </div>
 
-                    <div>
+                    <div class="col-span-4">
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Proyecto
                         </label>
                         <el-input v-model="form.project" placeholder="Nombre del proyecto" size="large" />
                     </div>
 
-                    <div>
+                    <div class="col-span-4">
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
-                            Fecha de salida
+                            Fecha inicio del servicio
                         </label>
-                        <el-date-picker v-model="form.date_output" type="date" class="!w-full"
+                        <el-date-picker clearable v-model="form.date_init_service" type="date" class="!w-full"
                             placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" size="large" />
                     </div>
 
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">
-                            Fecha de inducción
-                        </label>
-                        <el-date-picker v-model="form.date_induction" type="date" class="!w-full"
-                            placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" size="large" />
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-semibold text-slate-700">
-                            Fecha inicio del monitoreo
-                        </label>
-                        <el-date-picker v-model="form.date_monitoring_init" type="date" class="!w-full"
-                            placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" size="large" />
-                    </div>
-
-                    <div>
+                    <div class="col-span-4">
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Fecha fin del monitoreo
                         </label>
-                        <el-date-picker v-model="form.date_monitoring_end" type="date" class="!w-full"
+                        <el-date-picker clearable v-model="form.date_end_monitoring" type="date" class="!w-full"
                             placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" size="large" />
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div class="col-span-4">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Personal Programado
+                        </label>
+                        <el-select v-model="form.users" multiple filterable remote clearable size="large"
+                            placeholder="Seleccionar usuarios" :remote-method="listStore.getUsers"
+                            :loading="listStore.loadingUsers">
+                            <el-option v-for="row in users" :key="row.id" :value="row.id" :label="row.full_name" />
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-12">
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Especificar detalles
                         </label>
@@ -159,21 +215,163 @@
                             placeholder="Ej: Toma de muestras y mediciones de campo" />
                     </div>
 
-                    <div>
+                    <!-- <div class="col-span-4">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Fecha de salida
+                        </label>
+                        <el-date-picker v-model="form.date_output" type="date" class="!w-full"
+                            placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" size="large" />
+                    </div>
+
+                    <div class="col-span-4">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Fecha de inducción
+                        </label>
+                        <el-date-picker v-model="form.date_induction" type="date" class="!w-full"
+                            placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" size="large" />
+                    </div>
+
+                    <div class="col-span-4">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Fecha inicio del monitoreo
+                        </label>
+                        <el-date-picker v-model="form.date_monitoring_init" type="date" class="!w-full"
+                            placeholder="Selecciona fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" size="large" />
+                    </div> -->
+
+                    <el-divider class="col-span-12 !my-7">
+                        <div
+                            class="flex items-center gap-3 rounded-full bg-white px-4 py-2 shadow-sm ring-1 ring-slate-200">
+                            <div
+                                class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                                <i class="fa-solid fa-location-dot text-sm"></i>
+                            </div>
+
+                            <div class="text-left">
+                                <p class="text-xs font-bold uppercase tracking-wide text-slate-700">
+                                    Datos de información sobre los puntos de monitoreo
+                                </p>
+                                <p class="text-[11px] font-medium text-slate-400">
+                                    Aumentar las filas según sea necesario
+                                </p>
+                            </div>
+                        </div>
+                    </el-divider>
+
+                    <div class="col-span-6">
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Estaciones de monitoreo
                         </label>
-                        <el-input v-model="form.stations_monitoring" type="textarea"
-                            :autosize="{ minRows: 3, maxRows: 4 }"
+                        <el-input v-model="form.monitoring" type="textarea" :autosize="{ minRows: 3, maxRows: 4 }"
                             placeholder="Ej: Adjunta en la programación enviada" />
                     </div>
 
-                    <div>
+                    <div class="col-span-6">
                         <label class="mb-2 block text-sm font-semibold text-slate-700">
                             Proyecto de monitoreo
                         </label>
-                        <el-input v-model="form.project_monitoring" type="textarea"
-                            :autosize="{ minRows: 3, maxRows: 4 }" placeholder="Detalle del proyecto de monitoreo" />
+                        <el-input v-model="form.projects" type="textarea" :autosize="{ minRows: 3, maxRows: 4 }"
+                            placeholder="Detalle del proyecto de monitoreo" />
+                    </div>
+                </div>
+            </el-tab-pane>
+
+            <el-tab-pane name="services">
+                <template #label>
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-server"></i>
+                        <span>Condiciones del Servicio</span>
+                    </span>
+                </template>
+
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-12">
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Servicio incluye
+                        </label>
+                        <el-input v-model="form.service_includes" placeholder="Escribir..." />
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Hospedaje
+                        </label>
+                        <el-input v-model="form.accommodation" placeholder="Escribir..." />
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Viaticos
+                        </label>
+                        <el-input v-model="form.travel_expenses" placeholder="Escribir..." />
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Dias de Servicio
+                        </label>
+                        <el-input v-model="form.days_service" placeholder="Escribir..." />
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Trasporte de personal
+                        </label>
+                        <el-input v-model="form.personal_transport" placeholder="Escribir..." />
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Envio de Muestra
+                        </label>
+                        <el-input v-model="form.send_sampling" placeholder="Escribir..." />
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Vigilancia
+                        </label>
+                        <el-input v-model="form.surveillance" placeholder="Escribir..." />
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Generador de Electrico
+                        </label>
+                        <el-input v-model="form.electric_generator" placeholder="Escribir..." />
+                    </div>
+
+                    <el-divider class="col-span-12 !my-7">
+                        <div
+                            class="flex items-center gap-3 rounded-full bg-white px-4 py-2 shadow-sm ring-1 ring-slate-200">
+                            <div
+                                class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                                <i class="fa-solid fa-clipboard-check text-sm"></i>
+                            </div>
+
+                            <div class="text-left">
+                                <p class="text-xs font-bold uppercase tracking-wide text-slate-700">
+                                    Datos para la emisión informe
+                                </p>
+                            </div>
+                        </div>
+                    </el-divider>
+
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            Empresa
+                        </label>
+                        <el-select clearable :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                            v-model="form.company_emission_id" filterable class="w-full"
+                            placeholder="Selecciona una empresa" size="large">
+                            <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
+                                :value="company.id" />
+                        </el-select>
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            TIPO DE DOCUMENTO SOLICITADO
+                        </label>
+                        <el-input v-model="form.type_document_required" placeholder="Escribir..." />
+                    </div>
+                    <div class="col-span-6">
+                        <label class="mb-2 block text-sm font-semibold text-slate-700">
+                            NÚMERO DE COPIAS IMPRESAS
+                        </label>
+                        <el-input v-model="form.number_copy" placeholder="Escribir..." />
                     </div>
                 </div>
             </el-tab-pane>
@@ -414,6 +612,7 @@ import { useListStore } from '../../../stores/list';
 import MatrizModal from '../quotes/modal/MatrizModal.vue';
 import TeamsModal from './modals/TeamsModal.vue';
 import { ElNotification } from 'element-plus';
+import { OfficeBuilding } from '@element-plus/icons-vue';
 
 const listStore = useListStore()
 const companies = computed(() => listStore.companies)
@@ -424,6 +623,7 @@ const contacts = computed(() => listStore.contacts)
 const activeTab = ref('general')
 const state = ref(false)
 const matrizId = ref(null)
+const users = computed(() => listStore.users)
 
 const loadingCompany = ref(false)
 
@@ -437,30 +637,38 @@ const form = reactive({
     id: null,
     quote_id: null,
     company_id: null,
+    contact_company: null,
     direction: null,
     date_attention: null,
-    version: null,
-    code: null,
-    items_total: null,
-    other_expenses_total: null,
-    igv: null,
-    subtotal: null,
-    total: null,
+    application_id: null,
+    contact_application: null,
+    department: null,
+    district: null,
+    province: null,
     reference: null,
-    observations: null,
-    contact_id: null,
-
     origin: null,
     project: null,
-    date_monitoring_init: null,
-    date_monitoring_end: null,
-    date_induction: null,
-    date_output: null,
+    date_init_service: null,
+    date_end_monitoring: null,
+    users: [],
     details: null,
-    stations_monitoring: null,
-    project_monitoring: null,
-
+    monitoring: null,
+    projects: null,
+    service_includes: null,
+    accommodation: null,
+    travel_expenses: null,
+    days_service: null,
+    personal_transport: null,
+    send_sampling: null,
+    surveillance: null,
+    electric_generator: null,
+    company_emission_id: null,
+    type_document_required: null,
+    number_copy: null,
+    version: null,
+    code: null,
     items: [],
+    observations: null
 })
 
 const frequencies = [
@@ -585,8 +793,7 @@ const getQuote = async (quoteId) => {
             form.quote_id = data.data.id
             form.company_id = data.data.company_id
             form.direction = data.data.direction
-            form.reference = data.data.reference
-            form.contact_id = data.data.contact_id
+            form.contact_company = data.data.contact_id
             form.items = normalizeItems(data.data.items)
         }
     }
@@ -600,24 +807,42 @@ const getOrderService = async (id) => {
         const { data } = await tenant.get(`order-service/${id}`)
 
         if (data.data) {
+
             form.id = data.data.id
             form.quote_id = data.data.quote_id
             form.company_id = data.data.company_id
+            form.contact_company = data.data.contact_company
             form.direction = data.data.direction
             form.date_attention = data.data.date_attention
+            form.application_id = data.data.application_id
+            form.contact_application = data.data.contact_application
+            form.department = data.data.department
+            form.district = data.data.district
+            form.province = data.data.province
             form.reference = data.data.reference
-            form.observations = data.data.observations
-            form.contact_id = data.data.contact_id
             form.origin = data.data.origin
             form.project = data.data.project
-            form.date_monitoring_init = data.data.date_monitoring_init
-            form.date_monitoring_end = data.data.date_monitoring_end
-            form.date_induction = data.data.date_induction
-            form.date_output = data.data.date_output
+            form.date_init_service = data.data.date_init_service
+            form.date_end_monitoring = data.data.date_end_monitoring
+            form.users = data.data.users ?? []
             form.details = data.data.details
-            form.stations_monitoring = data.data.stations_monitoring
-            form.project_monitoring = data.data.project_monitoring
-            form.items = normalizeItems(data.data.items)
+            form.monitoring = data.data.monitoring
+            form.projects = data.data.projects
+            form.service_includes = data.data.service_includes
+            form.accommodation = data.data.accommodation
+            form.travel_expenses = data.data.travel_expenses
+            form.days_service = data.data.days_service
+            form.personal_transport = data.data.personal_transport
+            form.send_sampling = data.data.send_sampling
+            form.surveillance = data.data.surveillance
+            form.electric_generator = data.data.electric_generator
+            form.company_emission_id = data.data.company_emission_id
+            form.type_document_required = data.data.type_document_required
+            form.number_copy = data.data.number_copy
+            form.version = data.data.version
+            form.code = data.data.code
+            form.items = data.data.items ?? []
+            form.observations = data.data.observations
         }
     }
     catch (e) {
@@ -665,7 +890,74 @@ const resetForm = () => {
     form.items = []
 }
 
-onMounted(() => {
+const departments = ref([])
+const provinces = ref([])
+const districts = ref([])
+
+const getDepartments = async (q = null) => {
+    try {
+        const { data } = await tenant.get('ubigeo/departments', {
+            search: q
+        })
+
+        if (data.data) {
+            departments.value = data.data
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+const getProvinces = async (q = null, departament = null) => {
+    try {
+        const { data } = await tenant.get('ubigeo/provinces', {
+            params: {
+                search: q,
+                departamento_id: departament
+            }
+        })
+
+        if (data.data) {
+            provinces.value = data.data
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+const getDistricts = async (q = null, province = null) => {
+    try {
+        const { data } = await tenant.get('ubigeo/districts', {
+            params: {
+                search: q,
+                provincia_id: province
+            }
+        })
+
+        if (data.data) {
+            districts.value = data.data
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+watch(() => form.department, (newVal) => {
+    if (newVal) {
+        getProvinces(null, newVal)
+    }
+})
+
+watch(() => form.province, (newVal) => {
+    if (newVal) {
+        getDistricts(null, newVal)
+    }
+})
+
+onMounted(async () => {
     const date = new Date()
 
     const year = date.getFullYear()
@@ -674,13 +966,17 @@ onMounted(() => {
 
     form.date_attention = `${year}-${month}-${day}`
 
-    listStore.getCompanies()
+    await listStore.getCompanies()
+    await listStore.getUsers()
+    await getDepartments()
+    await getProvinces()
+    await getDistricts()
 
     if (route.params.id) {
-        getOrderService(route.params.id)
+        await getOrderService(route.params.id)
     }
     else if (route.query?.quoteId) {
-        getQuote(route.query?.quoteId)
+        await getQuote(route.query?.quoteId)
     }
 })
 </script>

@@ -11,13 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('parameters', function (Blueprint $table) {
+        Schema::create('type_of_samples', function (Blueprint $table) {
             $table->id();
-
-            $table->text('description')->nullable();
-            $table->unsignedBigInteger('type_of_analysis_id')->nullable();
-            $table->foreign('type_of_analysis_id')->references('id')->on('type_of_analysis');
-
+            $table->string('description')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -28,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('parameters');
+        Schema::dropIfExists('type_of_samples');
     }
 };

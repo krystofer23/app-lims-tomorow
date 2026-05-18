@@ -176,18 +176,18 @@
                 <el-table-column label="Acciones" width="190" fixed="right">
                     <template #default="{ row }">
                         <el-button-group>
-                            <el-button :loading="row?.loadingPdf" type="primary" size="small" v-tippy="'Generar PDF'"
-                                @click="downloadOrderServicePdf(row)">
+                            <el-button plain :loading="row?.loadingPdf" type="primary" size="small"
+                                v-tippy="'Generar PDF'" @click="downloadOrderServicePdf(row)">
                                 <i class="fa-regular fa-file-pdf"></i>
                             </el-button>
-                            <el-button :loading="row?.loadingExcel" type="success" size="small"
+                            <el-button plain :loading="row?.loadingExcel" type="success" size="small"
                                 v-tippy="'Generar Excel'" @click="downloadOrderServiceExcel(row)">
                                 <i class="fa-regular fa-file-excel"></i>
                             </el-button>
-                            <el-button type="warning" size="small" v-tippy="'Editar'" @click="onEdit(row)">
+                            <el-button plain type="warning" size="small" v-tippy="'Editar'" @click="onEdit(row)">
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </el-button>
-                            <el-button type="danger" size="small" v-tippy="'Eliminar'" @click="onDelete(row)">
+                            <el-button plain type="danger" size="small" v-tippy="'Eliminar'" @click="onDelete(row)">
                                 <i class="fa-regular fa-trash-can"></i>
                             </el-button>
                         </el-button-group>

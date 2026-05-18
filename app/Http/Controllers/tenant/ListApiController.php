@@ -13,6 +13,7 @@ use App\Models\tenant\Matriz;
 use App\Models\tenant\Methodologies;
 use App\Models\tenant\Parameters;
 use App\Models\tenant\Services;
+use App\Models\tenant\TypeOfSamples;
 use App\Models\tenant\UnitsMeasurement;
 use App\Models\Tenant\User;
 use Exception;
@@ -69,7 +70,8 @@ class ListApiController extends Controller
 
         $data = UnitsMeasurement::query()
             ->when($request->filled('query'), function ($q) use ($query) {
-                $q->where('description', 'like', "%$query%");
+                $q->where('description', 'like', "%$query%")
+                    ->orWhere('id', $query);
             })
             ->paginate(15);
 
@@ -180,12 +182,30 @@ class ListApiController extends Controller
     public function parameters(Request $request): JsonResponse
     {
         try {
-            $data = Parameters::query()
-                ->where('type', 'reception')
-                ->first()
-                ?->content;
+            $search = $request->input('search');
+            $type = $request->input('type');
+            $matrixId = $request->input('matrix_id');
 
-            return $this->sendResponse($data, 'Enviando parametros');
+            $data = Parameters::query()
+                ->when($request->filled('search'), function ($q) use ($search) {
+                    $q->where('description', 'like', "%{$search}%");
+                })
+                ->when($request->filled('type'), function ($q) use ($type) {
+                    $q->whereHas('item', function ($query) use ($type) {
+                        $query->whereHas('category', function ($query) use ($type) {
+                            $query->where('description', 'like', "%$type%");
+                        });
+                    });
+                })
+                ->when($request->filled('matrix_id'), function ($q) use ($matrixId) {
+                    $q->whereHas('item', function ($query) use ($matrixId) {
+                        $query->where('matrix_id', $matrixId);
+                    });
+                })
+                ->orderBy('description')
+                ->paginate($request->input('per_page', 20));
+
+            return $this->sendResponse($data, 'Enviando parámetros');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
@@ -235,6 +255,18 @@ class ListApiController extends Controller
                 ->get();
 
             return $this->sendResponse($matrixs, 'Enviando matrices únicas');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function typesSampling(Request $request): JsonResponse
+    {
+        try {
+            $data = TypeOfSamples::query()
+                ->get();
+
+            return $this->sendResponse($data, 'Enviando tipos de muestras');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }

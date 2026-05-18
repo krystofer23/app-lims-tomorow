@@ -50,15 +50,16 @@
                     <div class="grid grid-cols-12 w-full gap-3">
                         <div class="col-span-3">
                             <p class="font-medium">Comercial</p>
-                            <el-select v-model="filters.comercial_id" placeholder="Seleccionar" class="!w-full"
-                                size="small" clearable>
+                            <el-select :remote-method="listStore.getUsers" filterable remote reserve-keyword clearable
+                                v-model="filters.comercial_id" placeholder="Seleccionar" class="!w-full" size="small">
                                 <el-option :label="row.full_name" :value="row.id" v-for="row in users"></el-option>
                             </el-select>
                         </div>
                         <div class="col-span-3">
                             <p class="font-medium">Empresa</p>
-                            <el-select v-model="filters.company_id" placeholder="Seleccionar" class="!w-full"
-                                size="small" clearable>
+                            <el-select :remote-method="listStore.getCompanies" filterable remote reserve-keyword
+                                clearable v-model="filters.company_id" placeholder="Seleccionar" class="!w-full"
+                                size="small">
                                 <el-option v-for="row in companies" :label="row.business_name"
                                     :value="row.id"></el-option>
                             </el-select>
@@ -78,9 +79,18 @@
 
                 <el-table-column label="Empresa">
                     <template #default="{ row }">
-                        <p>{{ row.company?.business_name }}</p>
+                        <p>{{ row.company?.business_name ?? '-' }}</p>
                         <span class="block text-xs font-medium">
-                            RUC: {{ row.company?.ruc }}
+                            RUC: {{ row.company?.ruc ?? '-' }}
+                        </span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Solicitante">
+                    <template #default="{ row }">
+                        <p>{{ row.applicant?.business_name ?? '-' }}</p>
+                        <span class="block text-xs font-medium">
+                            RUC: {{ row.applicant?.ruc ?? '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -179,17 +189,17 @@
                     <template #default="{ row }">
                         <div class="flex justify-start gap-2">
                             <el-button-group>
-                                <el-button :loading="row?.loadingPdf" @click="downloadQuotePdf(row)"
+                                <el-button plain :loading="row?.loadingPdf" @click="downloadQuotePdf(row)"
                                     v-tippy="'Generar PDF'" size="small" type="primary">
                                     <i class="fa-regular fa-file-pdf"></i>
                                 </el-button>
 
-                                <el-button :loading="row?.loading" @click="downloadQuoteExcel(row)"
+                                <el-button plain :loading="row?.loading" @click="downloadQuoteExcel(row)"
                                     v-tippy="'Generar Excel'" size="small" type="success">
                                     <i class="fa-regular fa-file-excel"></i>
                                 </el-button>
 
-                                <el-button v-if="!row?.order_service" @click="$router.push({
+                                <el-button plain v-if="!row?.order_service" @click="$router.push({
                                     name: 'orders-services-create', query: {
                                         quoteId: row.id
                                     }
@@ -197,7 +207,7 @@
                                     <i class="fa-regular fa-file-zipper"></i>
                                 </el-button>
 
-                                <el-button @click="() => {
+                                <el-button plain @click="() => {
                                     $router.push({
                                         name: 'quote-update',
                                         params: {
@@ -208,7 +218,8 @@
                                     <i class="fa-regular fa-pen-to-square"></i>
                                 </el-button>
 
-                                <el-button @click="handleDelete(row)" v-tippy="'Eliminar'" size="small" type="danger">
+                                <el-button plain @click="handleDelete(row)" v-tippy="'Eliminar'" size="small"
+                                    type="danger">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </el-button>
                             </el-button-group>
@@ -228,7 +239,6 @@
                 </template>
             </el-table>
         </div>
-
 
         <div class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-sm text-slate-500">

@@ -73,10 +73,22 @@
                                 </el-select>
                             </div>
 
-                            <!-- Contacto -->
                             <div class="space-y-1">
                                 <label class="text-xs font-semibold text-slate-600">
-                                    Contacto
+                                    Solicitante
+                                </label>
+
+                                <el-select :remote-method="remoteMethodCompany" :loading="loadingCompany"
+                                    v-model="form.applicant_id" filterable remote class="!w-full" placeholder="Empresa"
+                                    size="default">
+                                    <el-option v-for="company in companies" :key="company.id"
+                                        :label="company.business_name" :value="company.id" />
+                                </el-select>
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="text-xs font-semibold text-slate-600">
+                                    Contacto(Empresa)
                                 </label>
 
                                 <el-select :loading="loadingContacts" clearable v-model="form.contact_id" filterable
@@ -86,16 +98,6 @@
                                 </el-select>
                             </div>
 
-                            <!-- Dirección -->
-                            <div class="space-y-1">
-                                <label class="text-xs font-semibold text-slate-600">
-                                    Dirección
-                                </label>
-
-                                <el-input v-model="form.direction" placeholder="Dirección" size="default" />
-                            </div>
-
-                            <!-- Fecha -->
                             <div class="space-y-1">
                                 <label class="text-xs font-semibold text-slate-600">
                                     Fecha de atención
@@ -105,7 +107,14 @@
                                     placeholder="Fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD" size="default" />
                             </div>
 
-                            <!-- Referencia -->
+                            <div class="space-y-1 col-span-2">
+                                <label class="text-xs font-semibold text-slate-600">
+                                    Dirección
+                                </label>
+
+                                <el-input v-model="form.direction" placeholder="Dirección" size="default" />
+                            </div>
+
                             <div class="space-y-1 md:col-span-2 lg:col-span-4">
                                 <label class="text-xs font-semibold text-slate-600">
                                     Referencia
@@ -422,7 +431,8 @@
 
                                     <td :class="row?.item?.bg" class="relative px-3 py-2 text-right">
                                         <el-button-group size="small">
-                                            <el-button v-tippy="'Cambiar valores'" class="!rounded-l-lg">
+                                            <el-button @click="changeValues(row)" v-tippy="'Cambiar valores'"
+                                                class="!rounded-l-lg">
                                                 <i class="fa-brands fa-unity"></i>
                                             </el-button>
                                             <el-button @click.stop="itemDelete(index)" type="danger" plain size="small"
@@ -781,54 +791,119 @@
     <logistic-cast-modal :items="form.other_expenses" :state="state" @close="() => {
         state = false
     }" />
-    
-    <el-dialog v-model="visibleValue" width="360px" align-center class="!rounded-2xl">
+
+    <el-dialog v-model="visibleValue" width="620px" align-center class="parameter-dialog !rounded-lg">
         <template #header>
             <div>
-                <h2 class="text-lg font-semibold text-gray-800">
+                <h2 class="text-base font-semibold text-gray-800">
                     Configurar parámetro
                 </h2>
-                <p class="text-sm text-gray-500 mt-1">
-                    Selecciona la unidad de medida y el LCM correspondiente.
+                <p class="text-xs text-gray-500">
+                    Selecciona unidad de medida y LCM.
                 </p>
             </div>
         </template>
 
-        <div class="space-y-5">
-            <div>
-                <el-button v-tippy="'Ver opciones'" size="small" type="primary" plain>
-                    <i class="fa-solid fa-table"></i>
-                </el-button>
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" v-if="rowValue.content">
+                <div class="rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="bg-blue-50 px-3 py-2 border-b">
+                        <h3 class="text-xs font-semibold text-blue-700 uppercase">
+                            Unidad de medida
+                        </h3>
+                    </div>
+
+                    <div class="divide-y divide-gray-100">
+                        <div v-for="(reference, index) in unitReferences" :key="`unit-${index}`"
+                            class="px-3 py-2 flex items-center justify-between gap-2 hover:bg-gray-50">
+                            <div class="min-w-0">
+                                <p class="text-xs font-medium text-gray-700">
+                                    {{ reference.unit }}
+                                </p>
+                                <p class="text-[11px] text-gray-400">
+                                    {{ reference.condition }}
+                                </p>
+                            </div>
+
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-xs text-gray-600 truncate max-w-[90px]">
+                                    {{ rowValue.content?.units_measurements?.[index] ?? '-' }}
+                                </span>
+
+                                <el-button v-if="rowValue.content?.units_measurements?.[index]" v-tippy="'Seleccionar'"
+                                    size="small" type="primary" plain circle
+                                    @click="selectUnit(rowValue.content.units_measurements[index])">
+                                    <i class="fa-regular fa-hand-pointer text-xs"></i>
+                                </el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="bg-emerald-50 px-3 py-2 border-b">
+                        <h3 class="text-xs font-semibold text-emerald-700 uppercase">
+                            LCM
+                        </h3>
+                    </div>
+
+                    <div class="divide-y divide-gray-100">
+                        <div v-for="(reference, index) in lcmReferences" :key="`lcm-${index}`"
+                            class="px-3 py-2 flex items-center justify-between gap-2 hover:bg-gray-50">
+                            <div class="min-w-0">
+                                <p class="text-xs font-medium text-gray-700">
+                                    {{ reference.unit }}
+                                </p>
+                                <p class="text-[11px] text-gray-400">
+                                    {{ reference.condition }}
+                                </p>
+                            </div>
+
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="text-xs text-gray-600 truncate max-w-[90px]">
+                                    {{ rowValue.content?.lcms?.[index] ?? '-' }}
+                                </span>
+
+                                <el-button v-if="rowValue.content?.lcms?.[index]" v-tippy="'Seleccionar'" size="small"
+                                    type="success" plain circle @click="lcm = rowValue.content.lcms[index]">
+                                    <i class="fa-regular fa-hand-pointer text-xs"></i>
+                                </el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                    Unidad de medida
-                </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-xl bg-gray-50 border border-gray-200 p-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">
+                        Unidad de medida
+                    </label>
 
-                <el-select placeholder="Seleccionar unidad" class="w-full" clearable filterable>
-                    <el-option label="mg/L" value="mg/L" />
-                    <el-option label="µg/m³" value="µg/m3" />
-                    <el-option label="%" value="%" />
-                </el-select>
-            </div>
+                    <el-select v-model="unit_measurent" :remote-method="listStore.getUnitsMeasurement" filterable remote
+                        reserve-keyword clearable placeholder="Seleccionar unidad" class="w-full" size="small">
+                        <el-option v-for="row in unitsMeasurement" :key="row.id" :label="row.description"
+                            :value="row.id" />
+                    </el-select>
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                    LCM
-                </label>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">
+                        LCM
+                    </label>
 
-                <el-input placeholder="LCM" />
+                    <el-input v-model="lcm" placeholder="LCM" size="small" clearable />
+                </div>
             </div>
         </div>
 
         <template #footer>
-            <div class="flex justify-end pt-2">
-                <el-button class="!rounded-lg" @click="visibleValue = false">
+            <div class="flex justify-end gap-2">
+                <el-button class="!rounded-lg" size="small" @click="visibleValue = false">
                     Cancelar
                 </el-button>
 
-                <el-button class="!rounded-lg" type="primary">
+                <el-button class="!rounded-lg" size="small" type="primary" @click="saveChangeValues()">
                     Guardar
                 </el-button>
             </div>
@@ -848,7 +923,10 @@ import { ElNotification } from 'element-plus'
 import LogisticCastModal from './modal/LogisticCastModal.vue'
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption'
 
-const visibleValue = ref(true)
+const visibleValue = ref(false)
+const rowValue = ref(null)
+const unit_measurent = ref(null)
+const lcm = ref(null)
 
 const state = ref(false)
 const router = useRouter()
@@ -856,10 +934,71 @@ const route = useRoute()
 const loadingSubmit = ref(false)
 const listStore = useListStore()
 const companies = computed(() => listStore.companies)
+const unitsMeasurement = computed(() => listStore.unitsMeasurement)
+
+const unitReferences = [
+    {
+        unit: 'mg/Nm³',
+        condition: '0° y 1 atm',
+    },
+    {
+        unit: 'mg/m³',
+        condition: '25° y 1 atm',
+    },
+    {
+        unit: 'mg/m³',
+        condition: '20° y 1 atm',
+    },
+    {
+        unit: 'PPM / %',
+        condition: '10-6 mol/mol',
+    },
+];
+
+const lcmReferences = [
+    {
+        unit: 'mg/Nm³',
+        condition: '0° y 1 atm',
+    },
+    {
+        unit: 'mg/m³',
+        condition: '25° y 1 atm',
+    },
+    {
+        unit: 'mg/m³',
+        condition: '20° y 1 atm',
+    },
+    {
+        unit: 'PPM',
+        condition: '10-6 mol/mol',
+    },
+];
+
+const selectUnit = async (uni) => {
+    await listStore.getUnitsMeasurement(uni)
+    unit_measurent.value = listStore.unitsMeasurement[0].id
+}
 
 const loadingCompany = ref(false)
 const loadingContacts = computed(() => listStore.loadingContacts)
 const contacts = computed(() => listStore.contacts)
+
+const changeValues = async (row) => {
+    rowValue.value = row
+
+    unit_measurent.value = row.unit_measurement_id;
+    lcm.value = row.lcm;
+
+    await listStore.getUnitsMeasurement(row.unit_measurement_id)
+    visibleValue.value = true
+}
+
+const saveChangeValues = async () => {
+    rowValue.value.unit_measurement_id = unit_measurent.value
+    rowValue.value.lcm = lcm.value
+
+    visibleValue.value = false
+}
 
 const remoteMethodCompany = async (q) => {
     loadingCompany.value = true
@@ -886,6 +1025,7 @@ const frequencies = [
 const form = reactive({
     id: null,
     company_id: null,
+    applicant_id: null,
     direction: null,
     date_attention: null,
     version: null,
@@ -959,6 +1099,7 @@ watch(() => form.items, (newVal) => {
 const resetForm = () => {
     form.id = null
     form.company_id = null
+    form.applicant_id = null
     form.direction = null
     form.date_attention = null
     form.version = null
@@ -1114,18 +1255,23 @@ const getQuote = async (id) => {
             form.reference = data.data.reference
             form.observations = data.data.observations
             form.contact_id = data.data.contact_id
+            form.applicant_id = data.data.applicant_id
             form.items = data.data.items
             form.services = data.data.services
             form.other_expenses = data.data.other_expenses
         }
+
+        await listStore.getCompanies(data.data.company_id)
+        await listStore.getCompanies(data.data.applicant_id)
     }
     catch (e) {
         handleErrorsExeption(e)
     }
 }
 
-onMounted(() => {
-    listStore.getCompanies()
+onMounted(async () => {
+    await listStore.getCompanies()
+    await listStore.getUnitsMeasurement()
 
     const date = new Date()
 
@@ -1148,5 +1294,19 @@ onMounted(() => {
 
 :deep(.el-select__wrapper) {
     border-radius: 12px !important;
+}
+
+:deep(.parameter-dialog .el-dialog__header) {
+    padding: 16px 18px 8px;
+    margin-right: 0;
+}
+
+:deep(.parameter-dialog .el-dialog__body) {
+    padding: 10px 18px 14px;
+}
+
+:deep(.parameter-dialog .el-dialog__footer) {
+    padding: 10px 18px 14px;
+    border-top: 1px solid #f1f5f9;
 }
 </style>

@@ -16,10 +16,10 @@ class Item extends TenantModel
 
     protected $fillable = [
         'type',
+        'type_of_sample_id',
         'condition_id',
         'matrix_id',
         'reference_id',
-        'category_id',
         'parameter_id',
         'unit_measurement_id',
         'lcm',
@@ -28,16 +28,19 @@ class Item extends TenantModel
         'is_other_company',
         'company_id',
         'unit_price',
-        'sub_category_id',
-        'content',
     ];
 
     protected $casts = [
+        'created_at' => LocalTimezone::class,
+        'is_other_company' => 'boolean',
         'is_operation' => 'boolean',
         'operations' => 'json',
-        'content' => 'json',
-        'created_at' => LocalTimezone::class
     ];
+
+    public function typeOfSample(): BelongsTo
+    {
+        return $this->belongsTo(TypeOfSamples::class, 'type_of_sample_id');
+    }
 
     public function condition(): BelongsTo
     {
@@ -54,11 +57,6 @@ class Item extends TenantModel
         return $this->belongsTo(ReferencesStandard::class, 'reference_id');
     }
 
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(Category::class, 'category_id');
-    }
-
     public function parameter(): BelongsTo
     {
         return $this->belongsTo(Parameters::class, 'parameter_id');
@@ -72,10 +70,5 @@ class Item extends TenantModel
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
-    }
-
-    public function subCategory(): BelongsTo
-    {
-        return $this->belongsTo(SubCategory::class, 'sub_category_id');
     }
 }

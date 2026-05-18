@@ -36,6 +36,7 @@ class QuotesApiController extends Controller
                     'itemsQuotes',
                     'contact.user',
                     'orderService',
+                    'applicant'
                 ])
                 ->when($search, function ($q) use ($search) {
                     $q->where(function ($query) use ($search) {
@@ -108,7 +109,8 @@ class QuotesApiController extends Controller
                 'services' => $services,
                 'other_expenses' => $otherExpenses,
                 'is_os' => $quote?->orderService ? true : false,
-                'order_service' => $quote?->orderService
+                'order_service' => $quote?->orderService,
+                'applicant_id' => $quote?->applicant_id
             ];
 
             return $this->sendResponse($mapData, 'Enviando cotización');
@@ -152,6 +154,7 @@ class QuotesApiController extends Controller
                 'total' => $input['total'] ?? 0,
 
                 'contact_id' => $input['contact_id'] ?? null,
+                'applicant_id' => $input['applicant_id'] ?? null,
             ]);
 
             if (!empty($input['items']) && is_array($input['items'])) {
@@ -246,6 +249,7 @@ class QuotesApiController extends Controller
                 'total' => $input['total'] ?? 0,
 
                 'contact_id' => $input['contact_id'] ?? null,
+                'applicant_id' => $input['applicant_id'] ?? null,
             ]);
 
             ItemsQuotes::query()

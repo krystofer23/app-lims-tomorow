@@ -14,8 +14,8 @@ class ItemsApiController extends Controller
     {
         try {
             $type = $request->input('type');
-            $condition = $request->input('condition');
-            $matrix = $request->input('matrix');
+            $conditionId = $request->input('condition_id');
+            $matrixId = $request->input('matrix_id');
 
             $data = Item::query()
                 ->with([
@@ -28,9 +28,9 @@ class ItemsApiController extends Controller
                     'company',
                     'subCategory',
                 ])
+                ->when($conditionId, fn($q) => $q->where('condition_id', $conditionId))
                 ->when($type, fn($q) => $q->where('type', $type))
-                ->when($condition, fn($q) => $q->where('condition_id', $condition))
-                ->when($matrix, fn($q) => $q->where('matrix_id', $matrix))
+                ->when($matrixId, fn($q) => $q->where('matrix_id', $matrixId))
                 ->paginate(15);
 
             return $this->sendResponse($data, 'Enviando items');

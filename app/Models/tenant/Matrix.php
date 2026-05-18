@@ -13,6 +13,7 @@ class Matrix extends TenantModel
     protected $table = 'matrix';
 
     protected $fillable = [
-        'description'
+        'description',
+        'type_of_sample_id',
     ];
 }

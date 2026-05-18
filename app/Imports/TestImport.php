@@ -34,24 +34,8 @@ class TestImport implements ToCollection
                 $normReferenceCode = trim((string) ($row[3] ?? ''));
                 $normReferenceTitle = trim((string) ($row[4] ?? ''));
 
-                // $categoryDescription = trim((string) ($row[5] ?? ''));
-                // $subCategoryDescription = trim((string) ($row[6] ?? ''));
-
-                $unitDescription = trim((string) ($row[5] ?? ''));
-                $lcm = trim((string) ($row[6] ?? ''));
-
-                Log::info([
-                    'row' => $index + 1,
-                    'conditionDescription' => $conditionDescription,
-                    'matrixDescription' => $matrixDescription,
-                    'parameterDescription' => $parameterDescription,
-                    'normReferenceCode' => $normReferenceCode,
-                    'normReferenceTitle' => $normReferenceTitle,
-                    // 'categoryDescription' => $categoryDescription,
-                    // 'subCategoryDescription' => $subCategoryDescription,
-                    'unitDescription' => $unitDescription,
-                    'lcm' => $lcm,
-                ]);
+                $unitDescriptionFirst = trim((string) ($row[5] ?? ''));
+                $lcmFirst = trim((string) ($row[9] ?? ''));
 
                 $condition = $conditionDescription !== ''
                     ? Conditions::firstOrCreate([
@@ -76,35 +60,37 @@ class TestImport implements ToCollection
                     'title' => $normReferenceTitle,
                 ]);
 
-                // $category = $categoryDescription !== ''
-                //     ? Category::firstOrCreate([
-                //         'description' => $categoryDescription,
-                //     ])
-                //     : null;
+                $findUnit = UnitsMeasurement::firstOrCreate([
+                    'description' => $unitDescriptionFirst
+                ]);
 
-                // $subcategory = $subCategoryDescription !== ''
-                //     ? SubCategory::firstOrCreate([
-                //         'description' => $subCategoryDescription,
-                //     ])
-                //     : null;
+                $unitsMensurets = [
+                    trim((string) ($row[5] ?? '')),
+                    trim((string) ($row[6] ?? '')),
+                    trim((string) ($row[7] ?? '')),
+                    trim((string) ($row[8] ?? '')),
+                ];
 
-                $unit = $unitDescription !== ''
-                    ? UnitsMeasurement::firstOrCreate([
-                        'description' => $unitDescription,
-                    ])
-                    : null;
+                $lcms = [
+                    trim((string) ($row[9] ?? '')),
+                    trim((string) ($row[10] ?? '')),
+                    trim((string) ($row[11] ?? '')),
+                    trim((string) ($row[12] ?? '')),
+                ];
 
                 Item::create([
-                    'type' => 'METEOROLOGIA',
+                    'type' => 'EMISIONES',
                     'condition_id' => $condition?->id,
                     'matrix_id' => $matrix?->id,
                     'parameter_id' => $parameter?->id,
                     'reference_id' => $referenceStandard?->id,
-                    // 'category_id' => $category?->id,
-                    // 'sub_category_id' => $subcategory?->id,
-                    'unit_measurement_id' => $unit?->id,
-                    'lcm' => $lcm,
+                    'unit_measurement_id' => $findUnit?->id,
+                    'lcm' => $lcmFirst,
                     'unit_price' => 0.00,
+                    'content' => [
+                        'units_measurements' => $unitsMensurets,
+                        'lcms' => $lcms,
+                    ]
                 ]);
 
                 DB::commit();

@@ -322,10 +322,11 @@
                 <el-table-column fixed="right" width="120" label="Acciones">
                     <template #default="{ row }">
                         <el-button-group>
-                            <el-button @click="handleEdit(row)" size="small" type="warning" v-tippy="'Editar'">
+                            <el-button plain @click="handleEdit(row)" size="small" type="warning" v-tippy="'Editar'">
                                 <i class="fa-regular fa-pen-to-square"></i>
                             </el-button>
-                            <el-button @click="handleDelete(row.id)" size="small" type="danger" v-tippy="'Eliminar'">
+                            <el-button plain @click="handleDelete(row.id)" size="small" type="danger"
+                                v-tippy="'Eliminar'">
                                 <i class="fa-regular fa-trash-can"></i>
                             </el-button>
                         </el-button-group>
@@ -395,8 +396,17 @@
                 <section class="rounded-2xl border border-slate-200 p-4 md:p-5">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                         <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-700">N° Orden de servicio</label>
+                            <el-select v-model="form.order_id" clearable filterable :remote-method="remoteMethodOrder"
+                                :loading="loadingOrder" class="w-full" placeholder="Selecciona una orden" size="large">
+                                <el-option v-for="company in orders" :key="company.id" :label="company.code"
+                                    :value="company.id" />
+                            </el-select>
+                        </div>
+
+                        <div class="space-y-2">
                             <label class="text-sm font-medium text-slate-700">Empresa</label>
-                            <el-select v-model="form.company_id" clearable filterable
+                            <el-select disabled v-model="form.company_id" clearable filterable
                                 :remote-method="remoteMethodCompany" :loading="loadingCompany" class="w-full"
                                 placeholder="Selecciona una empresa" size="large">
                                 <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
@@ -406,19 +416,10 @@
 
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-slate-700">Solicitante</label>
-                            <el-select v-model="form.application_id" clearable filterable
+                            <el-select disabled v-model="form.application_id" clearable filterable
                                 :remote-method="remoteMethodCompany" :loading="loadingCompany" class="w-full"
                                 placeholder="Selecciona una empresa" size="large">
                                 <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
-                                    :value="company.id" />
-                            </el-select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">N° Orden de servicio</label>
-                            <el-select v-model="form.order_id" clearable filterable :remote-method="remoteMethodOrder"
-                                :loading="loadingOrder" class="w-full" placeholder="Selecciona una orden" size="large">
-                                <el-option v-for="company in orders" :key="company.id" :label="company.code"
                                     :value="company.id" />
                             </el-select>
                         </div>
@@ -457,25 +458,8 @@
                             <label class="text-sm font-medium text-slate-700">Tipo de muestra</label>
                             <el-select v-model="form.type_sample" clearable size="large" placeholder="Seleccionar"
                                 class="w-full" filterable>
-                                <el-option :label="row" :value="row" v-for="row in [
-                                    'Agua C.Humano ',
-                                    'Agua Natural',
-                                    'Agua Proceso ',
-                                    'Agua Residual',
-                                    'Agua Salina ',
-                                    'Aire',
-                                    'Emisiones',
-                                    'Radiacion no ionizantes',
-                                    'Ruido continuo ',
-                                    'Ruido Ocupacional',
-                                    'Ruido ambiental',
-                                    'SSO',
-                                    'Suelo',
-                                    'Vibración Ambiental ',
-                                    'Vibración en Edificios',
-                                    'RNI',
-                                    'SED',
-                                ]" />
+                                <el-option :label="row.description" :value="row.description"
+                                    v-for="row in typesSampling" />
                             </el-select>
                         </div>
 
@@ -483,43 +467,8 @@
                             <label class="text-sm font-medium text-slate-700">Matriz</label>
                             <el-select v-model="form.matriz" clearable size="large" filterable
                                 placeholder="Seleccionar">
-                                <el-option :label="row" :value="row" v-for="row in [
-                                    'A. R Doméstica (ARD)',
-                                    'A. Alimentación de calderas (AAC)',
-                                    'A. Calderas (AC)',
-                                    'A. Circulación y Enfriamieno (ACE)',
-                                    'A. de Mar (AMAR)',
-                                    'A. de Piscina (APISC)',
-                                    'A. de Reinyección (AREY)',
-                                    'A. Inyección y Reinyección (AREY)',
-                                    'A. Laguna Artificial (ALA)',
-                                    'A. Lixiviación (ALIX)',
-                                    'A. Potable (AP)',
-                                    'A. Purificada (APU)',
-                                    'A. Salobre (ASAL)',
-                                    'A.R Industrial (ARI)',
-                                    'A.R Municipal (ARM)',
-                                    'A.Subterranea (ASB)',
-                                    'A.Superficial (AS)',
-                                    'Aire (AIR)',
-                                    'Emisiones',
-                                    'Filtro ',
-                                    'Hidrobiológico',
-                                    'Lodo (LD)',
-                                    'Radiación Electromagnética',
-                                    'Residuo solido (RSD)',
-                                    'Ruido ambiental',
-                                    'Ruido continuo ',
-                                    'Ruido Ocupacional',
-                                    'Salmuera (SALM)',
-                                    'Sedimento (SED)',
-                                    'Suelo (SU)',
-                                    'Sonometría (SSO)',
-                                    'A.de Manantial (AM)',
-                                    'Vibración cuerpo entero',
-                                    'Vibracion',
-                                    'SSO',
-                                ]"></el-option>
+                                <el-option :label="row.description" :value="row.description"
+                                    v-for="row in matrixs"></el-option>
                             </el-select>
                         </div>
 
@@ -608,8 +557,8 @@
                                 :remote-method="remoteMethodCompany" :loading="loadingCompany" class="w-full"
                                 placeholder="Selecciona una empresa" size="large">
                                 <el-option v-for="row in [
-                                    { business_name: 'Cliente' },
-                                    { business_name: 'GreenLab S.A.C.' }
+                                    { business_name: 'CLIENTE' },
+                                    { business_name: 'GREENLAB PERÚ S.A.C.' }
                                 ]" :label="row.business_name" :value="row.business_name"></el-option>
                             </el-select>
                         </div>
@@ -682,65 +631,12 @@
                                     </div>
                                 </div>
 
-                                <el-popover placement="bottom-end" width="430" trigger="click" v-model:visible="visible"
-                                    popper-class="parameter-popover">
-                                    <template #default>
-                                        <div class="space-y-3">
-                                            <div>
-                                                <label class="mb-1.5 block text-xs font-semibold text-slate-600">
-                                                    Seleccionar parámetro
-                                                </label>
-
-                                                <div class="relative">
-                                                    <i
-                                                        class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
-
-                                                    <input v-model="search" @focus="open = true" @input="filterOptions"
-                                                        placeholder="Buscar parámetro..."
-                                                        class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-700 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100" />
-
-                                                    <div v-if="open"
-                                                        class="absolute z-50 mt-2 max-h-44 w-full overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
-                                                        <div v-for="item in filtered" :key="item"
-                                                            @click="selectItem(item)"
-                                                            class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-blue-50 hover:text-blue-700">
-                                                            <i class="fa-solid fa-vial text-xs text-blue-400"></i>
-                                                            <span class="truncate">{{ item }}</span>
-                                                        </div>
-
-                                                        <div v-if="!filtered.length"
-                                                            class="flex items-center gap-2 px-3 py-3 text-xs text-slate-400">
-                                                            <i class="fa-regular fa-face-frown"></i>
-                                                            Sin resultados
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div
-                                                class="flex items-center justify-between border-t border-slate-100 pt-3">
-                                                <p class="text-xs text-slate-400">
-                                                    Agrega el parámetro seleccionado.
-                                                </p>
-
-                                                <el-button type="primary" size="small"
-                                                    class="!rounded-lg !border-0 !bg-blue-600 !font-semibold hover:!bg-blue-700"
-                                                    @click="handleAddParameter">
-                                                    <i class="fa-solid fa-plus mr-1"></i>
-                                                    Agregar
-                                                </el-button>
-                                            </div>
-                                        </div>
-                                    </template>
-
-                                    <template #reference>
-                                        <button
-                                            class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md">
-                                            <i class="fa-solid fa-plus text-xs"></i>
-                                            Agregar
-                                        </button>
-                                    </template>
-                                </el-popover>
+                                <el-button size="" type="primary" plain @click="() => {
+                                    visible = true
+                                }">
+                                    [+]
+                                    Parametros
+                                </el-button>
                             </div>
 
                             <div class="overflow-hidden rounded-xl border border-slate-200">
@@ -754,7 +650,7 @@
                                                     <i class="fa-solid fa-vial text-xs"></i>
                                                 </span>
 
-                                                <el-input :model-value="row" readonly class="parameter-input" />
+                                                <el-input :model-value="row.description" readonly class="parameter-input" />
                                             </div>
                                         </template>
                                     </el-table-column>
@@ -826,6 +722,166 @@
     }" />
 
     <confirm-dialog ref="confirmRef" />
+
+    <el-dialog v-model="visible" width="820px" class="!rounded-2xl" destroy-on-close>
+        <template #header>
+            <div class="flex items-start gap-3">
+                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <h2 class="text-lg font-semibold text-slate-800">
+                        Seleccionar parámetros
+                    </h2>
+                    <p class="text-sm text-slate-500">
+                        Busca y revisa los parámetros disponibles.
+                    </p>
+                </div>
+            </div>
+        </template>
+
+        <div class="space-y-4">
+            <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm">
+                <div class="mb-4 flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+                        <i class="fa-solid fa-filter"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">
+                            Filtros de búsqueda
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Filtra los parámetros por nombre, tipo y matriz.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-12 md:col-span-4">
+                        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </div>
+                            <span>Buscar parámetro</span>
+                        </div>
+
+                        <el-input v-model="searchParameter" clearable size="large" placeholder="Nombre del parámetro..."
+                            class="!rounded-xl">
+                            <template #prefix>
+                                <i class="fa-solid fa-flask-vial text-slate-400"></i>
+                            </template>
+                        </el-input>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-4">
+                        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <div
+                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                                <i class="fa-solid fa-layer-group text-xs"></i>
+                            </div>
+                            <span>Tipo</span>
+                        </div>
+
+                        <el-select v-model="type" clearable filterable size="large" placeholder="Seleccionar tipo"
+                            class="w-full">
+                            <template #prefix>
+                                <i class="fa-solid fa-tags text-slate-400"></i>
+                            </template>
+                            <el-option v-for="row in typesSampling" :value="row.description"
+                                :label="row.description"></el-option>
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-4">
+                        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <div
+                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                                <i class="fa-solid fa-table-cells-large text-xs"></i>
+                            </div>
+                            <span>Matriz</span>
+                        </div>
+
+                        <el-select v-model="matrix_id" clearable filterable size="large"
+                            placeholder="Seleccionar matriz" class="w-full">
+                            <template #prefix>
+                                <i class="fa-solid fa-cubes-stacked text-slate-400"></i>
+                            </template>
+                            <el-option v-for="row in matrixs" :value="row.id" :label="row.description"></el-option>
+                        </el-select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <el-table v-loading="loadingParameter" :data="parameters" height="420" stripe
+                    empty-text="No se encontraron parámetros" class="parameter-table" @row-click="toggleItem"
+                    :row-class-name="tableRowClassName">
+                    <el-table-column label="" width="70" align="center">
+                        <template #default="{ row }">
+                            <div class="mx-auto flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200"
+                                :class="isSelected(row)
+                                    ? 'border-cyan-600 bg-cyan-600 text-white shadow-sm shadow-cyan-200'
+                                    : 'border-slate-300 bg-white text-slate-400 hover:border-cyan-500 hover:bg-cyan-50 hover:text-cyan-600'">
+                                <i class="fa-solid text-xs" :class="isSelected(row) ? 'fa-check' : 'fa-plus'"></i>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column min-width="300">
+                        <template #header>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-flask text-cyan-600"></i>
+                                <span>Parámetro</span>
+                            </div>
+                        </template>
+
+                        <template #default="{ row }">
+                            <div class="flex items-center gap-3 py-1">
+                                <div
+                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                                    <i class="fa-solid fa-vial-circle-check text-sm"></i>
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-slate-700">
+                                        {{ row?.description || 'Sin descripción' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </div>
+
+            <div
+                class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+
+                    <p class="text-sm text-slate-500">
+                        Mostrando
+                        <span class="font-semibold text-slate-700">
+                            {{ parameters.length }}
+                        </span>
+                        de
+                        <span class="font-semibold text-slate-700">
+                            {{ paginationParameter.total }}
+                        </span>
+                        registros
+                    </p>
+                </div>
+
+                <el-pagination background small layout="prev, pager, next" :total="paginationParameter.total"
+                    v-model:page-size="paginationParameter.per_page"
+                    v-model:current-page="paginationParameter.current_page"
+                    @current-change="(page) => listStore.getParameters(page, searchParameter, type, matrix_id)" />
+            </div>
+        </div>
+    </el-dialog>
 </template>
 
 <script setup>
@@ -847,6 +903,24 @@ const visibleSelectType = ref(false)
 const confirmRef = ref(null);
 const loadingCompany = ref(false)
 const companies = computed(() => listStore.companies)
+const typesSampling = computed(() => listStore.typesSampling)
+const matrixs = computed(() => listStore.matrixs)
+const searchParameter = ref(null)
+const type = ref(null)
+const matrix_id = ref(null)
+const loadingParameter = computed(() => listStore.loadingParameter)
+
+watch(() => searchParameter.value, (newVal) => {
+    listStore.getParameters(1, newVal, type.value, matrix_id.value)
+})
+
+watch(() => type.value, (newVal) => {
+    listStore.getParameters(1, searchParameter.value, newVal, matrix_id.value)
+})
+
+watch(() => matrix_id.value, (newVal) => {
+    listStore.getParameters(1, searchParameter.value, type.value, newVal)
+})
 
 const handleGenerateOT = async () => {
     const ok = await confirmRef.value?.open({
@@ -921,6 +995,31 @@ const emptyForm = () => ({
 })
 
 const form = reactive(emptyForm())
+
+const isSelected = (row) => {
+    if (!Array.isArray(form.parameters)) return false
+
+    return form.parameters.some((item) => item.id === row.id)
+}
+
+const toggleItem = (row) => {
+    if (!Array.isArray(form.parameters)) {
+        form.parameters = []
+    }
+
+    const index = form.parameters.findIndex((item) => item.id === row.id)
+
+    if (index !== -1) {
+        form.parameters.splice(index, 1)
+        return
+    }
+
+    form.parameters.push(row)
+}
+
+const tableRowClassName = ({ row }) => {
+    return isSelected(row) ? 'selected-row' : ''
+}
 
 const resetForm = () => {
     Object.assign(form, emptyForm())
@@ -1052,6 +1151,7 @@ const getConditionClass = (condition) => {
 }
 
 const parameters = computed(() => listStore.parameters)
+const paginationParameter = computed(() => listStore.paginationParameter)
 
 const visible = ref(false)
 const parameter = ref(null)
@@ -1121,6 +1221,30 @@ const handleEdit = (row) => {
     form.observations = row.content?.observations
 }
 
+const getOrder = async () => {
+    try {
+        const { data } = await tenant.get(`order-service/${form.order_id}`)
+
+        if (data.data) {
+            form.company_id = Number(data.data.company_id)
+            form.application_id = Number(data.data.application_id)
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+watch(() => form.order_id, (newVal) => {
+    if (newVal) {
+        getOrder()
+    }
+    else {
+        form.company_id = null
+        form.application_id = null
+    }
+})
+
 watch(() => filters, (newVal) => {
     getReceptions()
 }, { deep: true })
@@ -1130,6 +1254,8 @@ onMounted(async () => {
     await listStore.getCompanies()
     await listStore.getParameters()
     await listStore.getOrderServices()
+    await listStore.getTypesSampling()
+    await listStore.getMatrixs()
 })
 </script>
 
@@ -1203,5 +1329,48 @@ onMounted(async () => {
 .custom-textarea :deep(.el-textarea__inner:focus) {
     border-color: #f59e0b;
     box-shadow: 0 0 0 4px #fef3c7;
+}
+
+:deep(.parameter-table .el-table__header-wrapper th) {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+}
+
+:deep(.parameter-table .el-table__row:hover > td) {
+    background-color: #ecfeff !important;
+}
+
+:deep(.parameter-table .el-table__cell) {
+    padding: 10px 0;
+}
+
+:deep(.el-dialog) {
+    border-radius: 1rem;
+}
+
+:deep(.el-dialog__header) {
+    margin-right: 0;
+    padding-bottom: 14px;
+}
+
+:deep(.el-dialog__body) {
+    padding-top: 8px;
+}
+
+:deep(.selected-row td) {
+    background-color: #ecfeff !important;
+}
+
+:deep(.selected-row:hover td) {
+    background-color: #cffafe !important;
+}
+
+:deep(.selected-row td:first-child) {
+    border-left: 4px solid #0891b2 !important;
+}
+
+:deep(.lims-table .el-table__row) {
+    cursor: pointer;
 }
 </style>

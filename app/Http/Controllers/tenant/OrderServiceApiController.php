@@ -30,8 +30,6 @@ class OrderServiceApiController extends Controller
                     'user',
                     'reviwed',
                     'company',
-                    'items',
-                    'contact.user'
                 ])
                 ->paginate(15);
 
@@ -45,21 +43,58 @@ class OrderServiceApiController extends Controller
     {
         try {
             $os = OrderService::query()
-                ->with([
-                    'quote',
-                    'user',
-                    'reviwed',
-                    'company',
-                    'items',
-                    'contact.user',
-                ])
-                ->find($id);
+                ->findOrFail($id);
 
             if (!$os) {
                 return $this->sendError('Orden de servicio no encontrada.');
             }
 
-            return $this->sendResponse($os, 'Enviando orden de servicio');
+            $items = $os->items
+                ->where('type', 'matrix')
+                ->map(function ($item) {
+                    return $item->item;
+                })
+                ->values();
+
+            $mapData = [
+                "id" => $os?->id,
+                "quote_id" => $os?->quote_id,
+                "company_id" => $os?->company_id,
+                "contact_company" => $os?->contact_company,
+                "direction" => $os?->direction,
+                "date_attention" => $os?->date_attention,
+                "application_id" => $os?->application_id,
+                "contact_application" => $os?->contact_application,
+                "department" => $os?->department,
+                "district" => $os?->district,
+                "province" => $os?->province,
+                "reference" => $os?->reference,
+                "origin" => $os?->origin,
+                "project" => $os?->project,
+                "date_init_service" => $os?->date_init_service,
+                "date_end_monitoring" => $os?->date_end_monitoring,
+                "users" => $os?->users ?? [],
+                "details" => $os?->details,
+                "monitoring" => $os?->monitoring,
+                "projects" => $os?->projects,
+                "service_includes" => $os?->service_includes,
+                "accommodation" => $os?->accommodation,
+                "travel_expenses" => $os?->travel_expenses,
+                "days_service" => $os?->days_service,
+                "personal_transport" => $os?->personal_transport,
+                "send_sampling" => $os?->send_sampling,
+                "surveillance" => $os?->surveillance,
+                "electric_generator" => $os?->electric_generator,
+                "company_emission_id" => $os?->company_emission_id,
+                "type_document_required" => $os?->type_document_required,
+                "number_copy" => $os?->number_copy,
+                "version" => $os?->version,
+                "code" => $os?->code,
+                "items" => $items,
+                "observations" => null
+            ];
+
+            return $this->sendResponse($mapData, 'Enviando orden de servicio');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
@@ -73,7 +108,8 @@ class OrderServiceApiController extends Controller
             $userId = Auth::guard('api')->id();
             $input = $request->all();
 
-            $lastOrder = OrderService::whereNotNull('code')
+            $lastOrder = OrderService::query()
+                ->whereNotNull('code')
                 ->lockForUpdate()
                 ->orderByDesc('id')
                 ->first();
@@ -88,28 +124,40 @@ class OrderServiceApiController extends Controller
             $code = 'OS-' . str_pad($nextNumber, 7, '0', STR_PAD_LEFT);
 
             $orderService = OrderService::create([
-                'quote_id' => $input['quote_id'] ?? null,
+                'quote_id' => $input['quote_id'],
                 'user_id' => $userId,
-                'reviwed_id' => $input['reviwed_id'] ?? null,
-                'company_id' => $input['company_id'] ?? null,
-                'reviwed' => $input['reviwed'] ?? null,
-                'reference' => $input['reference'] ?? null,
-                'origin' => $input['origin'] ?? null,
-                'project' => $input['project'] ?? null,
-                'date_monitoring_init' => $input['date_monitoring_init'] ?? null,
-                'date_monitoring_end' => $input['date_monitoring_end'] ?? null,
-                'date_induction' => $input['date_induction'] ?? null,
-                'date_output' => $input['date_output'] ?? null,
-                'details' => $input['details'] ?? null,
-                'stations_monitoring' => $input['stations_monitoring'] ?? null,
-                'project_monitoring' => $input['project_monitoring'] ?? null,
-                'conditions' => $input['conditions'] ?? null,
-                'emision_data' => $input['emision_data'] ?? null,
-                'observations' => $input['observations'] ?? null,
+                'reviwed' => 'RONALD RAMIREZ',
+                'company_id' => $input['company_id'],
+                'contact_company' => $input['contact_company'],
+                'direction' => $input['direction'],
+                'date_attention' => $input['date_attention'],
+                'application_id' => $input['application_id'],
+                'contact_application' => $input['contact_application'],
+                'department' => $input['department'],
+                'district' => $input['district'],
+                'province' => $input['province'],
+                'reference' => $input['reference'],
+                'origin' => $input['origin'],
+                'project' => $input['project'],
+                'date_init_service' => $input['date_init_service'],
+                'date_end_monitoring' => $input['date_end_monitoring'],
+                'users' => $input['users'],
+                'details' => $input['details'],
+                'monitoring' => $input['monitoring'],
+                'projects' => $input['projects'],
+                'service_includes' => $input['service_includes'],
+                'accommodation' => $input['accommodation'],
+                'travel_expenses' => $input['travel_expenses'],
+                'days_service' => $input['days_service'],
+                'personal_transport' => $input['personal_transport'],
+                'send_sampling' => $input['send_sampling'],
+                'surveillance' => $input['surveillance'],
+                'electric_generator' => $input['electric_generator'],
+                'company_emission_id' => $input['company_emission_id'],
+                'type_document_required' => $input['type_document_required'],
+                'number_copy' => $input['number_copy'],
                 'code' => $code,
-                'contact_id' => $input['contact_id'] ?? null,
-                'direction' => $input['direction'] ?? null,
-                'date_attention' => $input['date_attention'] ?? null
+                'observations' => $input['observations'],
             ]);
 
             if (!empty($input['items']) && is_array($input['items'])) {
@@ -145,28 +193,38 @@ class OrderServiceApiController extends Controller
             $orderService = OrderService::findOrFail($id);
 
             $orderService->update([
-                'quote_id' => $input['quote_id'] ?? null,
-                'reviwed_id' => $input['reviwed_id'] ?? null,
-                'company_id' => $input['company_id'] ?? null,
-                'reviwed' => $input['reviwed'] ?? null,
-                'reference' => $input['reference'] ?? null,
-                'origin' => $input['origin'] ?? null,
-                'project' => $input['project'] ?? null,
-                'date_monitoring_init' => $input['date_monitoring_init'] ?? null,
-                'date_monitoring_end' => $input['date_monitoring_end'] ?? null,
-                'date_induction' => $input['date_induction'] ?? null,
-                'date_output' => $input['date_output'] ?? null,
-                'details' => $input['details'] ?? null,
-                'stations_monitoring' => $input['stations_monitoring'] ?? null,
-                'project_monitoring' => $input['project_monitoring'] ?? null,
-                'conditions' => $input['conditions'] ?? null,
-                'emision_data' => $input['emision_data'] ?? null,
-                'observations' => $input['observations'] ?? null,
-                'direction' => $input['direction'] ?? null,
-                'date_attention' => $input['date_attention'] ?? null
+                'company_id' => $input['company_id'],
+                'contact_company' => $input['contact_company'],
+                'direction' => $input['direction'],
+                'application_id' => $input['application_id'],
+                'contact_application' => $input['contact_application'],
+                'department' => $input['department'],
+                'district' => $input['district'],
+                'province' => $input['province'],
+                'reference' => $input['reference'],
+                'origin' => $input['origin'],
+                'project' => $input['project'],
+                'date_init_service' => $input['date_init_service'],
+                'date_end_monitoring' => $input['date_end_monitoring'],
+                'users' => $input['users'],
+                'details' => $input['details'],
+                'monitoring' => $input['monitoring'],
+                'projects' => $input['projects'],
+                'service_includes' => $input['service_includes'],
+                'accommodation' => $input['accommodation'],
+                'travel_expenses' => $input['travel_expenses'],
+                'days_service' => $input['days_service'],
+                'personal_transport' => $input['personal_transport'],
+                'send_sampling' => $input['send_sampling'],
+                'surveillance' => $input['surveillance'],
+                'electric_generator' => $input['electric_generator'],
+                'company_emission_id' => $input['company_emission_id'],
+                'type_document_required' => $input['type_document_required'],
+                'number_copy' => $input['number_copy'],
+                'observations' => $input['observations'],
             ]);
 
-            ItemsOrderService::where('order_service_id', $orderService->id)->delete();
+            $orderService->items()->delete();
 
             if (!empty($input['items']) && is_array($input['items'])) {
                 foreach ($input['items'] as $item) {
@@ -197,9 +255,7 @@ class OrderServiceApiController extends Controller
             DB::beginTransaction();
 
             $orderService = OrderService::findOrFail($id);
-
-            ItemsOrderService::where('order_service_id', $orderService->id)->delete();
-
+            $orderService->items()->delete();
             $orderService->delete();
 
             DB::commit();

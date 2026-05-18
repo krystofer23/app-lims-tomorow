@@ -13,15 +13,27 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
+
             $table->string('type')->nullable();
 
+            $table->unsignedBigInteger('type_of_sample_id')->nullable();
+            $table->foreign('type_of_sample_id')->references('id')->on('type_of_samples');
+
             $table->unsignedBigInteger('condition_id')->nullable();
+            $table->foreign('condition_id')->references('id')->on('conditions');
+
             $table->unsignedBigInteger('matrix_id')->nullable();
+            $table->foreign('matrix_id')->references('id')->on('matrix');
+
             $table->unsignedBigInteger('reference_id')->nullable();
-            $table->unsignedBigInteger('category_id')->nullable();
+            $table->foreign('reference_id')->references('id')->on('references_standard');
+
             $table->unsignedBigInteger('parameter_id')->nullable();
+            $table->foreign('parameter_id')->references('id')->on('parameters');
 
             $table->unsignedBigInteger('unit_measurement_id')->nullable();
+            $table->foreign('unit_measurement_id')->references('id')->on('units_measurement');
+
             $table->string('lcm')->nullable();
 
             $table->boolean('is_operation')->default(false);
@@ -29,16 +41,9 @@ return new class extends Migration
 
             $table->boolean('is_other_company')->default(false);
             $table->unsignedBigInteger('company_id')->nullable();
+            $table->foreign('company_id')->references('id')->on('companies');
 
             $table->decimal('unit_price', 10, 2)->nullable();
-
-            $table->foreign('condition_id')->references('id')->on('conditions');
-            $table->foreign('matrix_id')->references('id')->on('matrix');
-            $table->foreign('reference_id')->references('id')->on('references_standard');
-            $table->foreign('category_id')->references('id')->on('categories');
-            $table->foreign('unit_measurement_id')->references('id')->on('units_measurement');
-            $table->foreign('company_id')->references('id')->on('companies');
-            $table->foreign('parameter_id')->references('id')->on('parameters');
 
             $table->timestamps();
             $table->softDeletes();

@@ -19,6 +19,7 @@ use App\Http\Controllers\tenant\ReceptionApiController;
 use App\Http\Controllers\tenant\ReportOtsApiController;
 use App\Http\Controllers\tenant\ServiceApiController;
 use App\Http\Controllers\tenant\TestImportApiController;
+use App\Http\Controllers\tenant\UbigeoApiController;
 use App\Http\Controllers\tenant\UnitsMeasurementApiController;
 use App\Http\Controllers\tenant\UserApiController;
 use App\Http\Middleware\AllowExpiredTokenOnly;
@@ -67,6 +68,13 @@ Route::middleware([
         });
 
         Route::middleware([JWTMiddleware::class])->group(function () {
+
+            Route::controller(UbigeoApiController::class)->prefix('ubigeo')->group(function () {
+
+                Route::get('departments', 'departments');
+                Route::get('provinces', 'provinces');
+                Route::get('districts', 'districts');
+            });
 
             Route::controller(ItemsApiController::class)->prefix('items')->group(function ($q) {
 
@@ -158,6 +166,7 @@ Route::middleware([
                 Route::get('teams', 'teams');
                 Route::get('parameters', 'parameters');
                 Route::get('users', 'users');
+                Route::get('types-sampling', 'typesSampling');
             });
 
             Route::controller(MatrizApiController::class)->prefix('matriz')->group(function () {

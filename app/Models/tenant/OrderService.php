@@ -19,25 +19,38 @@ class OrderService extends TenantModel
         'quote_id',
         'user_id',
         'reviwed_id',
-        'company_id',
         'reviwed',
+        'company_id',
+        'contact_company',
+        'direction',
+        'date_attention',
+        'application_id',
+        'contact_application',
+        'department',
+        'district',
+        'province',
         'reference',
         'origin',
         'project',
-        'date_monitoring_init',
-        'date_monitoring_end',
-        'date_induction',
-        'date_output',
+        'date_init_service',
+        'date_end_monitoring',
+        'users',
         'details',
-        'stations_monitoring',
-        'project_monitoring',
-        'conditions',
-        'emision_data',
-        'observations',
+        'monitoring',
+        'projects',
+        'service_includes',
+        'accommodation',
+        'travel_expenses',
+        'days_service',
+        'personal_transport',
+        'send_sampling',
+        'surveillance',
+        'electric_generator',
+        'company_emission_id',
+        'type_document_required',
+        'number_copy',
         'code',
-        'contact_id',
-        'direction',
-        'date_attention'
+        'observations',
     ];
 
     protected $casts = [
@@ -49,6 +62,7 @@ class OrderService extends TenantModel
         'date_attention' => LocalTimezone::class,
         'conditions' => 'json',
         'emision_data' => 'json',
+        'users' => 'json',
     ];
 
     public function quote(): BelongsTo
@@ -74,10 +88,5 @@ class OrderService extends TenantModel
     public function items(): HasMany
     {
         return $this->hasMany(ItemsOrderService::class, 'order_service_id', 'id');
-    }
-
-    public function contact(): BelongsTo
-    {
-        return $this->belongsTo(ContactCompanies::class, 'contact_id');
     }
 }

@@ -59,18 +59,7 @@
                 </el-button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
-                        Tipo
-                    </label>
-
-                    <el-select v-model="filters.type" clearable filterable class="w-full"
-                        placeholder="Seleccionar tipo">
-                        <el-option v-for="row in types" :key="row" class="!uppercase" :value="row" :label="row" />
-                    </el-select>
-                </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1.5">
                         Acreditación
@@ -85,6 +74,17 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1.5">
+                        Tipo
+                    </label>
+
+                    <el-select v-model="filters.type" clearable filterable class="w-full"
+                        placeholder="Seleccionar tipo">
+                        <el-option v-for="row in types" :key="row" class="!uppercase" :value="row" :label="row" />
+                    </el-select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
                         Matriz
                     </label>
 
@@ -94,6 +94,30 @@
                             :label="row.description" />
                     </el-select>
                 </div>
+
+                <!-- <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
+                        Categoria
+                    </label>
+
+                    <el-select v-model="filters.matrix" clearable filterable class="w-full"
+                        placeholder="Seleccionar matriz">
+                        <el-option v-for="row in matrixs" :key="row.id" class="!uppercase" :value="row.id"
+                            :label="row.description" />
+                    </el-select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
+                        Sub Categoria
+                    </label>
+
+                    <el-select v-model="filters.matrix" clearable filterable class="w-full"
+                        placeholder="Seleccionar matriz">
+                        <el-option v-for="row in matrixs" :key="row.id" class="!uppercase" :value="row.id"
+                            :label="row.description" />
+                    </el-select>
+                </div> -->
             </div>
         </section>
 
@@ -160,6 +184,14 @@
                         </el-tag>
                     </template>
                 </el-table-column>
+                <el-table-column label="Parametro" min-width="155">
+                    <template #default="{ row }">
+                        <el-tag size="small" effect="light" :type="row?.condition?.description ? 'success' : 'info'"
+                            class="!rounded-full !font-bold">
+                            {{ row.parameter.description || 'No indica' }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
 
                 <el-table-column label="Matriz" min-width="170">
                     <template #default="{ row }">
@@ -171,6 +203,21 @@
 
                             <span class="font-semibold text-slate-800">
                                 {{ row?.matrix?.description || 'No indica' }}
+                            </span>
+                        </div>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="Categorias" min-width="270">
+                    <template #default="{ row }">
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-layer-group text-xs"></i>
+                            </span>
+
+                            <span class="font-semibold text-slate-800">
+                                {{ row?.category?.description || '-' }}
                             </span>
                         </div>
                     </template>
@@ -364,6 +411,8 @@ const clearFilters = () => {
 }
 
 const isSelected = (row) => {
+    if (!Array.isArray(props.items)) return false
+
     return props.items.some((item) => item.id === row.id)
 }
 
@@ -373,20 +422,19 @@ const toggleItem = (row) => {
     if (exists) {
         const newItems = props.items.filter((item) => item.id !== row.id)
 
-        emit('update:items', {
-            ...newItems,
-            price: 0.00,
-            number_samples: 1,
-        })
+        emit('update:items', newItems)
 
         return
     }
 
-    emit('update:items', [...props.items, {
-        ...row,
-        price: 0.00,
-        number_samples: 1,
-    }])
+    emit('update:items', [
+        ...props.items,
+        {
+            ...row,
+            price: 0.00,
+            number_samples: 1,
+        }
+    ])
 }
 
 const tableRowClassName = ({ row }) => {

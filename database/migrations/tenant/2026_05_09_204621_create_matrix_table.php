@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('matrix', function (Blueprint $table) {
             $table->id();
             $table->string('description')->nullable();
+            $table->unsignedBigInteger('type_of_sample_id')->nullable();
+            $table->foreign('type_of_sample_id')->references('id')->on('type_of_samples');
             $table->timestamps();
             $table->softDeletes();
         });
