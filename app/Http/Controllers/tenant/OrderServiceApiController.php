@@ -91,7 +91,7 @@ class OrderServiceApiController extends Controller
                 "version" => $os?->version,
                 "code" => $os?->code,
                 "items" => $items,
-                "observations" => null
+                "observations" => $os?->observations,
             ];
 
             return $this->sendResponse($mapData, 'Enviando orden de servicio');

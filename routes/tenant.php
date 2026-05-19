@@ -104,6 +104,9 @@ Route::middleware([
 
                 Route::get('download-excel/{id}', 'downloadExcelOT');
                 Route::get('view-pdf-ot/{id}', 'viewPdfOT');
+
+                Route::get('get-type-of-samples', 'getTypeOfSamples');
+                Route::get('get-matrix', 'getMatrix');
             });
 
             Route::controller(OrderServiceApiController::class)->prefix('order-service')->group(function () {
@@ -167,6 +170,7 @@ Route::middleware([
                 Route::get('parameters', 'parameters');
                 Route::get('users', 'users');
                 Route::get('types-sampling', 'typesSampling');
+                Route::get('types-analysis', 'typesAnalysis');
             });
 
             Route::controller(MatrizApiController::class)->prefix('matriz')->group(function () {

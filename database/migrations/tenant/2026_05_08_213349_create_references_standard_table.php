@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('references_standard', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->nullable();
-            $table->string('title')->nullable();
+            $table->text('code')->nullable();
+            $table->text('title')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

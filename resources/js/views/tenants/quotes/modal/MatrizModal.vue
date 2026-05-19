@@ -74,12 +74,12 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1.5">
-                        Tipo
+                        Producto
                     </label>
 
-                    <el-select v-model="filters.type" clearable filterable class="w-full"
-                        placeholder="Seleccionar tipo">
-                        <el-option v-for="row in types" :key="row" class="!uppercase" :value="row" :label="row" />
+                    <el-select v-model="filters.product" clearable filterable class="w-full"
+                        placeholder="Seleccionar acreditación">
+                        <el-option v-for="row in typesSampling" :value="row.id" :label="row.description"></el-option>
                     </el-select>
                 </div>
 
@@ -89,35 +89,28 @@
                     </label>
 
                     <el-select v-model="filters.matrix" clearable filterable class="w-full"
-                        placeholder="Seleccionar matriz">
-                        <el-option v-for="row in matrixs" :key="row.id" class="!uppercase" :value="row.id"
-                            :label="row.description" />
-                    </el-select>
-                </div>
-
-                <!-- <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
-                        Categoria
-                    </label>
-
-                    <el-select v-model="filters.matrix" clearable filterable class="w-full"
-                        placeholder="Seleccionar matriz">
-                        <el-option v-for="row in matrixs" :key="row.id" class="!uppercase" :value="row.id"
-                            :label="row.description" />
+                        placeholder="Seleccionar acreditación">
+                        <el-option v-for="row in matrixs" :value="row.id" :label="row.description"></el-option>
                     </el-select>
                 </div>
 
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1.5">
-                        Sub Categoria
+                        Tipo de Análisis
                     </label>
 
-                    <el-select v-model="filters.matrix" clearable filterable class="w-full"
-                        placeholder="Seleccionar matriz">
-                        <el-option v-for="row in matrixs" :key="row.id" class="!uppercase" :value="row.id"
-                            :label="row.description" />
+                    <el-select v-model="filters.type_of_analysis" clearable filterable class="w-full"
+                        placeholder="Seleccionar acreditación">
+                        <el-option v-for="row in typesAnalysis" :value="row.id" :label="row.description"></el-option>
                     </el-select>
-                </div> -->
+                </div>
+
+                <div class="flex items-end">
+                    <el-button @click="getItem()" :loading="loading" class="!rounded-lg">
+                        <i class="fa-solid fa-filter me-2"></i>
+                        Filtrar
+                    </el-button>
+                </div>
             </div>
         </section>
 
@@ -176,7 +169,7 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="Acreditación" min-width="155">
+                <el-table-column label="Acreditación" min-width="120">
                     <template #default="{ row }">
                         <el-tag size="small" effect="light" :type="row?.condition?.description ? 'success' : 'info'"
                             class="!rounded-full !font-bold">
@@ -184,49 +177,19 @@
                         </el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column label="Parametro" min-width="155">
+
+                <el-table-column label="Parametro" min-width="340">
                     <template #default="{ row }">
-                        <el-tag size="small" effect="light" :type="row?.condition?.description ? 'success' : 'info'"
-                            class="!rounded-full !font-bold">
+                        <span
+                            class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-mono font-bold">
                             {{ row.parameter.description || 'No indica' }}
-                        </el-tag>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Matriz" min-width="170">
-                    <template #default="{ row }">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-layer-group text-xs"></i>
-                            </span>
-
-                            <span class="font-semibold text-slate-800">
-                                {{ row?.matrix?.description || 'No indica' }}
-                            </span>
-                        </div>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Categorias" min-width="270">
-                    <template #default="{ row }">
-                        <div class="flex items-center gap-2">
-                            <span
-                                class="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-layer-group text-xs"></i>
-                            </span>
-
-                            <span class="font-semibold text-slate-800">
-                                {{ row?.category?.description || '-' }}
-                            </span>
-                        </div>
+                        </span>
                     </template>
                 </el-table-column>
 
                 <el-table-column label="Ensayo" min-width="145">
                     <template #default="{ row }">
-                        <span
-                            class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-mono font-bold">
+                        <span class="inline-flex items-center px-2.5 py-1 text-slate-700 text-xs font-mono font-bold">
                             {{ row?.reference?.code || 'No indica' }}
                         </span>
                     </template>
@@ -347,14 +310,26 @@ const listStore = useListStore()
 const loading = ref(false)
 const itemsData = ref([])
 
-const matrixs = computed(() => listStore.matrixs)
-const types = computed(() => listStore.types)
 const conditions = computed(() => listStore.conditions)
+const typesSampling = computed(() => listStore.typesSampling)
+const typesAnalysis = computed(() => listStore.typesAnalysis)
+const matrixs = computed(() => {
+    const data = listStore.matrixs ?? []
+
+    if (!filters.product) {
+        return data
+    }
+
+    return data.filter(
+        m => Number(m.type_of_sample_id) === Number(filters.product)
+    )
+})
 
 const filters = reactive({
-    type: null,
-    condition: null,
     matrix: null,
+    product: null,
+    condition: null,
+    type_of_analysis: null
 })
 
 const pagination = ref({
@@ -371,9 +346,7 @@ const getItem = async (page = 1) => {
         const { data } = await tenant.get('items', {
             params: {
                 page,
-                type: filters.type,
-                condition_id: filters.condition,
-                matrix_id: filters.matrix,
+                ...filters
             },
         })
 
@@ -403,11 +376,7 @@ const handlePageChange = (page) => {
 }
 
 const clearFilters = () => {
-    filters.type = null
-    filters.condition = null
-    filters.matrix = null
-
-    getItem(1)
+    getItem()
 }
 
 const isSelected = (row) => {
@@ -445,19 +414,14 @@ const handleClose = () => {
     emit('close')
 }
 
-watch(
-    filters,
-    () => {
-        getItem(1)
-    },
-    { deep: true }
-)
+watch(filters, () => getItem(), { deep: true })
+watch(filters, () => listStore.getTypesAnalysis(filters), { deep: true })
 
 onMounted(async () => {
     await listStore.getConditions()
+    await listStore.getTypesSampling()
+    await listStore.getTypesAnalysis()
     await listStore.getMatrixs()
-    await listStore.getTypes()
-    await getItem()
 })
 </script>
 

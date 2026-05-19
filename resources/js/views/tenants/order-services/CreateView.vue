@@ -807,7 +807,6 @@ const getOrderService = async (id) => {
         const { data } = await tenant.get(`order-service/${id}`)
 
         if (data.data) {
-
             form.id = data.data.id
             form.quote_id = data.data.quote_id
             form.company_id = data.data.company_id
@@ -968,6 +967,7 @@ onMounted(async () => {
 
     await listStore.getCompanies()
     await listStore.getUsers()
+
     await getDepartments()
     await getProvinces()
     await getDistricts()

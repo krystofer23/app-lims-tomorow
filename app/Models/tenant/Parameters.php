@@ -28,4 +28,9 @@ class Parameters extends TenantModel
     {
         return $this->hasMany(Item::class, 'parameter_id', 'id');
     }
+
+    public function connectionsParameter(): HasMany
+    {
+        return $this->hasMany(ConnectionParameter::class, 'parameter_id', 'id');
+    }
 }

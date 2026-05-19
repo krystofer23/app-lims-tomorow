@@ -16,12 +16,30 @@ class ChainCustody extends TenantModel
         'application_id',
         'order_id',
         'os',
-        'content',
+        'number_chain',
+        'number_report',
+        'type_of_sample_id',
+        'matrix_id',
+        'number_sample',
+        'number_essays',
+        'date_reception',
+        'date_sampling_init_date',
+        'date_sampling_init_time',
+        'date_sampling_end_date',
+        'date_sampling_end_time',
+        'date_agreed',
+        'company_sampling_id',
+        'code_lab',
+        'code_season',
+        'condition_report',
+        'other_company_id',
+        'observations',
+        'parameters',
     ];
 
     protected $casts = [
         'created_at' => LocalTimezone::class,
-        'content' => 'json'
+        'parameters' => 'json',
     ];
 
     public function company(): BelongsTo
@@ -37,5 +55,15 @@ class ChainCustody extends TenantModel
     public function order(): BelongsTo
     {
         return $this->belongsTo(OrderService::class, 'order_id');
+    }
+
+    public function typeOfSample(): BelongsTo
+    {
+        return $this->belongsTo(TypeOfSamples::class, 'type_of_sample_id');
+    }
+
+    public function matrix(): BelongsTo
+    {
+        return $this->belongsTo(Matrix::class, 'matrix_id');
     }
 }

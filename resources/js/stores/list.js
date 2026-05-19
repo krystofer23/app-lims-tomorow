@@ -278,24 +278,25 @@ export const useListStore = defineStore("listStore", () => {
 
     const getParameters = async (
         page = 1,
-        q = null,
-        type = null,
-        matrix_id = null
+        matrix = null,
+        product = null,
+        condition = null,
+        type_of_analysis = null,
     ) => {
         loadingParameter.value = true
 
         try {
             const { data } = await tenant.get(`list/parameters?page=${page}`, {
                 params: {
-                    search: q,
-                    type,
-                    matrix_id
+                    matrix: matrix,
+                    product: product,
+                    condition: condition,
+                    type_of_analysis: type_of_analysis,
                 }
             })
 
             if (data.data) {
                 parameters.value = data.data.data
-
                 paginationParameter.value = {
                     total: data.data.total,
                     current_page: data.data.current_page,
@@ -361,10 +362,30 @@ export const useListStore = defineStore("listStore", () => {
         }
     }
 
+    const typesAnalysis = ref([])
+
+    const getTypesAnalysis = async (matrix = null, product = null, condition = null) => {
+        try {
+            const { data } = await tenant.get(`list/types-analysis`, {
+                params: {
+                    matrix: matrix,
+                    product: product,
+                    condition: condition,
+                }
+            })
+
+            if (data.data) typesAnalysis.value = data.data
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+    }
+
     return {
         conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService, comerciales,
         getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices, contacts, loadingContacts, getContacts, loadingTeam,
         teams, paginationTeam, getTeams, loadingOrderService, ordersServices, paginationOrderService, getOrderServices, getParameters, parameters,
-        getUsers, users, types, matrixs, getTypes, getMatrixs, typesSampling, getTypesSampling, paginationParameter, loadingParameter
+        getUsers, users, types, matrixs, getTypes, getMatrixs, typesSampling, getTypesSampling, paginationParameter, loadingParameter,
+        typesAnalysis, getTypesAnalysis
     }
 })

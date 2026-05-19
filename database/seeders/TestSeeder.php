@@ -3,10 +3,17 @@
 namespace Database\Seeders;
 
 use App\Models\tenant\Category;
+use App\Models\tenant\Conditions;
+use App\Models\tenant\ConnectionParameter;
 use App\Models\tenant\Matrix;
+use App\Models\tenant\Parameters;
+use App\Models\tenant\TypeOfAnalysis;
 use App\Models\tenant\TypeOfSamples;
+use App\Models\tenant\UnitsMeasurement;
+use Exception;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Log;
 
 class TestSeeder extends Seeder
 {
@@ -15,59 +22,43 @@ class TestSeeder extends Seeder
      */
     public function run(): void
     {
-        $types = [
-            'Agua Residual Doméstica',
-            'Agua Residual Industrial',
-            'Agua Residual Municipal',
-            'Agua Superficial',
-            'Agua Subterránea',
-            'Agua Potable',
-            'Agua de Piscina',
-            'Agua de Laguna Artificial',
-            'Agua de Circulación y Enfriamiento',
-            'Agua de Alimentación de Calderas',
-            'Agua de Calderas',
-            'Agua de Lixiviación',
-            'Agua Purificada',
-            'Agua de Inyección y reinyección',
-            'Agua de Mar',
-            'Agua Salobre',
-            'Agua de Reinyeccón',
-            'Salmuera',
+        try {
+            $parameters = [
+                "- Hidrocarburos Totales expresados como Hexano.",
+                "- Benceno.",
+                "- Hidrocarburos No Metano (HCNM)",
+            ];
 
-            'Aire',
-            'Filtro',
-            'Solución Captadora',
-            'Tubo de Carbón Activado',
+            $matrixs = [
+                "Tubo de Carbón Activado"
+            ];
 
-            'Emisiones',
-
-            'Radiacion No Ionizante',
-            'Radiacion Electromagnética',
-
-            'Ruido Ambiental: Planta Industriales',
-            'Ruido Ambiental: Tráfico Aéreo',
-            'Ruido Ambiental: Tráfico Ferroviario',
-            'Ruido Ambiental: Tráfico Rodado',
-            'Ruido Ocupacional',
-
-            'Salud Ocupacional',
-
-            'Suelo',
-            'Sedimento',
-            'Lodo',
-
-            'Vibración Ambiental',
-            'Vibración cuerpo entero',
-            'Vibracion mano-brazo',
-            'Vibracion en edificios',
-
-        ];
-
-        foreach ($types as $value) {
-            Matrix::firstOrCreate([
-                'description' => $value
+            $type = TypeOfSamples::firstOrCreate([
+                'description' => 'Tubo de Carbón Activado'
             ]);
+
+            foreach ($matrixs as $matrix) {
+                $ma = Matrix::firstOrCreate([
+                    'description' => $matrix,
+                    'type_of_sample_id' => $type?->id
+                ]);
+
+                foreach ($parameters as $parameter) {
+                    $par = Parameters::query()->where('description', $parameter)->first();
+
+                    if ($par) {
+                        ConnectionParameter::firstOrCreate([
+                            'parameter_id' => $par?->id,
+                            'matrix_id' => $ma?->id,
+                            'type_of_samples_id' => $type?->id
+                        ]);
+                    } else {
+                        Log::error("NO SE ENCONTRO: $parameter");
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
         }
     }
 }

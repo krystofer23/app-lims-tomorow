@@ -13,6 +13,7 @@ use App\Models\tenant\Matriz;
 use App\Models\tenant\Methodologies;
 use App\Models\tenant\Parameters;
 use App\Models\tenant\Services;
+use App\Models\tenant\TypeOfAnalysis;
 use App\Models\tenant\TypeOfSamples;
 use App\Models\tenant\UnitsMeasurement;
 use App\Models\Tenant\User;
@@ -182,30 +183,46 @@ class ListApiController extends Controller
     public function parameters(Request $request): JsonResponse
     {
         try {
-            $search = $request->input('search');
-            $type = $request->input('type');
-            $matrixId = $request->input('matrix_id');
+            $matrix = $request->input('matrix');
+            $product = $request->input('product');
+            $condition = $request->input('condition');
+            $type_of_analysis = $request->input('type_of_analysis');
 
-            $data = Parameters::query()
-                ->when($request->filled('search'), function ($q) use ($search) {
-                    $q->where('description', 'like', "%{$search}%");
+            $data = Item::query()
+                ->with([
+                    'typeOfSample',
+                    'condition',
+                    'matrix',
+                    'reference',
+                    'parameter',
+                    'unitMeasurement',
+                    'company',
+                ])
+                ->when($condition, function ($q) use ($condition) {
+                    $q->where('condition_id', $condition);
                 })
-                ->when($request->filled('type'), function ($q) use ($type) {
-                    $q->whereHas('item', function ($query) use ($type) {
-                        $query->whereHas('category', function ($query) use ($type) {
-                            $query->where('description', 'like', "%$type%");
-                        });
+                ->when($product, function ($query) use ($product) {
+                    $query->where(function ($q) use ($product) {
+                        $q->where('type_of_sample_id', $product)
+                            ->orWhereHas('parameter.connectionsParameter', function ($subQuery) use ($product) {
+                                $subQuery->where('type_of_samples_id', $product);
+                            });
                     });
                 })
-                ->when($request->filled('matrix_id'), function ($q) use ($matrixId) {
-                    $q->whereHas('item', function ($query) use ($matrixId) {
-                        $query->where('matrix_id', $matrixId);
+                ->when($matrix, function ($query) use ($matrix) {
+                    $query->where(function ($q) use ($matrix) {
+                        $q->where('matrix_id', $matrix)
+                            ->orWhereHas('parameter.connectionsParameter', function ($subQuery) use ($matrix) {
+                                $subQuery->where('matrix_id', $matrix);
+                            });
                     });
                 })
-                ->orderBy('description')
-                ->paginate($request->input('per_page', 20));
+                ->when($type_of_analysis, function ($query) use ($type_of_analysis) {
+                    $query->whereHas('parameter', fn($q) => $q->where('type_of_analysis_id', $type_of_analysis));
+                })
+                ->paginate(15);
 
-            return $this->sendResponse($data, 'Enviando parámetros');
+            return $this->sendResponse($data, 'Enviando items/parametros');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
@@ -250,8 +267,6 @@ class ListApiController extends Controller
     {
         try {
             $matrixs = Matrix::query()
-                ->select('id', 'description')
-                ->orderBy('description')
                 ->get();
 
             return $this->sendResponse($matrixs, 'Enviando matrices únicas');
@@ -267,6 +282,57 @@ class ListApiController extends Controller
                 ->get();
 
             return $this->sendResponse($data, 'Enviando tipos de muestras');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function typesAnalysis(Request $request): JsonResponse
+    {
+        try {
+            $matrix = $request->input('matrix');
+            $product = $request->input('product');
+            $condition = $request->input('condition');
+
+            $parametersIds = Item::query()
+                ->when($product, function ($query) use ($product) {
+                    $query->where(function ($q) use ($product) {
+                        $q->where('type_of_sample_id', $product)
+                            ->orWhereHas('parameter.connectionsParameter', function ($subQuery) use ($product) {
+                                $subQuery->where('type_of_samples_id', $product);
+                            });
+                    });
+                })
+                ->when($matrix, function ($query) use ($matrix) {
+                    $query->where(function ($q) use ($matrix) {
+                        $q->where('matrix_id', $matrix)
+                            ->orWhereHas('parameter.connectionsParameter', function ($subQuery) use ($matrix) {
+                                $subQuery->where('matrix_id', $matrix);
+                            });
+                    });
+                })
+                ->when($condition, function ($q) use ($condition) {
+                    $q->where('condition_id', $condition);
+                })
+                ->pluck('parameter_id')
+                ->filter()
+                ->unique()
+                ->values();
+
+            $typeOfAnalysisIds = Parameters::query()
+                ->whereIn('id', $parametersIds)
+                ->pluck('type_of_analysis_id')
+                ->filter()
+                ->unique()
+                ->values();
+
+            $data = TypeOfAnalysis::query()
+                ->when($typeOfAnalysisIds->isNotEmpty(), function ($q) use ($typeOfAnalysisIds) {
+                    $q->whereIn('id', $typeOfAnalysisIds);
+                })
+                ->get();
+
+            return $this->sendResponse($data, 'Enviando tipos de análisis');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }

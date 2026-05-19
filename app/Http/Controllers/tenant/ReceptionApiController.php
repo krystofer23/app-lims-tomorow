@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdenTrabajoExport;
+use App\Models\tenant\ConnectionParameter;
+use App\Models\tenant\Matrix;
+use App\Models\tenant\Parameters;
+use App\Models\tenant\TypeOfSamples;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -61,11 +65,30 @@ class ReceptionApiController extends Controller
             $os = $input['order_id'] ? OrderService::select('id', 'code')->find($input['order_id'])?->code : null;
 
             $chainCustody = ChainCustody::create([
+                'os' => $os,
                 'company_id' => $input['company_id'],
                 'application_id' => $input['application_id'],
                 'order_id' => $input['order_id'],
-                'os' => $os,
-                'content' => $input,
+                'os' => $input['os'],
+                'number_chain' => $input['number_chain'],
+                'number_report' => $input['number_report'],
+                'type_of_sample_id' => $input['type_of_sample_id'],
+                'matrix_id' => $input['matrix_id'],
+                'number_sample' => $input['number_sample'],
+                'number_essays' => $input['number_essays'],
+                'date_reception' => $input['date_reception'],
+                'date_sampling_init_date' => $input['date_sampling_init_date'],
+                'date_sampling_init_time' => $input['date_sampling_init_time'],
+                'date_sampling_end_date' => $input['date_sampling_end_date'],
+                'date_sampling_end_time' => $input['date_sampling_end_time'],
+                'date_agreed' => $input['date_agreed'],
+                'company_sampling_id' => $input['company_sampling_id'],
+                'code_lab' => $input['code_lab'],
+                'code_season' => $input['code_season'],
+                'condition_report' => $input['condition_report'],
+                'other_company_id' => $input['other_company_id'],
+                'observations' => $input['observations'],
+                'parameters' => $input['parameters'],
             ]);
 
             Record::create([
@@ -100,11 +123,30 @@ class ReceptionApiController extends Controller
             $os = $input['order_id'] ? OrderService::select('id', 'code')->find($input['order_id'])?->code : null;
 
             $chainCustody->update([
+                'os' => $os,
                 'company_id' => $input['company_id'],
                 'application_id' => $input['application_id'],
                 'order_id' => $input['order_id'],
-                'os' => $os,
-                'content' => $input,
+                'os' => $input['os'],
+                'number_chain' => $input['number_chain'],
+                'number_report' => $input['number_report'],
+                'type_of_sample_id' => $input['type_of_sample_id'],
+                'matrix_id' => $input['matrix_id'],
+                'number_sample' => $input['number_sample'],
+                'number_essays' => $input['number_essays'],
+                'date_reception' => $input['date_reception'],
+                'date_sampling_init_date' => $input['date_sampling_init_date'],
+                'date_sampling_init_time' => $input['date_sampling_init_time'],
+                'date_sampling_end_date' => $input['date_sampling_end_date'],
+                'date_sampling_end_time' => $input['date_sampling_end_time'],
+                'date_agreed' => $input['date_agreed'],
+                'company_sampling_id' => $input['company_sampling_id'],
+                'code_lab' => $input['code_lab'],
+                'code_season' => $input['code_season'],
+                'condition_report' => $input['condition_report'],
+                'other_company_id' => $input['other_company_id'],
+                'observations' => $input['observations'],
+                'parameters' => $input['parameters'],
             ]);
 
             Record::create([
@@ -265,5 +307,114 @@ class ReceptionApiController extends Controller
             'rows' => $rows,
             'maxColumns' => $maxColumns,
         ];
+    }
+
+    public function getTypeOfSamples(Request $request): JsonResponse
+    {
+        try {
+            $orderId = $request->input('order_id');
+
+            if (!$orderId) {
+                $data = TypeOfSamples::query()
+                    ->get();
+
+                return $this->sendResponse($data, 'Enviando tipos de muestras');
+            }
+
+            $order = OrderService::query()
+                ->with('items')
+                ->findOrFail($orderId);
+
+            $samplesIds = [];
+
+            foreach ($order->items as $itemOrder) {
+                $typeOfSampleId = data_get($itemOrder->item, 'type_of_sample_id');
+
+                if ($typeOfSampleId) {
+                    $samplesIds[] = $typeOfSampleId;
+                    continue;
+                }
+
+                $parameterId = data_get($itemOrder->item, 'parameter_id');
+
+                if (!$parameterId) {
+                    continue;
+                }
+
+                $connectionParameter = ConnectionParameter::query()
+                    ->where('parameter_id', $parameterId)
+                    ->first();
+
+                if ($connectionParameter?->type_of_samples_id) {
+                    $samplesIds[] = $connectionParameter->type_of_samples_id;
+                }
+            }
+
+            $samplesIds = array_values(array_unique($samplesIds));
+
+            $data = TypeOfSamples::query()
+                ->whereIn('id', $samplesIds)
+                ->get();
+
+            return $this->sendResponse($data, 'Enviando tipos de muestras');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function getMatrix(Request $request): JsonResponse
+    {
+        try {
+            $orderId = $request->input('order_id');
+            $type = $request->input('type');
+
+            if (!$orderId) {
+                $data = Matrix::query()
+                    ->when($request->filled('type'), fn($q) => $q->where('type_of_sample_id', $type))
+                    ->get();
+
+                return $this->sendResponse($data, 'Enviando tipos de muestras');
+            }
+
+            $order = OrderService::query()
+                ->with('items')
+                ->findOrFail($orderId);
+
+            $matrixIds = [];
+
+            foreach ($order->items as $itemOrder) {
+                $matrixId = data_get($itemOrder->item, 'matrix_id');
+
+                if ($matrixId) {
+                    $matrixIds[] = $matrixId;
+                    continue;
+                }
+
+                $parameterId = data_get($itemOrder->item, 'parameter_id');
+
+                if (!$parameterId) {
+                    continue;
+                }
+
+                $connectionParameter = ConnectionParameter::query()
+                    ->where('parameter_id', $parameterId)
+                    ->first();
+
+                if ($connectionParameter?->matrix_id) {
+                    $matrixIds[] = $connectionParameter->matrix_id;
+                }
+            }
+
+            $matrixIds = array_values(array_unique($matrixIds));
+
+            $data = Matrix::query()
+                ->whereIn('id', $matrixIds)
+                ->when($request->filled('type'), fn($q) => $q->where('type_of_sample_id', $type))
+                ->get();
+
+            return $this->sendResponse($data, 'Enviando tipos de muestras');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
     }
 }

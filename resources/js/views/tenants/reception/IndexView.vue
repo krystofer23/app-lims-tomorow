@@ -456,19 +456,17 @@
 
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-slate-700">Tipo de muestra</label>
-                            <el-select v-model="form.type_sample" clearable size="large" placeholder="Seleccionar"
+                            <el-select v-model="form.type_of_sample_id" clearable size="large" placeholder="Seleccionar"
                                 class="w-full" filterable>
-                                <el-option :label="row.description" :value="row.description"
-                                    v-for="row in typesSampling" />
+                                <el-option :label="row.description" :value="row.id" v-for="row in typesSampling" />
                             </el-select>
                         </div>
 
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-slate-700">Matriz</label>
-                            <el-select v-model="form.matriz" clearable size="large" filterable
+                            <el-select v-model="form.matrix_id" clearable size="large" filterable
                                 placeholder="Seleccionar">
-                                <el-option :label="row.description" :value="row.description"
-                                    v-for="row in matrixs"></el-option>
+                                <el-option :label="row.description" :value="row.id" v-for="row in matrixs"></el-option>
                             </el-select>
                         </div>
 
@@ -650,7 +648,8 @@
                                                     <i class="fa-solid fa-vial text-xs"></i>
                                                 </span>
 
-                                                <el-input :model-value="row.description" readonly class="parameter-input" />
+                                                <el-input :model-value="row.description" readonly
+                                                    class="parameter-input" />
                                             </div>
                                         </template>
                                     </el-table-column>
@@ -761,36 +760,19 @@
                 <div class="grid grid-cols-12 gap-4">
                     <div class="col-span-12 md:col-span-4">
                         <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
-                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                            </div>
-                            <span>Buscar parámetro</span>
-                        </div>
-
-                        <el-input v-model="searchParameter" clearable size="large" placeholder="Nombre del parámetro..."
-                            class="!rounded-xl">
-                            <template #prefix>
-                                <i class="fa-solid fa-flask-vial text-slate-400"></i>
-                            </template>
-                        </el-input>
-                    </div>
-
-                    <div class="col-span-12 md:col-span-4">
-                        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
                             <div
                                 class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
                                 <i class="fa-solid fa-layer-group text-xs"></i>
                             </div>
-                            <span>Tipo</span>
+                            <span>Acreditación</span>
                         </div>
 
-                        <el-select v-model="type" clearable filterable size="large" placeholder="Seleccionar tipo"
+                        <el-select v-model="condition" clearable filterable size="large" placeholder="Seleccionar tipo"
                             class="w-full">
                             <template #prefix>
                                 <i class="fa-solid fa-tags text-slate-400"></i>
                             </template>
-                            <el-option v-for="row in typesSampling" :value="row.description"
-                                :label="row.description"></el-option>
+                            <el-option v-for="row in conditions" :value="row.id" :label="row.description"></el-option>
                         </el-select>
                     </div>
 
@@ -800,15 +782,13 @@
                                 class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                                 <i class="fa-solid fa-table-cells-large text-xs"></i>
                             </div>
-                            <span>Matriz</span>
+                            <span>Tipo de Análisis</span>
                         </div>
 
-                        <el-select v-model="matrix_id" clearable filterable size="large"
-                            placeholder="Seleccionar matriz" class="w-full">
-                            <template #prefix>
-                                <i class="fa-solid fa-cubes-stacked text-slate-400"></i>
-                            </template>
-                            <el-option v-for="row in matrixs" :value="row.id" :label="row.description"></el-option>
+                        <el-select size="large" v-model="type_of_analysis" clearable filterable class="w-full"
+                            placeholder="Seleccionar acreditación">
+                            <el-option v-for="row in typesAnalysis" :value="row.id"
+                                :label="row.description"></el-option>
                         </el-select>
                     </div>
                 </div>
@@ -833,6 +813,25 @@
                         <template #header>
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-flask text-cyan-600"></i>
+                                <span>Acreditación</span>
+                            </div>
+                        </template>
+
+                        <template #default="{ row }">
+                            <div class="flex items-center gap-3 py-1">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-slate-700">
+                                        {{ row?.condition?.description || 'Sin descripción' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column min-width="300">
+                        <template #header>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-flask text-cyan-600"></i>
                                 <span>Parámetro</span>
                             </div>
                         </template>
@@ -846,7 +845,7 @@
 
                                 <div class="flex flex-col">
                                     <span class="text-sm font-semibold text-slate-700">
-                                        {{ row?.description || 'Sin descripción' }}
+                                        {{ row?.parameter?.description || 'Sin descripción' }}
                                     </span>
                                 </div>
                             </div>
@@ -878,7 +877,7 @@
                 <el-pagination background small layout="prev, pager, next" :total="paginationParameter.total"
                     v-model:page-size="paginationParameter.per_page"
                     v-model:current-page="paginationParameter.current_page"
-                    @current-change="(page) => listStore.getParameters(page, searchParameter, type, matrix_id)" />
+                    @current-change="(page) => listStore.getParameters(page, form.matrix_id, form.type_of_sample_id, condition, type_of_analysis)" />
             </div>
         </div>
     </el-dialog>
@@ -903,24 +902,46 @@ const visibleSelectType = ref(false)
 const confirmRef = ref(null);
 const loadingCompany = ref(false)
 const companies = computed(() => listStore.companies)
-const typesSampling = computed(() => listStore.typesSampling)
-const matrixs = computed(() => listStore.matrixs)
-const searchParameter = ref(null)
-const type = ref(null)
-const matrix_id = ref(null)
+const conditions = computed(() => listStore.conditions)
+const typesAnalysis = computed(() => listStore.typesAnalysis)
+
+const typesSampling = ref([])
+const matrixs = ref([])
+
+const getTypeOfSamples = async () => {
+    try {
+        const { data } = await tenant.get(`reception/get-type-of-samples`, {
+            params: {
+                order_id: form.order_id
+            }
+        })
+
+        if (data.data) typesSampling.value = data.data ?? []
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+const getMatrix = async () => {
+    try {
+        const { data } = await tenant.get(`reception/get-matrix`, {
+            params: {
+                order_id: form.order_id,
+                type: form.type_of_sample_id,
+            }
+        })
+
+        if (data.data) matrixs.value = data.data ?? []
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+const condition = ref(null)
+const type_of_analysis = ref(null)
 const loadingParameter = computed(() => listStore.loadingParameter)
-
-watch(() => searchParameter.value, (newVal) => {
-    listStore.getParameters(1, newVal, type.value, matrix_id.value)
-})
-
-watch(() => type.value, (newVal) => {
-    listStore.getParameters(1, searchParameter.value, newVal, matrix_id.value)
-})
-
-watch(() => matrix_id.value, (newVal) => {
-    listStore.getParameters(1, searchParameter.value, type.value, newVal)
-})
 
 const handleGenerateOT = async () => {
     const ok = await confirmRef.value?.open({
@@ -975,8 +996,8 @@ const emptyForm = () => ({
     order_id: null,
     number_chain: null,
     number_report: null,
-    type_sample: null,
-    matriz: null,
+    type_of_sample_id: null,
+    matrix_id: null,
     number_sample: null,
     number_essays: null,
     date_reception: null,
@@ -1198,27 +1219,29 @@ const toReply = (row) => {
 const handleEdit = (row) => {
     dialogVisible.value = true
 
-    form.id = row?.id
-    form.company_id = row?.company_id
-    form.application_id = row?.application_id
+    form.id = row.id
+    form.company_id = row.company_id
+    form.application_id = row.application_id
     form.order_id = row.order_id
-    form.number_chain = row.content?.number_chain
-    form.number_report = row.content?.number_report
-    form.type_sample = row.content?.type_sample
-    form.matriz = row.content?.matriz
-    form.number_sample = row.content?.number_sample
-    form.number_essays = row.content?.number_essays
-    form.date_reception = row.content?.date_reception
-    form.date_sampling_init = row.content?.date_sampling_init
-    form.date_sampling_end = row.content?.date_sampling_end
-    form.date_agreed = row.content?.date_agreed
-    form.company_sampling_id = row.content?.company_sampling_id
-    form.code_lab = row.content?.code_lab
-    form.code_season = row.content?.code_season
-    form.condition_report = row.content?.condition_report
-    form.other_company_id = row.content?.other_company_id
-    form.parameters = row.content?.parameters
-    form.observations = row.content?.observations
+    form.number_chain = row.number_chain
+    form.number_report = row.number_report
+    form.type_of_sample_id = row.type_of_sample_id
+    form.matrix_id = row.matrix_id
+    form.number_sample = row.number_sample
+    form.number_essays = row.number_essays
+    form.date_reception = row.date_reception
+    form.date_sampling_init_date = row.date_sampling_init_date
+    form.date_sampling_init_time = row.date_sampling_init_time
+    form.date_sampling_end_date = row.date_sampling_end_date
+    form.date_sampling_end_time = row.date_sampling_end_time
+    form.date_agreed = row.date_agreed
+    form.company_sampling_id = row.company_sampling_id
+    form.code_lab = row.code_lab
+    form.code_season = row.code_season
+    form.condition_report = row.condition_report
+    form.other_company_id = row.other_company_id
+    form.parameters = row.parameters
+    form.observations = row.observations
 }
 
 const getOrder = async () => {
@@ -1235,9 +1258,11 @@ const getOrder = async () => {
     }
 }
 
-watch(() => form.order_id, (newVal) => {
+watch(() => form.order_id, async (newVal) => {
     if (newVal) {
-        getOrder()
+        await getOrder()
+        await getTypeOfSamples()
+        await getMatrix()
     }
     else {
         form.company_id = null
@@ -1249,10 +1274,31 @@ watch(() => filters, (newVal) => {
     getReceptions()
 }, { deep: true })
 
+watch(() => form.type_of_sample_id, async () => {
+    form.matrix_id = null
+    await getMatrix()
+})
+
+watch(
+    () => [form.matrix_id, form.type_of_sample_id, condition.value, type_of_analysis.value],
+    ([matrixId, typeOfSampleId, conditionId, type_of_analysisId]) => {
+        listStore.getParameters(1, matrixId, typeOfSampleId, conditionId, type_of_analysisId)
+    }
+)
+
+watch(
+    () => [form.matrix_id, form.type_of_sample_id, condition.value],
+    ([matrixId, typeOfSampleId, conditionId]) => {
+        type_of_analysis.value = null
+        listStore.getTypesAnalysis(matrixId, typeOfSampleId, conditionId)
+    }
+)
+
 onMounted(async () => {
     await getReceptions()
+
     await listStore.getCompanies()
-    await listStore.getParameters()
+    await listStore.getConditions()
     await listStore.getOrderServices()
     await listStore.getTypesSampling()
     await listStore.getMatrixs()
