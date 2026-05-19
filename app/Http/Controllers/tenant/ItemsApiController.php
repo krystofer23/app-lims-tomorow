@@ -16,7 +16,7 @@ class ItemsApiController extends Controller
             $matrix = $request->input('matrix');
             $product = $request->input('product');
             $condition = $request->input('condition');
-            $type_of_analysis = $request->input('type_of_analysis');
+            $typeOfAnalysis = $request->input('type_of_analysis');
 
             $data = Item::query()
                 ->with([
@@ -28,27 +28,29 @@ class ItemsApiController extends Controller
                     'unitMeasurement',
                     'company',
                 ])
-                ->when($condition, function ($q) use ($condition) {
-                    $q->where('condition_id', $condition);
+                ->when($condition, function ($query) use ($condition) {
+                    $query->where('condition_id', $condition);
                 })
                 ->when($product, function ($query) use ($product) {
-                    $query->where(function ($q) use ($product) {
-                        $q->where('type_of_sample_id', $product)
-                            ->orWhereHas('parameter.connectionsParameter', function ($subQuery) use ($product) {
-                                $subQuery->where('type_of_samples_id', $product);
+                    $query->where(function ($query) use ($product) {
+                        $query->where('type_of_sample_id', $product)
+                            ->orWhereHas('parameter.connectionsParameter', function ($query) use ($product) {
+                                $query->where('type_of_samples_id', $product);
                             });
                     });
                 })
                 ->when($matrix, function ($query) use ($matrix) {
-                    $query->where(function ($q) use ($matrix) {
-                        $q->where('matrix_id', $matrix)
-                            ->orWhereHas('parameter.connectionsParameter', function ($subQuery) use ($matrix) {
-                                $subQuery->where('matrix_id', $matrix);
+                    $query->where(function ($query) use ($matrix) {
+                        $query->where('matrix_id', $matrix)
+                            ->orWhereHas('parameter.connectionsParameter', function ($query) use ($matrix) {
+                                $query->where('matrix_id', $matrix);
                             });
                     });
                 })
-                ->when($type_of_analysis, function ($query) use ($type_of_analysis) {
-                    $query->whereHas('parameter', fn($q) => $q->where('type_of_analysis_id', $type_of_analysis));
+                ->when($typeOfAnalysis, function ($query) use ($typeOfAnalysis) {
+                    $query->whereHas('parameter', function ($query) use ($typeOfAnalysis) {
+                        $query->where('type_of_analysis_id', $typeOfAnalysis);
+                    });
                 })
                 ->paginate(15);
 
