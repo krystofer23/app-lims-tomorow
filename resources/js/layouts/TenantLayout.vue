@@ -2,7 +2,7 @@
     <div class="">
         <HeaderItem class="fixed left-0" />
 
-        <div class="ms-[320px]">
+        <div class="ms-[287px]">
             <main class="w-full">
                 <RouterView />
             </main>

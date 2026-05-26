@@ -282,6 +282,7 @@ export const useListStore = defineStore("listStore", () => {
         product = null,
         condition = null,
         type_of_analysis = null,
+        order_id = null,
     ) => {
         loadingParameter.value = true
 
@@ -292,6 +293,7 @@ export const useListStore = defineStore("listStore", () => {
                     product: product,
                     condition: condition,
                     type_of_analysis: type_of_analysis,
+                    order_id: order_id
                 }
             })
 
@@ -381,11 +383,23 @@ export const useListStore = defineStore("listStore", () => {
         }
     }
 
+    const typesItems = ref([])
+
+    const getTypesItems = async () => {
+        try {
+            const { data } = await tenant.get(`list/types-items`)
+            if (data.data) typesItems.value = data.data
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+    }
+
     return {
         conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService, comerciales,
         getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices, contacts, loadingContacts, getContacts, loadingTeam,
         teams, paginationTeam, getTeams, loadingOrderService, ordersServices, paginationOrderService, getOrderServices, getParameters, parameters,
         getUsers, users, types, matrixs, getTypes, getMatrixs, typesSampling, getTypesSampling, paginationParameter, loadingParameter,
-        typesAnalysis, getTypesAnalysis
+        typesAnalysis, getTypesAnalysis, typesItems, getTypesItems
     }
 })

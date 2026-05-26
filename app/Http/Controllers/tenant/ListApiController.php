@@ -11,6 +11,7 @@ use App\Models\tenant\Item;
 use App\Models\tenant\Matrix;
 use App\Models\tenant\Matriz;
 use App\Models\tenant\Methodologies;
+use App\Models\tenant\OrderService;
 use App\Models\tenant\Parameters;
 use App\Models\tenant\Services;
 use App\Models\tenant\TypeOfAnalysis;
@@ -183,10 +184,25 @@ class ListApiController extends Controller
     public function parameters(Request $request): JsonResponse
     {
         try {
+            $type = $request->input('type');
             $matrix = $request->input('matrix');
             $product = $request->input('product');
             $condition = $request->input('condition');
             $typeOfAnalysis = $request->input('type_of_analysis');
+
+            $orderId = $request->input('order_id');
+            $parametersIds = collect();
+
+            if ($orderId) {
+                $order = OrderService::findOrFail($orderId);
+
+                $parametersIds = $order->items()
+                    ->where('type', 'matrix')
+                    ->get()
+                    ->pluck('item.parameter_id')
+                    ->filter()
+                    ->values();
+            }
 
             $data = Item::query()
                 ->with([
@@ -195,11 +211,18 @@ class ListApiController extends Controller
                     'matrix',
                     'reference',
                     'parameter',
+                    'parameter.connectionsParameter' => fn($q) => $q
+                        ->when($matrix, fn($query) => $query->where('matrix_id', $matrix))
+                        ->when($product, fn($query) => $query->where('type_of_samples_id', $product)),
+                    'parameter.connectionsParameter.matrix',
                     'unitMeasurement',
                     'company',
                 ])
                 ->when($condition, function ($query) use ($condition) {
                     $query->where('condition_id', $condition);
+                })
+                ->when($type, function ($query) use ($type) {
+                    $query->where('type', $type);
                 })
                 ->when($product, function ($query) use ($product) {
                     $query->where(function ($query) use ($product) {
@@ -221,6 +244,9 @@ class ListApiController extends Controller
                     $query->whereHas('parameter', function ($query) use ($typeOfAnalysis) {
                         $query->where('type_of_analysis_id', $typeOfAnalysis);
                     });
+                })
+                ->when($parametersIds->isNotEmpty(), function ($query) use ($parametersIds) {
+                    $query->whereIn('parameter_id', $parametersIds->toArray());
                 })
                 ->paginate(15);
 
@@ -335,6 +361,21 @@ class ListApiController extends Controller
                 ->get();
 
             return $this->sendResponse($data, 'Enviando tipos de análisis');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function typesItems(Request $request): JsonResponse
+    {
+        try {
+            $data = Item::query()
+                ->whereNotNull('type')
+                ->distinct()
+                ->orderBy('type')
+                ->pluck('type');
+
+            return $this->sendResponse($data, 'Enviando tipos de datos únicos');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }

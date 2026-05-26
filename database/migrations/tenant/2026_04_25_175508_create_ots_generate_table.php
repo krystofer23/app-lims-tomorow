@@ -13,13 +13,19 @@ return new class extends Migration
     {
         Schema::create('ots_generate', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreign('user_id')->references('id')->on('users');
+
             $table->string('os')->nullable();
             $table->unsignedBigInteger('order_id')->nullable();
-            $table->foreign('order_id')->references('id')->on('order_service');
-            $table->json('content')->nullable();
             $table->string('number_chain')->nullable();
+            $table->string('number_report')->nullable();
+            $table->unsignedBigInteger('matrix_id')->nullable();
+            $table->date('delivery_date')->nullable();
+            $table->time('hour')->nullable();
+            $table->json('parameters')->nullable();
+
+            $table->foreign('order_id')->references('id')->on('order_service');
+            $table->foreign('matrix_id')->references('id')->on('matrix');
+
             $table->timestamps();
             $table->softDeletes();
         });

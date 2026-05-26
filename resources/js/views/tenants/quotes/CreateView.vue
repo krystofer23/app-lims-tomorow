@@ -1,41 +1,20 @@
 <template>
-    <div
-        class="flex flex-col gap-4 border-b border-slate-200/80 bg-white px-5 py-4   lg:flex-row lg:items-center lg:justify-between lg:px-6">
-        <div class="min-w-0">
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-100">
-                    <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
-                </div>
-
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                        <h1 class="truncate text-lg font-bold tracking-tight text-slate-900">
-                            {{ form.id ? 'Editar cotización' : 'Registrar cotización' }}
-                        </h1>
-                    </div>
-
-                    <p class="mt-0.5 truncate text-xs text-slate-500">
-                        Completa la información general, agrega conceptos y revisa el resumen económico antes de
-                        guardar.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
-            <el-button class="!rounded-xl !px-5 !h-9" @click="onCancel">
+    <custom-header title="Registrar cotización"
+        description="Completa la información general, agrega conceptos y revisa el resumen económico antes de guardar."
+        icon="fa-solid fa-receipt">
+        <div class="flex w-full flex-col sm:flex-row sm:items-center lg:w-auto">
+            <el-button class="!rounded-xl !px-5 !h-8" @click="onCancel">
                 <i class="fa-solid fa-arrow-left me-2"></i>
                 Volver
             </el-button>
 
             <el-button :loading="loadingSubmit" @click="onSubmit" type="primary"
-                class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
-                <i class="fa-solid fa-file-invoice-dollar mr-2"></i>
+                class="!h-8 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
+                <!-- <i class="fa-solid fa-file-invoice-dollar mr-2"></i> -->
                 {{ form.id ? 'Guardar cambios' : 'Guardar cotización' }}
             </el-button>
         </div>
-    </div>
+    </custom-header>
 
     <div class="bg-white p-5 md:p-6 space-y-6">
         <div class="w-full space-y-6">
@@ -342,12 +321,6 @@
                                     <i class="fa-solid fa-layer-group me-1"></i>
                                     Agregar matrices
                                 </el-button>
-
-                                <!-- <el-button size="small" class="!rounded-lg" plain type="success"
-                                        @click="showServiceModal = true">
-                                        <i class="fa-solid fa-briefcase-medical me-1"></i>
-                                        Agregar servicios
-                                    </el-button> -->
                             </div>
                         </div>
                     </div>
@@ -406,7 +379,8 @@
                                     </td>
 
                                     <td :class="row?.item?.bg" class="px-3 py-2">
-                                        {{ row?.matrix?.description }}
+                                        {{ row?.matrix?.description ??
+                                            row?.parameter?.connections_parameter?.[0]?.matrix?.description ?? '-' }}
                                     </td>
 
                                     <td :class="row?.item?.bg" class="px-3 py-2 text-slate-700">
@@ -505,12 +479,6 @@
                             </div>
 
                             <div class="flex flex-wrap gap-2">
-                                <!-- <el-button size="small" class="!rounded-lg" plain type="primary"
-                                        @click="showMatrixModal = true">
-                                        <i class="fa-solid fa-layer-group me-1"></i>
-                                        Agregar matrices
-                                    </el-button> -->
-
                                 <el-button size="small" class="!rounded-lg" plain type="success"
                                     @click="showServiceModal = true">
                                     <i class="fa-solid fa-briefcase-medical me-1"></i>
@@ -922,6 +890,7 @@ import tenant from '../../../stores/tenant'
 import { ElNotification } from 'element-plus'
 import LogisticCastModal from './modal/LogisticCastModal.vue'
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption'
+import CustomHeader from '../../../components/tenants/CustomHeader.vue'
 
 const visibleValue = ref(false)
 const rowValue = ref(null)

@@ -39,12 +39,14 @@ class ReceptionApiController extends Controller
                     'company',
                     'application',
                     'order',
+                    'typeOfSample',
+                    'matrix',
                 ])
                 ->when($request->filled('company_id'), fn($q) => $q->where('company_id', $company_id))
                 ->when($request->filled('application_id'), fn($q) => $q->where('application_id', $application_id))
                 ->when($request->filled('order_id'), fn($q) => $q->where('order_id', $order_id))
                 ->when($request->filled('number_chain'), function ($q) use ($numberChain) {
-                    $q->where('content->number_chain', 'like', "%{$numberChain}%");
+                    $q->where('number_chain', 'like', "%{$numberChain}%");
                 })
                 ->paginate(15);
 
@@ -62,33 +64,36 @@ class ReceptionApiController extends Controller
             $input = $request->all();
             $userId = Auth::guard('api')->id();
 
-            $os = $input['order_id'] ? OrderService::select('id', 'code')->find($input['order_id'])?->code : null;
+            $orderId = $input['order_id'] ?? null;
+
+            $os = $orderId
+                ? OrderService::query()->select('id', 'code')->find($orderId)?->code
+                : null;
 
             $chainCustody = ChainCustody::create([
                 'os' => $os,
-                'company_id' => $input['company_id'],
-                'application_id' => $input['application_id'],
-                'order_id' => $input['order_id'],
-                'os' => $input['os'],
-                'number_chain' => $input['number_chain'],
-                'number_report' => $input['number_report'],
-                'type_of_sample_id' => $input['type_of_sample_id'],
-                'matrix_id' => $input['matrix_id'],
-                'number_sample' => $input['number_sample'],
-                'number_essays' => $input['number_essays'],
-                'date_reception' => $input['date_reception'],
-                'date_sampling_init_date' => $input['date_sampling_init_date'],
-                'date_sampling_init_time' => $input['date_sampling_init_time'],
-                'date_sampling_end_date' => $input['date_sampling_end_date'],
-                'date_sampling_end_time' => $input['date_sampling_end_time'],
-                'date_agreed' => $input['date_agreed'],
-                'company_sampling_id' => $input['company_sampling_id'],
-                'code_lab' => $input['code_lab'],
-                'code_season' => $input['code_season'],
-                'condition_report' => $input['condition_report'],
-                'other_company_id' => $input['other_company_id'],
-                'observations' => $input['observations'],
-                'parameters' => $input['parameters'],
+                'order_id' => $input['order_id'] ?? null,
+                'company_id' => $input['company_id'] ?? null,
+                'application_id' => $input['application_id'] ?? null,
+                'number_chain' => $input['number_chain'] ?? null,
+                'number_report' => $input['number_report'] ?? null,
+                'type_of_sample_id' => $input['type_of_sample_id'] ?? null,
+                'matrix_id' => $input['matrix_id'] ?? null,
+                'number_sample' => $input['number_sample'] ?? null,
+                'number_essays' => $input['number_essays'] ?? null,
+                'date_reception' => $input['date_reception'] ?? null,
+                'date_sampling_init_date' => $input['date_sampling_init_date'] ?? null,
+                'date_sampling_init_time' => $input['date_sampling_init_time'] ?? null,
+                'date_sampling_end_date' => $input['date_sampling_end_date'] ?? null,
+                'date_sampling_end_time' => $input['date_sampling_end_time'] ?? null,
+                'date_agreed' => $input['date_agreed'] ?? null,
+                'company_sampling_id' => $input['company_sampling_id'] ?? null,
+                'code_lab' => $input['code_lab'] ?? null,
+                'code_season' => $input['code_season'] ?? null,
+                'condition_report' => $input['condition_report'] ?? null,
+                'other_company_id' => $input['other_company_id'] ?? null,
+                'observations' => $input['observations'] ?? null,
+                'parameters' => $input['parameters'] ?? null,
             ]);
 
             Record::create([
@@ -124,29 +129,28 @@ class ReceptionApiController extends Controller
 
             $chainCustody->update([
                 'os' => $os,
-                'company_id' => $input['company_id'],
-                'application_id' => $input['application_id'],
-                'order_id' => $input['order_id'],
-                'os' => $input['os'],
-                'number_chain' => $input['number_chain'],
-                'number_report' => $input['number_report'],
-                'type_of_sample_id' => $input['type_of_sample_id'],
-                'matrix_id' => $input['matrix_id'],
-                'number_sample' => $input['number_sample'],
-                'number_essays' => $input['number_essays'],
-                'date_reception' => $input['date_reception'],
-                'date_sampling_init_date' => $input['date_sampling_init_date'],
-                'date_sampling_init_time' => $input['date_sampling_init_time'],
-                'date_sampling_end_date' => $input['date_sampling_end_date'],
-                'date_sampling_end_time' => $input['date_sampling_end_time'],
-                'date_agreed' => $input['date_agreed'],
-                'company_sampling_id' => $input['company_sampling_id'],
-                'code_lab' => $input['code_lab'],
-                'code_season' => $input['code_season'],
-                'condition_report' => $input['condition_report'],
-                'other_company_id' => $input['other_company_id'],
-                'observations' => $input['observations'],
-                'parameters' => $input['parameters'],
+                'order_id' => $input['order_id'] ?? null,
+                'company_id' => $input['company_id'] ?? null,
+                'application_id' => $input['application_id'] ?? null,
+                'number_chain' => $input['number_chain'] ?? null,
+                'number_report' => $input['number_report'] ?? null,
+                'type_of_sample_id' => $input['type_of_sample_id'] ?? null,
+                'matrix_id' => $input['matrix_id'] ?? null,
+                'number_sample' => $input['number_sample'] ?? null,
+                'number_essays' => $input['number_essays'] ?? null,
+                'date_reception' => $input['date_reception'] ?? null,
+                'date_sampling_init_date' => $input['date_sampling_init_date'] ?? null,
+                'date_sampling_init_time' => $input['date_sampling_init_time'] ?? null,
+                'date_sampling_end_date' => $input['date_sampling_end_date'] ?? null,
+                'date_sampling_end_time' => $input['date_sampling_end_time'] ?? null,
+                'date_agreed' => $input['date_agreed'] ?? null,
+                'company_sampling_id' => $input['company_sampling_id'] ?? null,
+                'code_lab' => $input['code_lab'] ?? null,
+                'code_season' => $input['code_season'] ?? null,
+                'condition_report' => $input['condition_report'] ?? null,
+                'other_company_id' => $input['other_company_id'] ?? null,
+                'observations' => $input['observations'] ?? null,
+                'parameters' => $input['parameters'] ?? null,
             ]);
 
             Record::create([
@@ -201,38 +205,73 @@ class ReceptionApiController extends Controller
             $numberChain = $request->input('number_chain');
 
             $data = ChainCustody::query()
-                ->where('content->number_chain', $numberChain)
+                ->where('number_chain', $numberChain)
                 ->get();
 
             if ($data->isEmpty()) {
                 return $this->sendError('No se encontraron cadenas de custodia.');
             }
 
+            DB::beginTransaction();
+
+            $numberReports = $data->pluck('number_report')->unique()->values()->toArray();
             $orderIds = $data->pluck('order_id')->unique()->values()->toArray();
             $os = $data->pluck('os')->unique()->values()->toArray();
+            $matrixIds = $data->pluck('matrix_id')->unique()->values()->toArray();
 
-            $content = $data->map(function ($item) {
-                return [
-                    'code_lab' => $item->content['code_lab'] ?? null,
-                    'chain_custody_id' => $item->id,
-                    'content' => $item->content,
+            $dateReception = $data->pluck('date_reception')->unique()->values()->first();
+
+            $date = '-';
+            $hour = '-';
+
+            if ($dateReception) {
+                $dateReceptionCarbon = Carbon::parse($dateReception);
+
+                $date = $dateReceptionCarbon->format('Y-m-d');
+                $hour = $dateReceptionCarbon->format('H:i:s');
+            }
+
+            $parameters = [];
+
+            foreach ($data as $reception) {
+                $parameters[] = [
+                    'cod_lab' => $reception->code_lab,
+                    'parameters' => $reception->parameters,
                 ];
-            })->values()->toArray();
+            }
 
             $otsGenerate = OtsGenerate::updateOrCreate(
                 [
                     'os' => $os[0] ?? null,
                     'order_id' => $orderIds[0] ?? null,
-                    'number_chain' => $numberChain
+                    'number_chain' => $numberChain,
                 ],
                 [
-                    'user_id' => $userId,
-                    'content' => $content,
+                    'number_report' => $numberReports[0] ?? null,
+                    'matrix_id' => $matrixIds[0] ?? null,
+                    'delivery_date' => $date,
+                    'hour' => $hour,
+                    'parameters' => $parameters,
                 ]
             );
 
-            return $this->sendResponse($otsGenerate, 'Datos generados correctamente');
+            Record::create([
+                'user_id' => $userId,
+                'type' => $otsGenerate->wasRecentlyCreated ? 'created' : 'updated',
+                'fileable_type' => OtsGenerate::class,
+                'fileable_id' => $otsGenerate->id,
+            ]);
+
+            DB::commit();
+
+            return $this->sendResponse(
+                $otsGenerate,
+                $otsGenerate->wasRecentlyCreated
+                    ? 'OT generada correctamente'
+                    : 'OT generada correctamente'
+            );
         } catch (Exception $e) {
+            DB::rollBack();
             return $this->sendError($e->getMessage());
         }
     }
@@ -271,40 +310,25 @@ class ReceptionApiController extends Controller
 
     private function buildPayload(OtsGenerate $ot): array
     {
-        $firstOt = $ot->content[0]['content'] ?? [];
+        $arrMax = [];
 
-        $datetime = $firstOt['date_sampling_init'];
-
-        $carbon = Carbon::parse($datetime);
-
-        $date = $carbon->toDateString();
-        $hour = $carbon->toTimeString();
-
-        $rows = [];
-
-        foreach ($ot->content as $value) {
-            $content = $value['content'] ?? [];
-
-            $codeLab = $content['code_lab'] ?? null;
-            $parameters = $content['parameters'] ?? [];
-
-            $rows[] = array_values(array_filter([
-                ...(is_array($codeLab) ? $codeLab : [$codeLab]),
-                ...$parameters,
-            ]));
+        foreach ($ot->parameters as $parameter) {
+            $arrMax[] = count($parameter['parameters'] ?? []);
         }
 
-        $maxColumns = collect($rows)->map(fn($row) => count($row))->max() ?? 1;
+        $maxColumns = max($arrMax);
 
         return [
-            'os' => $ot?->os ?? '-',
-            'number_report' => $firstOt['number_report'] ?? '-',
-            'number_chain' => $firstOt['number_chain'] ?? '-',
-            'matriz' => $firstOt['matriz'] ?? '-',
-            'date_agreed' => $date ?? '-',
-            'hour' => $hour ?? '-',
-            'created_at' => optional($ot?->created_at)->format('Y-m-d'),
-            'rows' => $rows,
+            'os' => $ot?->os,
+            'number_chain' => $ot?->number_chain,
+            'number_report' => $ot?->number_report,
+            'matrix' => $ot?->matrix?->description,
+            'delivery_date' => $ot?->delivery_date,
+            'hour' => $ot?->hour,
+
+            'created_at' => optional($ot->created_at)->format('Y-m-d'),
+
+            'parameters' => $ot?->parameters,
             'maxColumns' => $maxColumns,
         ];
     }

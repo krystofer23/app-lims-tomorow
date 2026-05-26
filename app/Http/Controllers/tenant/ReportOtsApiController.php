@@ -15,7 +15,8 @@ class ReportOtsApiController extends Controller
         try {
             $data = OtsGenerate::query()
                 ->with([
-                    'user:id,full_name,type_document,document_number'
+                    'user:id,full_name,type_document,document_number',
+                    'matrix.typeOfSample'
                 ])
                 ->paginate(15);
 

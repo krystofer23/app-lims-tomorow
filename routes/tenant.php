@@ -171,6 +171,7 @@ Route::middleware([
                 Route::get('users', 'users');
                 Route::get('types-sampling', 'typesSampling');
                 Route::get('types-analysis', 'typesAnalysis');
+                Route::get('types-items', 'typesItems');
             });
 
             Route::controller(MatrizApiController::class)->prefix('matriz')->group(function () {

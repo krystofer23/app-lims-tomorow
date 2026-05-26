@@ -4,6 +4,7 @@ namespace App\Http\Controllers\tenant;
 
 use App\Exports\QuoteExport;
 use App\Http\Controllers\Controller;
+use App\Models\tenant\ConnectionParameter;
 use App\Models\tenant\Item;
 use App\Models\tenant\ItemsQuotes;
 use App\Models\tenant\LogisticCats;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class QuotesApiController extends Controller
 {
@@ -105,7 +107,7 @@ class QuotesApiController extends Controller
                 'reference' => $quote->reference,
                 'observations' => $quote->observations,
                 'contact_id' => $quote->contact_id,
-                'items' => $items,
+                'items' => $items->values(),
                 'services' => $services,
                 'other_expenses' => $otherExpenses,
                 'is_os' => $quote?->orderService ? true : false,
@@ -364,84 +366,170 @@ class QuotesApiController extends Controller
 
     public function exportQuotePdf($id, Request $request)
     {
-        $quote = Quotes::query()
-            ->with([
-                'company:id,ruc,business_name,direction,activity',
-                'user',
-                'itemsQuotes',
-                'contact.user',
-            ])
-            ->find($id);
+        try {
+            $quote = Quotes::query()
+                ->with([
+                    'company:id,ruc,business_name,direction,activity',
+                    'user',
+                    'itemsQuotes',
+                    'contact.user',
+                ])
+                ->find($id);
 
-        if (!$quote) {
-            return $this->sendError('No se encontró la cotización');
+            if (!$quote) {
+                return $this->sendError('No se encontró la cotización');
+            }
+
+            $company = $quote->company;
+            $ruc = strval($company?->ruc ?? '');
+
+            $matrices = $quote->itemsQuotes->where('type', 'matrix');
+            $services = $quote->itemsQuotes->where('type', 'service');
+            $otherExpense = $quote->itemsQuotes->where('type', 'other_expense');
+
+            $groupedMatrices = $matrices
+                ->groupBy(function ($matrix) {
+                    $matrixDescription = data_get($matrix, 'item.matrix.description');
+
+                    $matrixKey = $matrixDescription
+                        ?: 'matrix_filter_' . data_get($matrix, 'item.matrix_filter', 'sin_matriz');
+
+                    $frequencyLabel = data_get($matrix, 'item.frequency_label')
+                        ?? data_get($matrix, 'item.item.frequency_label')
+                        ?? 'SIN_FRECUENCIA';
+
+                    return $matrixKey . '||' . $frequencyLabel;
+                })
+                ->map(function ($items) {
+                    $first = $items->first();
+
+                    $matrixDescription = data_get($first, 'item.matrix.description');
+
+                    if (!$matrixDescription) {
+                        $parameterId = data_get($first, 'item.parameter_id');
+                        $typeOfSampleId = data_get($first, 'item.type_of_sample_filter');
+                        $matrixId = data_get($first, 'item.matrix_filter');
+
+                        $connectionParameter = ConnectionParameter::query()
+                            ->with('matrix')
+                            ->where('parameter_id', $parameterId)
+                            ->where('type_of_samples_id', $typeOfSampleId)
+                            ->when($matrixId, fn($q) => $q->where('matrix_id', $matrixId))
+                            ->first();
+
+                        $matrixDescription = $connectionParameter?->matrix?->description;
+                    }
+
+                    $preparedItems = $items
+                        ->map(function ($item) use ($matrixDescription) {
+                            $item->matrix_description_resolved = data_get($item, 'item.matrix.description')
+                                ?? $matrixDescription
+                                ?? 'Sin matriz';
+
+                            $item->essay_description_resolved = data_get($item, 'item.parameter.description', '-');
+
+                            $methodologyCode = data_get($item, 'item.reference.code', '');
+                            $methodologyTitle = data_get($item, 'item.reference.title', '');
+
+                            $methodology = trim($methodologyCode . ' - ' . $methodologyTitle);
+
+                            $item->methodology_resolved = $methodology !== '-' && $methodology !== ''
+                                ? $methodology
+                                : '-';
+
+                            $item->lcm_resolved = data_get($item, 'item.lcm', '-');
+
+                            $item->unit_resolved = data_get(
+                                $item,
+                                'item.unit_measurement.description',
+                                '-'
+                            );
+
+                            $item->samples_resolved = data_get(
+                                $item,
+                                'item.number_samples',
+                                $item->amount ?? '-'
+                            );
+
+                            $item->condition_resolved = data_get(
+                                $item,
+                                'item.condition.description',
+                                '-'
+                            );
+
+                            $item->price_unit_resolved = (float) (
+                                $item->price_unit
+                                ?? data_get($item, 'item.unit_price')
+                                ?? 0
+                            );
+
+                            $item->total_resolved = (float) (
+                                $item->total
+                                ?? data_get($item, 'item.price')
+                                ?? 0
+                            );
+
+                            return $item;
+                        })
+                        ->values();
+
+                    return [
+                        'description' => $matrixDescription ?? 'Sin matriz',
+                        'frequency_label' => data_get($first, 'item.frequency_label')
+                            ?? data_get($first, 'item.item.frequency_label'),
+                        'items' => $preparedItems,
+                        'total' => $preparedItems->sum(
+                            fn($item) => (float) ($item->total_resolved ?? 0)
+                        ),
+                    ];
+                })
+                ->values();
+
+            $matricesTotal = $matrices->sum(function ($item) {
+                return (float) (
+                    $item->total
+                    ?? data_get($item, 'item.price')
+                    ?? 0
+                );
+            });
+
+            $servicesTotal = $services->sum(function ($service) {
+                return (float) (
+                    $service->total
+                    ?? data_get($service, 'item.price')
+                    ?? data_get($service, 'item.item.price')
+                    ?? 0
+                );
+            });
+
+            $otherExpenseTotal = $otherExpense->sum(function ($otherExpenseItem) {
+                return (float) (
+                    $otherExpenseItem->total
+                    ?? data_get($otherExpenseItem, 'item.total')
+                    ?? data_get($otherExpenseItem, 'item.price')
+                    ?? 0
+                );
+            });
+
+            $grandTotal = $matricesTotal + $servicesTotal + $otherExpenseTotal;
+
+            $pdf = Pdf::loadView('pdf.quotes.main', [
+                'quote' => $quote,
+                'company' => $company,
+                'ruc' => $ruc,
+                'groupedMatrices' => $groupedMatrices,
+                'services' => $services,
+                'servicesTotal' => $servicesTotal,
+                'matricesTotal' => $matricesTotal,
+                'grandTotal' => $grandTotal,
+                'other_expense' => $otherExpense,
+                'otherExpenseTotal' => $otherExpenseTotal,
+                'contact' => $quote?->contact,
+            ])->setPaper('a4', 'portrait');
+
+            return $pdf->download('cotizacion-' . $quote->id . '.pdf');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
         }
-
-        $company = $quote->company;
-        $ruc = strval($company?->ruc ?? '');
-
-        $matrices = $quote->itemsQuotes->where('type', 'matrix');
-        $services = $quote->itemsQuotes->where('type', 'service');
-        $other_expense = $quote->itemsQuotes->where('type', 'other_expense');
-
-        $groupedMatrices = $matrices
-            ->groupBy(function ($matrix) {
-                $description = data_get($matrix, 'item.matrix.description', 'Sin matriz');
-
-                $frequencyLabel = data_get($matrix, 'item.frequency_label')
-                    ?? data_get($matrix, 'item.item.frequency_label');
-
-                return $description . '||' . ($frequencyLabel ?: 'SIN_FRECUENCIA');
-            })
-            ->map(function ($items) {
-                $first = $items->first();
-
-                return [
-                    'description' => data_get($first, 'item.matrix.description', 'Sin matriz'),
-                    'frequency_label' => data_get($first, 'item.frequency_label')
-                        ?? data_get($first, 'item.item.frequency_label'),
-                    'items' => $items,
-                    'total' => $items->sum(fn($item) => (float) ($item->total ?? 0)),
-                ];
-            })
-            ->values();
-
-        $matricesTotal = $matrices->sum(fn($item) => (float) ($item->total ?? 0));
-
-        $servicesTotal = $services->sum(function ($service) {
-            return (float) (
-                $service->total
-                ?? data_get($service, 'item.price')
-                ?? data_get($service, 'item.item.price')
-                ?? 0
-            );
-        });
-
-        $otherExpenseTotal = $other_expense->sum(function ($otherexpense) {
-            return (float) (
-                $otherexpense->total
-                ?? data_get($otherexpense, 'item.total')
-                ?? data_get($otherexpense, 'item.price')
-                ?? 0
-            );
-        });
-
-        $grandTotal = $matricesTotal + $servicesTotal + $otherExpenseTotal;
-
-        $pdf = Pdf::loadView('pdf.quotes.main', [
-            'quote' => $quote,
-            'company' => $company,
-            'ruc' => $ruc,
-            'groupedMatrices' => $groupedMatrices,
-            'services' => $services,
-            'servicesTotal' => $servicesTotal,
-            'matricesTotal' => $matricesTotal,
-            'grandTotal' => $grandTotal,
-            'other_expense' => $other_expense,
-            'otherExpenseTotal' => $otherExpenseTotal,
-            'contact' => $quote?->contact,
-        ])->setPaper('a4', 'portrait');
-
-        return $pdf->download('cotizacion-' . $quote->id . '.pdf');
     }
 }

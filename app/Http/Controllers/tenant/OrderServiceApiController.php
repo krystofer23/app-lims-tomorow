@@ -17,8 +17,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\tenant\ConnectionParameter;
+use Carbon\Carbon;
 
 class OrderServiceApiController extends Controller
 {
@@ -30,6 +31,7 @@ class OrderServiceApiController extends Controller
                     'user',
                     'reviwed',
                     'company',
+                    'contactCompany.user'
                 ])
                 ->paginate(15);
 
@@ -108,8 +110,13 @@ class OrderServiceApiController extends Controller
             $userId = Auth::guard('api')->id();
             $input = $request->all();
 
+            $period = Carbon::now('America/Lima')->format('ym');
+
+            $prefix = 'OS-' . $period . '-';
+
             $lastOrder = OrderService::query()
                 ->whereNotNull('code')
+                ->where('code', 'like', $prefix . '%')
                 ->lockForUpdate()
                 ->orderByDesc('id')
                 ->first();
@@ -117,11 +124,11 @@ class OrderServiceApiController extends Controller
             $nextNumber = 1;
 
             if ($lastOrder && !empty($lastOrder->code)) {
-                $lastNumber = (int) str_replace('OS-', '', $lastOrder->code);
+                $lastNumber = (int) str_replace($prefix, '', $lastOrder->code);
                 $nextNumber = $lastNumber + 1;
             }
 
-            $code = 'OS-' . str_pad($nextNumber, 7, '0', STR_PAD_LEFT);
+            $code = $prefix . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
 
             $orderService = OrderService::create([
                 'quote_id' => $input['quote_id'],
@@ -390,11 +397,15 @@ class OrderServiceApiController extends Controller
     {
         return OrderService::query()
             ->with([
-                'quote',
                 'company:id,ruc,business_name,direction,activity',
                 'user',
+                'reviwed',
+                'quote',
+                'contactCompany.user',
                 'items',
-                'contact.user',
+                'application',
+                'contactApplication.user',
+                'companyEmission'
             ])
             ->find($id);
     }
@@ -402,25 +413,99 @@ class OrderServiceApiController extends Controller
     private function buildOrderServiceExportData(OrderService $orderService): array
     {
         $company = $orderService->company;
-        $contact = $orderService->contact;
+        $contact = $orderService->contactCompany;
 
-        $matrices = $orderService->items->where('type', 'matriz');
+        $matrices = $orderService->items->where('type', 'matrix');
         $services = $orderService->items->where('type', 'service');
 
         $groupedMatrices = $matrices
-            ->groupBy(function ($matriz) {
-                $description = data_get($matriz, 'item.description', 'Sin matriz');
-                $frequencyLabel = data_get($matriz, 'item.frequency_label');
+            ->groupBy(function ($matrix) {
+                $matrixDescription = data_get($matrix, 'item.matrix.description');
 
-                return $description . '||' . ($frequencyLabel ?: 'SIN_FRECUENCIA');
+                $matrixKey = $matrixDescription
+                    ?: 'matrix_filter_' . data_get($matrix, 'item.matrix_filter', 'sin_matriz');
+
+                $frequencyLabel = data_get($matrix, 'item.frequency_label')
+                    ?? data_get($matrix, 'item.item.frequency_label')
+                    ?? 'SIN_FRECUENCIA';
+
+                return $matrixKey . '||' . $frequencyLabel;
             })
             ->map(function ($items) {
                 $first = $items->first();
 
+                $matrixDescription = data_get($first, 'item.matrix.description');
+
+                if (!$matrixDescription) {
+                    $parameterId = data_get($first, 'item.parameter_id');
+                    $typeOfSampleId = data_get($first, 'item.type_of_sample_filter');
+                    $matrixId = data_get($first, 'item.matrix_filter');
+
+                    $connectionParameter = ConnectionParameter::query()
+                        ->with('matrix')
+                        ->where('parameter_id', $parameterId)
+                        ->when($typeOfSampleId, fn($q) => $q->where('type_of_samples_id', $typeOfSampleId))
+                        ->when($matrixId, fn($q) => $q->where('matrix_id', $matrixId))
+                        ->first();
+
+                    $matrixDescription = $connectionParameter?->matrix?->description;
+                }
+
+                $preparedItems = $items
+                    ->map(function ($item) use ($matrixDescription) {
+                        $methodologyCode = data_get($item, 'item.reference.code', '');
+                        $methodologyTitle = data_get($item, 'item.reference.title', '');
+
+                        $methodology = trim($methodologyCode . ' - ' . $methodologyTitle, ' -');
+
+                        $item->matrix_description_resolved = data_get($item, 'item.matrix.description')
+                            ?? $matrixDescription
+                            ?? 'Sin matriz';
+
+                        $item->essay_description_resolved = data_get($item, 'item.parameter.description')
+                            ?? data_get($item, 'item.description')
+                            ?? '-';
+
+                        $item->methodology_resolved = $methodology !== ''
+                            ? $methodology
+                            : data_get($item, 'item.methodology')
+                            ?? data_get($item, 'item.methodologie.description')
+                            ?? '-';
+
+                        $item->lcm_resolved = data_get($item, 'item.lcm', '-');
+
+                        $item->unit_resolved = data_get($item, 'item.unit_measurement.description')
+                            ?? data_get($item, 'item.units_measurement.description')
+                            ?? '-';
+
+                        $item->samples_resolved = data_get($item, 'item.number_samples')
+                            ?? $item->amount
+                            ?? '-';
+
+                        $item->subcontract_resolved = data_get($item, 'item.subcontract')
+                            ?? data_get($item, 'item.subcontract_name')
+                            ?? data_get($item, 'item.condition.description')
+                            ?? 'NO APLICA';
+
+                        $item->equipment_resolved = data_get($item, 'item.equipment')
+                            ?? data_get($item, 'item.equipments')
+                            ?? data_get($item, 'item.team')
+                            ?? '-';
+
+                        $item->observation_resolved = data_get($item, 'item.observation')
+                            ?? data_get($item, 'item.observations')
+                            ?? data_get($item, 'item.accreditation')
+                            ?? '-';
+
+                        return $item;
+                    })
+                    ->values();
+
                 return [
-                    'description' => data_get($first, 'item.description', 'Sin matriz'),
-                    'frequency_label' => data_get($first, 'item.frequency_label'),
-                    'items' => $items->values(),
+                    'description' => $matrixDescription ?? 'Sin matriz',
+                    'frequency_label' => data_get($first, 'item.frequency_label')
+                        ?? data_get($first, 'item.item.frequency_label'),
+                    'items' => $preparedItems,
                 ];
             })
             ->values();

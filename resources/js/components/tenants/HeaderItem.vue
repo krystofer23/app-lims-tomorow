@@ -1,194 +1,217 @@
 <template>
     <div class="flex min-h-screen bg-slate-50">
         <aside ref="headerRef"
-            class="hidden md:flex lg:w-80 shrink-0 flex-col border-r border-slate-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 sticky top-0 h-screen z-40">
-            <div class="flex h-full flex-col">
-                <div class="border-b border-slate-200 px-4 py-4">
+            class="hidden md:flex lg:w-72 shrink-0 flex-col border-r border-slate-200 bg-white sticky top-0 h-screen z-40">
+            <div class="flex h-full min-h-0 flex-col">
+                <div class="border-b border-slate-100 px-4 py-4">
                     <a href="#"
-                        class="group flex items-center gap-3 p-2 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 transition-all duration-200">
+                        class="group flex items-center gap-3 rounded-2xl border border-slate-200/70 bg-gradient-to-br from-white to-slate-50 px-3 py-2.5 transition hover:border-emerald-200 hover:shadow-sm">
                         <span
-                            class="relative grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md transition-all duration-200 group-hover:scale-105 group-hover:shadow-lg">
-
-                            <i class="fa-solid fa-flask-vial text-[16px]"></i>
-                            <span
-                                class="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition"></span>
+                            class="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-500/20 transition group-hover:scale-[1.03]">
+                            <i class="fa-solid fa-flask-vial text-sm"></i>
                         </span>
+
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
-                                <span class="truncate text-sm font-bold tracking-tight text-slate-900 transition">
+                                <span class="truncate text-sm font-semibold tracking-tight text-slate-900">
                                     GreenLab
                                 </span>
 
                                 <span
-                                    class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                                    <i class="fa-solid fa-crown text-[9px]"></i>
+                                    class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-100">
                                     Pro
                                 </span>
                             </div>
 
-                            <p class="truncate text-[12px] text-slate-500 group-hover:text-slate-600 transition">
+                            <p class="mt-0.5 truncate text-[11px] text-slate-400">
                                 Sistema LIMS
                             </p>
                         </div>
                     </a>
 
-                    <div class="mt-4">
+                    <div class="mt-3">
                         <label class="relative block">
                             <span class="sr-only">Buscar</span>
+
                             <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                    <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" />
-                                    <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
-                                </svg>
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
                             </span>
 
-                            <input v-model="q" ref="searchRef" type="search"
-                                placeholder="Buscar recursos, cursos, guías..."
-                                class="h-11 w-full rounded-2xl border border-slate-200 bg-white px-11 text-sm text-slate-900 shadow-sm outline-none placeholder:text-slate-400 focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100"
+                            <input v-model="q" ref="searchRef" type="search" placeholder="Buscar módulo..."
+                                class="h-10 w-full rounded-xl border border-slate-200 bg-slate-50/70 px-9 pr-16 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-300 focus:bg-white focus:ring-4 focus:ring-emerald-100/70"
                                 @keydown.ctrl.k.prevent="focusSearch" @keydown.meta.k.prevent="focusSearch" />
 
                             <span
-                                class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden rounded-xl border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-500 lg:inline">
+                                class="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded-lg border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-400 lg:inline">
                                 Ctrl K
                             </span>
                         </label>
                     </div>
                 </div>
 
-                <nav class="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-                    <a href="/"
-                        class="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100 transition">
-                        <i class="fa-solid fa-house"></i>
-                        Inicio
-                    </a>
-
-                    <div v-for="menu in menus" :key="menu.key"
-                        class="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-                        <button v-if="menu.items?.length" type="button"
-                            class="flex w-full items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 active:scale-[.98] transition"
-                            :aria-expanded="openTop === menu.key ? 'true' : 'false'" @click="toggleTop(menu.key)">
-                            <span class="flex items-center gap-3">
-                                <i :class="menu.icon"></i>
-                                {{ menu.label }}
+                <nav class="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+                    <div class="space-y-1">
+                        <a href="/"
+                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                            :class="$route.name === 'home' ? 'bg-slate-100 text-slate-900' : ''">
+                            <span class="grid h-8 w-8 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                                <i class="fa-solid fa-house text-xs"></i>
                             </span>
+                            <span>Inicio</span>
+                        </a>
 
-                            <svg class="h-4 w-4 text-slate-500 transition"
-                                :class="openTop === menu.key ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none"
-                                aria-hidden="true">
-                                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                            </svg>
-                        </button>
+                        <div v-for="menu in menus" :key="menu.key" class="overflow-hidden rounded-xl">
+                            <button v-if="menu.items?.length" type="button"
+                                class="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                                :aria-expanded="openTop === menu.key ? 'true' : 'false'" @click="toggleTop(menu.key)">
+                                <span class="flex min-w-0 items-center gap-3">
+                                    <span
+                                        class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                                        <i :class="menu.icon" class="text-xs"></i>
+                                    </span>
 
-                        <Transition name="accordion">
-                            <div v-if="menu.items?.length && openTop === menu.key" class="px-2 pb-2">
-                                <div v-for="item in menu.items" :key="item.key" class="relative">
-                                    <button type="button"
-                                        class="w-full text-left group rounded-2xl border border-transparent p-3 hover:bg-slate-50 transition"
-                                        @click="item.children?.length ? toggleSub(item.key) : go(item)"
-                                        :class="item.key == $route.name ? 'bg-gradient-to-tr from-slate-50 to-slate-100' : 'bg-white'">
-                                        <div class="flex items-start gap-3">
-                                            <span class="grid h-10 w-10 place-items-center rounded-2xl"
-                                                :class="item.iconBg">
-                                                <i :class="item.icon"></i>
-                                            </span>
+                                    <span class="truncate">
+                                        {{ menu.label }}
+                                    </span>
+                                </span>
 
-                                            <div class="min-w-0 flex-1">
-                                                <div class="flex items-center justify-between gap-2">
-                                                    <p class="text-sm font-medium text-slate-900 truncate">
-                                                        {{ item.title }}
-                                                    </p>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition"
+                                    :class="openTop === menu.key ? 'rotate-180' : ''"></i>
+                            </button>
 
-                                                    <svg v-if="item.children?.length"
-                                                        class="h-4 w-4 text-slate-400 group-hover:text-slate-600 transition"
-                                                        :class="openSub === item.key ? 'rotate-180' : ''"
-                                                        viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
-                                                            stroke-linecap="round" />
-                                                    </svg>
-                                                </div>
-
-                                                <p class="text-xs text-slate-600">{{ item.desc }}</p>
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    <Transition name="accordion">
-                                        <div v-if="item.children?.length && openSub === item.key"
-                                            class="ml-4 mt-1 space-y-1 border-l border-slate-200 pl-3 pb-2">
-                                            <p
-                                                class="px-3 pt-1 pb-1 text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                                                {{ item.subtitle || "Opciones" }}
-                                            </p>
-
-                                            <a v-for="child in item.children" :key="child.key" href="#"
-                                                class="flex items-start gap-3 rounded-2xl px-3 py-3 hover:bg-slate-50 transition"
-                                                @click.prevent="go(child)">
-                                                <span class="mt-0.5 grid h-9 w-9 place-items-center rounded-2xl"
-                                                    :class="child.iconBg">
-                                                    <i :class="child.icon"></i>
+                            <Transition name="accordion">
+                                <div v-if="menu.items?.length && openTop === menu.key"
+                                    class="mt-1 space-y-1 rounded-xl bg-slate-50 p-1.5">
+                                    <div v-for="item in menu.items" :key="item.key" class="relative">
+                                        <button type="button"
+                                            class="group w-full rounded-lg px-2.5 py-2.5 text-left transition hover:bg-white"
+                                            @click="item.children?.length ? toggleSub(item.key) : go(item)"
+                                            :class="item.key == $route.name ? 'bg-white ring-1 ring-slate-200' : ''">
+                                            <div class="flex items-start gap-2.5">
+                                                <span :class="item.iconBg, item.ctaColor"
+                                                    class="grid h-8 w-8 shrink-0 place-items-center rounded-lg">
+                                                    <i :class="item.icon" class="text-xs"></i>
                                                 </span>
-                                                <div class="min-w-0">
-                                                    <p class="text-sm font-medium text-slate-900 truncate">
-                                                        {{ child.title }}
+
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center justify-between gap-2">
+                                                        <p class="truncate text-sm font-medium"
+                                                            :class="item.key == $route.name ? 'text-slate-900' : 'text-slate-700'">
+                                                            {{ item.title }}
+                                                        </p>
+
+                                                        <i v-if="item.children?.length"
+                                                            class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition group-hover:text-slate-600"
+                                                            :class="openSub === item.key ? 'rotate-180' : ''"></i>
+                                                    </div>
+
+                                                    <p class="mt-0.5 line-clamp-1 text-[11px] text-slate-500">
+                                                        {{ item.desc }}
                                                     </p>
-                                                    <p class="text-xs text-slate-600">{{ child.desc }}</p>
                                                 </div>
-                                            </a>
-                                        </div>
-                                    </Transition>
+                                            </div>
+                                        </button>
+
+                                        <Transition name="accordion">
+                                            <div v-if="item.children?.length && openSub === item.key"
+                                                class="ml-4 mt-1 space-y-1 border-l border-slate-200 pl-3">
+                                                <p
+                                                    class="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                                                    {{ item.subtitle || 'Opciones' }}
+                                                </p>
+
+                                                <a v-for="child in item.children" :key="child.key" href="#"
+                                                    class="group flex items-start gap-2.5 rounded-lg px-2.5 py-2 transition hover:bg-white"
+                                                    @click.prevent="go(child)"
+                                                    :class="child.key == $route.name ? 'bg-white ring-1 ring-slate-200' : ''">
+                                                    <span
+                                                        class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200">
+                                                        <i :class="child.icon" class="text-[11px]"></i>
+                                                    </span>
+
+                                                    <div class="min-w-0">
+                                                        <p class="truncate text-sm font-medium"
+                                                            :class="child.key == $route.name ? 'text-slate-900' : 'text-slate-700'">
+                                                            {{ child.title }}
+                                                        </p>
+
+                                                        <p class="mt-0.5 line-clamp-1 text-[11px] text-slate-500">
+                                                            {{ child.desc }}
+                                                        </p>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        </Transition>
+                                    </div>
                                 </div>
-                            </div>
-                        </Transition>
+                            </Transition>
+                        </div>
                     </div>
                 </nav>
 
-                <!-- Bottom -->
-                <div class="border-t border-slate-200 p-4 sm:px-6">
-                    <div class="flex items-center justify-between gap-2">
-                        <button
-                            class="inline-flex h-10 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[.98] transition">
-                            <i class="fa-solid fa-bell"></i>
+                <div class="border-t border-slate-100 p-3">
+                    <div class="flex items-center gap-2">
+                        <button type="button" v-tippy="'Notificaciones'"
+                            class="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-700 active:scale-95">
+                            <i class="fa-regular fa-bell text-sm"></i>
+
+                            <span
+                                class="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
                         </button>
 
-                        <div class="relative flex-1">
-                            <button
-                                class="w-full inline-flex h-11 items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-2 pr-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[.98] transition"
+                        <div class="relative min-w-0 flex-1">
+                            <button type="button"
+                                class="inline-flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95"
                                 :aria-expanded="openTop === 'profile' ? 'true' : 'false'" @click="toggleTop('profile')">
-                                <span class="flex items-center gap-2">
+                                <span class="flex min-w-0 items-center gap-2">
                                     <span
-                                        class="grid h-9 w-9 place-items-center rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 text-white text-xs font-black">
+                                        class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 text-xs font-semibold text-white">
                                         K
                                     </span>
-                                    <span class="truncate">Mi cuenta</span>
+
+                                    <span class="truncate">
+                                        Mi cuenta
+                                    </span>
                                 </span>
 
-                                <svg class="h-4 w-4 text-slate-500 transition"
-                                    :class="openTop === 'profile' ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none"
-                                    aria-hidden="true">
-                                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" />
-                                </svg>
+                                <i class="fa-solid fa-chevron-up text-[10px] text-slate-400 transition"
+                                    :class="openTop === 'profile' ? 'rotate-180' : ''"></i>
                             </button>
 
                             <Transition name="menu-pop">
                                 <div v-if="openTop === 'profile'" class="absolute bottom-full left-0 z-50 mb-2 w-full">
-                                    <div class="rounded-3xl border border-slate-200 bg-white p-2 shadow-xl">
-                                        <a href="#" class="block rounded-2xl px-3 py-3 hover:bg-slate-50"
+                                    <div
+                                        class="rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10">
+                                        <a href="#" class="block rounded-xl px-3 py-2.5 transition hover:bg-slate-50"
                                             @click.prevent="closeAll">
-                                            <p class="text-sm font-medium text-slate-900">Perfil</p>
-                                            <p class="text-xs text-slate-600">Datos y preferencias.</p>
+                                            <p class="text-sm font-medium text-slate-800">
+                                                Perfil
+                                            </p>
+                                            <p class="mt-0.5 text-[11px] text-slate-500">
+                                                Datos y preferencias
+                                            </p>
                                         </a>
-                                        <a href="#" class="block rounded-2xl px-3 py-3 hover:bg-slate-50"
+
+                                        <a href="#" class="block rounded-xl px-3 py-2.5 transition hover:bg-slate-50"
                                             @click.prevent="closeAll">
-                                            <p class="text-sm font-medium text-slate-900">Configuración</p>
-                                            <p class="text-xs text-slate-600">Permisos, seguridad, accesos.</p>
+                                            <p class="text-sm font-medium text-slate-800">
+                                                Configuración
+                                            </p>
+                                            <p class="mt-0.5 text-[11px] text-slate-500">
+                                                Seguridad y accesos
+                                            </p>
                                         </a>
-                                        <div class="my-2 h-px bg-slate-200"></div>
-                                        <a href="#" class="block rounded-2xl px-3 py-3 hover:bg-red-50"
+
+                                        <div class="my-1 h-px bg-slate-100"></div>
+
+                                        <a href="#" class="block rounded-xl px-3 py-2.5 transition hover:bg-rose-50"
                                             @click.prevent="authStore.logout">
-                                            <p class="text-sm font-medium text-red-600">Cerrar sesión</p>
-                                            <p class="text-xs text-red-500">Salir de tu cuenta.</p>
+                                            <p class="text-sm font-medium text-rose-600">
+                                                Cerrar sesión
+                                            </p>
+                                            <p class="mt-0.5 text-[11px] text-rose-400">
+                                                Salir de tu cuenta
+                                            </p>
                                         </a>
                                     </div>
                                 </div>
@@ -199,9 +222,7 @@
             </div>
         </aside>
 
-        <!-- CONTENT -->
         <div class="min-w-0 flex-1 flex flex-col">
-            <!-- Mobile topbar -->
             <header
                 class="md:hidden sticky top-0 z-50 border-b border-slate-200 bg-white/85 backdrop-blur supports-[backdrop-filter]:bg-white/70">
                 <div class="px-4">
@@ -242,13 +263,11 @@
                 </div>
             </header>
 
-            <!-- Tu contenido -->
             <main class="flex-1">
                 <slot />
             </main>
         </div>
 
-        <!-- MOBILE DRAWER -->
         <Transition name="mobile-drop">
             <div v-if="mobileOpen" class="fixed inset-0 z-[60] md:hidden">
                 <div class="absolute inset-0 bg-slate-900/40" @click="closeAllAndMobile"></div>
@@ -695,53 +714,43 @@ const menus = computed(() => {
 </script>
 
 <style scoped>
+:deep(nav::-webkit-scrollbar) {
+    width: 6px;
+}
+
+:deep(nav::-webkit-scrollbar-track) {
+    background: transparent;
+}
+
+:deep(nav::-webkit-scrollbar-thumb) {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+
+:deep(nav::-webkit-scrollbar-thumb:hover) {
+    background: #94a3b8;
+}
+
+.accordion-enter-active,
+.accordion-leave-active {
+    transition: all 0.18s ease;
+    overflow: hidden;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+
 .menu-pop-enter-active,
 .menu-pop-leave-active {
-    transition: opacity 160ms ease, transform 160ms ease;
+    transition: all 0.16s ease;
 }
 
 .menu-pop-enter-from,
 .menu-pop-leave-to {
     opacity: 0;
     transform: translateY(6px) scale(0.98);
-}
-
-.submenu-pop-enter-active,
-.submenu-pop-leave-active {
-    transition: opacity 140ms ease, transform 140ms ease;
-}
-
-.submenu-pop-enter-from,
-.submenu-pop-leave-to {
-    opacity: 0;
-    transform: translateX(8px) scale(0.98);
-}
-
-.mobile-drop-enter-active,
-.mobile-drop-leave-active {
-    transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.mobile-drop-enter-from,
-.mobile-drop-leave-to {
-    opacity: 0;
-    transform: translateY(-6px);
-}
-
-.accordion-enter-active,
-.accordion-leave-active {
-    transition: max-height 200ms ease, opacity 200ms ease;
-}
-
-.accordion-enter-from,
-.accordion-leave-to {
-    max-height: 0;
-    opacity: 0;
-}
-
-.accordion-enter-to,
-.accordion-leave-from {
-    max-height: 900px;
-    opacity: 1;
 }
 </style>

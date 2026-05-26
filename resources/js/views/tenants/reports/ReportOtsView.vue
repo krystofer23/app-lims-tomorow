@@ -33,7 +33,6 @@
     </div>
 
     <div class="bg-white p-5 md:p-6 space-y-6">
-
         <el-collapse>
             <el-collapse-item>
                 <template #title>
@@ -46,223 +45,110 @@
             </el-collapse-item>
         </el-collapse>
 
-        <div class="overflow-x-auto">
-            <el-table :data="reportsOts" v-loading="loading" stripe :header-cell-style="headerStyle"
-                :row-class-name="rowClassName" class="custom-table w-full" table-layout="auto">
+        <div class="rounded-2xl border bbg-white overflow-hidden">
+            <div class="flex items-center justify-between gap-4 border-b bg-slate-50/80 px-5 py-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800">
+                        Reportes de Órdenes de Trabajo
+                    </h3>
+                    <p class="mt-1 text-xs text-slate-500">
+                        Visualiza el PDF o descarga el Excel de cada OT generada.
+                    </p>
+                </div>
 
-                <el-table-column label="OS" min-width="160">
-                    <template #default="{ row }">
-                        <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-800">
-                                {{ row.os || '-' }}
-                            </span>
-                            <span class="text-xs text-slate-400">
-                                Orden ID: {{ row.order_id || '-' }}
-                            </span>
-                        </div>
-                    </template>
-                </el-table-column>
+                <div
+                    class="hidden sm:flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-500 shadow-sm ring-1 ring-slate-200">
+                    <i class="fa-solid fa-file-lines text-emerald-600"></i>
+                    {{ reportsOts?.length || 0 }} reportes
+                </div>
+            </div>
 
-                <el-table-column label="Cadena" min-width="140">
-                    <template #default="{ row }">
-                        <el-tag type="success" effect="light" round>
-                            {{ getNumberChain(row) }}
-                        </el-tag>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Código Lab." min-width="150">
-                    <template #default="{ row }">
-                        <div class="flex flex-wrap gap-1">
-                            <el-tag v-for="(item, index) in row.content" :key="index" type="info" effect="plain" round>
-                                {{ item.code_lab || item.content?.code_lab || '-' }}
-                            </el-tag>
-                        </div>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Matriz / Tipo muestra" min-width="240">
-                    <template #default="{ row }">
-                        <div class="space-y-2">
-                            <div v-for="(item, index) in row.content" :key="index"
-                                class="rounded-xl border border-slate-100 bg-slate-50/70 px-3 py-2">
-                                <p class="text-sm font-semibold text-slate-800">
-                                    {{ item.content?.matriz || '-' }}
-                                </p>
-                                <p class="text-xs text-slate-500">
-                                    {{ item.content?.type_sample || '-' }}
-                                </p>
-                            </div>
-                        </div>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Parámetros" min-width="260">
-                    <template #default="{ row }">
-                        <div class="space-y-2">
-                            <div v-for="(item, index) in row.content" :key="index"
-                                class="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-                                <div class="min-w-0">
-                                    <p class="truncate text-xs font-bold text-slate-700">
-                                        {{ item.code_lab || item.content?.code_lab || `Registro ${index + 1}` }}
-                                    </p>
-
-                                    <p class="text-[11px] text-slate-400">
-                                        {{ getParameters(item).length }} parámetro(s)
-                                    </p>
+            <div class="overflow-x-auto">
+                <el-table :data="reportsOts" v-loading="loading" stripe :header-cell-style="headerStyle"
+                    :row-class-name="rowClassName" class="custom-table w-full" table-layout="auto">
+                    <el-table-column label="Orden de Servicio" min-width="210">
+                        <template #default="{ row }">
+                            <div class="flex items-center gap-3 py-1">
+                                <div
+                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100">
+                                    <i class="fa-solid fa-clipboard-list"></i>
                                 </div>
 
-                                <el-popover placement="left" width="360" trigger="click"
-                                    popper-class="parameters-popover">
-                                    <template #reference>
-                                        <el-button size="small" type="success" plain>
-                                            Ver
-                                        </el-button>
-                                    </template>
-
-                                    <div class="space-y-3">
-                                        <div>
-                                            <p class="text-sm font-bold text-slate-800">
-                                                {{ item.content?.matriz || 'Matriz no indicada' }}
-                                            </p>
-                                            <p class="text-xs text-slate-400">
-                                                {{ item.content?.type_sample || 'Tipo de muestra no indicado' }}
-                                            </p>
-                                        </div>
-
-                                        <div class="max-h-64 overflow-y-auto pr-1">
-                                            <div class="flex flex-wrap gap-1.5">
-                                                <span v-for="(parameter, pIndex) in getParameters(item)" :key="pIndex"
-                                                    class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                                                    {{ parameter }}
-                                                </span>
-                                            </div>
-
-                                            <p v-if="!getParameters(item).length" class="text-xs text-slate-400">
-                                                No hay parámetros registrados.
-                                            </p>
-                                        </div>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="truncate text-sm font-bold text-slate-800">
+                                            {{ row?.os || '-' }}
+                                        </span>
                                     </div>
-                                </el-popover>
+
+                                    <div class="mt-0.5 flex items-center gap-1.5 text-xs text-slate-400">
+                                        <i class="fa-regular fa-hashtag text-[10px]"></i>
+                                        <span>Orden ID: {{ row?.order_id || '-' }}</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </template>
-                </el-table-column>
+                        </template>
+                    </el-table-column>
 
-                <el-table-column label="N° Informe" min-width="130">
-                    <template #default="{ row }">
-                        {{ firstContent(row)?.number_report || '-' }}
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="N° Ensayos" min-width="120">
-                    <template #default="{ row }">
-                        {{ firstContent(row)?.number_essays || '-' }}
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="N° Muestra" min-width="120">
-                    <template #default="{ row }">
-                        {{ firstContent(row)?.number_sample || '-' }}
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Condición" min-width="130">
-                    <template #default="{ row }">
-                        <el-tag type="success" effect="light">
-                            {{ firstContent(row)?.condition_report || '-' }}
-                        </el-tag>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Recepción" min-width="170">
-                    <template #default="{ row }">
-                        <div class="flex flex-col">
-                            <span class="text-sm font-medium text-slate-700">
-                                {{ formatDate(firstContent(row)?.date_reception) }}
-                            </span>
-                            <span class="text-xs text-slate-400">
-                                {{ formatTime(firstContent(row)?.date_reception) }}
-                            </span>
-                        </div>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Muestreo" min-width="170">
-                    <template #default="{ row }">
-                        <div class="flex flex-col">
-                            <span class="text-sm font-medium text-slate-700">
-                                {{ formatDate(firstContent(row)?.date_sampling_init) }}
-                            </span>
-                            <span class="text-xs text-slate-400">
-                                {{ formatTime(firstContent(row)?.date_sampling_init) }}
-                            </span>
-                        </div>
-                    </template>
-                </el-table-column>
-
-                <el-table-column label="Usuario" min-width="180">
-                    <template #default="{ row }">
-                        <div class="flex items-center gap-2">
+                    <el-table-column label="Cadena de Custodia" min-width="190">
+                        <template #default="{ row }">
                             <div
-                                class="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-600">
-                                {{ getInitials(row.user?.full_name) }}
+                                class="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 my-1 text-xs font-semibold text-green-700 ring-1 ring-green-100">
+                                <i class="fa-solid fa-link text-[11px]"></i>
+                                <span>{{ row?.number_chain || '-' }}</span>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column label="Informe de Ensayo" min-width="200">
+                        <template #default="{ row }">
+                            <div
+                                class="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1.5 my-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-100">
+                                <i class="fa-solid fa-flask-vial text-[11px]"></i>
+                                <span>{{ row?.number_report || '-' }}</span>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column fixed="right" width="170" label="Acciones" align="center">
+                        <template #default="{ row }">
+                            <div class="flex items-center justify-center gap-2">
+                                <el-button-group>
+                                    <el-button :loading="row.loadingPdf" size="small" type="danger" plain
+                                        class="!rounded-l-xl !px-3" v-tippy="'Ver PDF'" @click="handleView(row)">
+                                        <i class="fa-solid fa-file-pdf mr-1"></i>
+                                        PDF
+                                    </el-button>
+
+                                    <el-button :loading="row.loadingExcel" size="small" type="success" plain
+                                        class="!rounded-r-xl !px-3" v-tippy="'Descargar Excel'"
+                                        @click="handleDownload(row)">
+                                        <i class="fa-solid fa-file-excel mr-1"></i>
+                                        Excel
+                                    </el-button>
+                                </el-button-group>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <template #empty>
+                        <div class="py-14 text-center">
+                            <div
+                                class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-slate-100 text-slate-400 ring-1 ring-slate-200">
+                                <i class="fa-regular fa-folder-open text-2xl"></i>
                             </div>
 
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-slate-800">
-                                    {{ row.user?.full_name || '-' }}
-                                </p>
-                                <p class="text-xs text-slate-400">
-                                    {{ row.user?.document_number || '-' }}
-                                </p>
-                            </div>
+                            <p class="text-sm font-bold text-slate-600">
+                                No hay reportes de OTs disponibles
+                            </p>
+
+                            <p class="mt-1 text-xs text-slate-400">
+                                Cuando generes una orden de trabajo, aparecerá en esta tabla.
+                            </p>
                         </div>
                     </template>
-                </el-table-column>
-
-                <el-table-column label="Generado" min-width="170">
-                    <template #default="{ row }">
-                        <div class="flex flex-col">
-                            <span class="text-sm font-medium text-slate-700">
-                                {{ formatDate(row.created_at) }}
-                            </span>
-                            <span class="text-xs text-slate-400">
-                                {{ formatTime(row.created_at) }}
-                            </span>
-                        </div>
-                    </template>
-                </el-table-column>
-
-                <el-table-column fixed="right" width="130" label="Acciones">
-                    <template #default="{ row }">
-                        <el-button-group>
-                            <el-button :loading="row.loadingPdf" size="small" type="danger" v-tippy="'Ver pdf'"
-                                @click="handleView(row)">
-                                <i class="fa-solid fa-file-pdf"></i>
-                            </el-button>
-
-                            <el-button :loading="row.loadingExcel" size="small" type="success"
-                                v-tippy="'Descargar excel'" @click="handleDownload(row)">
-                                <i class="fa-solid fa-file-excel"></i>
-                            </el-button>
-                        </el-button-group>
-                    </template>
-                </el-table-column>
-
-                <template #empty>
-                    <div class="py-10 text-center">
-                        <div
-                            class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                            <i class="fa-regular fa-folder-open text-xl"></i>
-                        </div>
-
-                        <p class="text-sm font-medium text-slate-500">
-                            No hay reportes de OTs disponibles
-                        </p>
-                    </div>
-                </template>
-            </el-table>
+                </el-table>
+            </div>
         </div>
 
         <div class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -551,5 +437,31 @@ onMounted(() => {
 .custom-textarea :deep(.el-textarea__inner:focus) {
     border-color: #f59e0b;
     box-shadow: 0 0 0 4px #fef3c7;
+}
+
+.custom-table :deep(.el-table__header th) {
+    background: #f8fafc !important;
+    color: #475569;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.custom-table :deep(.el-table__row) {
+    transition: background-color 0.2s ease;
+}
+
+.custom-table :deep(.el-table__row:hover > td) {
+    background-color: #f8fafc !important;
+}
+
+.custom-table :deep(.el-table__cell) {
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.custom-table :deep(.el-button + .el-button) {
+    margin-left: 0;
 }
 </style>

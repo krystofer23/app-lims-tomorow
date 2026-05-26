@@ -42,74 +42,108 @@
             </div>
         </template>
 
-        <section class="mt-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                    <h4 class="text-sm font-bold text-slate-700">
-                        Filtros de búsqueda
-                    </h4>
-                    <p class="text-xs text-slate-500 mt-0.5">
-                        Refina los resultados para encontrar el ensayo correcto.
-                    </p>
-                </div>
+        <section class="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-slate-50 px-5 py-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                            <i class="fa-solid fa-filter text-sm"></i>
+                        </div>
 
-                <el-button size="small" class="!rounded-xl" plain @click="clearFilters">
-                    <i class="fa-solid fa-filter-circle-xmark mr-2"></i>
-                    Limpiar filtros
-                </el-button>
+                        <div>
+                            <h4 class="text-sm font-semibold tracking-tight text-slate-800">
+                                Filtros de búsqueda
+                            </h4>
+                            <p class="mt-0.5 text-xs leading-relaxed text-slate-500">
+                                Refina los resultados para encontrar el ensayo correcto.
+                            </p>
+                        </div>
+                    </div>
+
+                    <el-button size="small" class="!rounded-xl" plain @click="clearFilters">
+                        <i class="fa-solid fa-filter-circle-xmark mr-2"></i>
+                        Limpiar filtros
+                    </el-button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
-                        Acreditación
-                    </label>
+            <div class="bg-slate-50/60 p-5">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
+                    <div class="space-y-1.5">
+                        <label
+                            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <i class="fa-solid fa-certificate text-[10px] text-blue-500"></i>
+                            Acreditación
+                        </label>
 
-                    <el-select v-model="filters.condition" clearable filterable class="w-full"
-                        placeholder="Seleccionar acreditación">
-                        <el-option v-for="row in conditions" :key="row.id" class="!uppercase" :value="row.id"
-                            :label="row.description" />
-                    </el-select>
-                </div>
+                        <el-select v-model="filters.condition" clearable filterable class="w-full"
+                            placeholder="Seleccionar acreditación">
+                            <el-option v-for="row in conditions" :key="row.id" class="!uppercase" :value="row.id"
+                                :label="row.description" />
+                        </el-select>
+                    </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
-                        Producto
-                    </label>
+                    <div class="space-y-1.5">
+                        <label
+                            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <i class="fa-solid fa-layer-group text-[10px] text-indigo-500"></i>
+                            Tipo
+                        </label>
 
-                    <el-select v-model="filters.product" clearable filterable class="w-full"
-                        placeholder="Seleccionar acreditación">
-                        <el-option v-for="row in typesSampling" :value="row.id" :label="row.description"></el-option>
-                    </el-select>
-                </div>
+                        <el-select v-model="filters.type" clearable filterable class="w-full"
+                            placeholder="Seleccionar tipo">
+                            <el-option v-for="row in typesItems" :key="row" :value="row" :label="row" />
+                        </el-select>
+                    </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
-                        Matriz
-                    </label>
+                    <div class="space-y-1.5">
+                        <label
+                            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <i class="fa-solid fa-flask-vial text-[10px] text-emerald-500"></i>
+                            Producto
+                        </label>
 
-                    <el-select v-model="filters.matrix" clearable filterable class="w-full"
-                        placeholder="Seleccionar acreditación">
-                        <el-option v-for="row in matrixs" :value="row.id" :label="row.description"></el-option>
-                    </el-select>
-                </div>
+                        <el-select v-model="filters.product" clearable filterable class="w-full"
+                            placeholder="Seleccionar producto">
+                            <el-option v-for="row in typesSampling" :key="row.id" :value="row.id"
+                                :label="row.description" />
+                        </el-select>
+                    </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 mb-1.5">
-                        Tipo de Análisis
-                    </label>
+                    <div class="space-y-1.5">
+                        <label
+                            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <i class="fa-solid fa-table-cells-large text-[10px] text-amber-500"></i>
+                            Matriz
+                        </label>
 
-                    <el-select v-model="filters.type_of_analysis" clearable filterable class="w-full"
-                        placeholder="Seleccionar acreditación">
-                        <el-option v-for="row in typesAnalysis" :value="row.id" :label="row.description"></el-option>
-                    </el-select>
-                </div>
+                        <el-select v-model="filters.matrix" clearable filterable class="w-full"
+                            placeholder="Seleccionar matriz">
+                            <el-option v-for="row in matrixs" :key="row.id" :value="row.id" :label="row.description" />
+                        </el-select>
+                    </div>
 
-                <div class="flex items-end">
-                    <el-button @click="getItem()" :loading="loading" class="!rounded-lg">
-                        <i class="fa-solid fa-filter me-2"></i>
-                        Filtrar
-                    </el-button>
+                    <div class="space-y-1.5">
+                        <label
+                            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <i class="fa-solid fa-microscope text-[10px] text-purple-500"></i>
+                            Tipo de análisis
+                        </label>
+
+                        <el-select v-model="filters.type_of_analysis" clearable filterable class="w-full"
+                            placeholder="Seleccionar análisis">
+                            <el-option v-for="row in typesAnalysis" :key="row.id" :value="row.id"
+                                :label="row.description" />
+                        </el-select>
+                    </div>
+
+                    <div class="flex items-end">
+                        <el-button type="primary" :loading="loading"
+                            class="!h-[32px] !w-full !rounded-xl !font-semibold" @click="getItem()">
+                            <i class="fa-solid fa-magnifying-glass mr-2"></i>
+                            Buscar
+                        </el-button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -281,6 +315,7 @@ import tenant from '../../../../stores/tenant'
 import { useListStore } from '../../../../stores/list'
 import { useWindowSize } from '@vueuse/core'
 import { handleErrorsExeption } from '../../../../stores/handleErrorsExeption'
+import { ElNotification } from 'element-plus'
 
 const { width: windowWidth } = useWindowSize()
 
@@ -310,6 +345,7 @@ const listStore = useListStore()
 const loading = ref(false)
 const itemsData = ref([])
 
+const typesItems = computed(() => listStore.typesItems)
 const conditions = computed(() => listStore.conditions)
 const typesSampling = computed(() => listStore.typesSampling)
 const typesAnalysis = computed(() => listStore.typesAnalysis)
@@ -329,7 +365,8 @@ const filters = reactive({
     matrix: null,
     product: null,
     condition: null,
-    type_of_analysis: null
+    type_of_analysis: null,
+    type: null
 })
 
 const pagination = ref({
@@ -340,6 +377,11 @@ const pagination = ref({
 })
 
 const getItem = async (page = 1) => {
+    if (!filters.type && !filters.product) {
+        ElNotification.warning('Debe de ingresar el tipo o producto para poder filtrar')
+        return
+    }
+
     loading.value = true
 
     try {
@@ -376,7 +418,13 @@ const handlePageChange = (page) => {
 }
 
 const clearFilters = () => {
-    getItem()
+    filters.matrix = null
+    filters.product = null
+    filters.condition = null
+    filters.type_of_analysis = null
+    filters.type = null
+
+    itemsData.value = []
 }
 
 const isSelected = (row) => {
@@ -386,10 +434,11 @@ const isSelected = (row) => {
 }
 
 const toggleItem = (row) => {
+    const items = props.items ?? []
     const exists = isSelected(row)
 
     if (exists) {
-        const newItems = props.items.filter((item) => item.id !== row.id)
+        const newItems = items.filter((item) => item.id !== row.id)
 
         emit('update:items', newItems)
 
@@ -397,11 +446,14 @@ const toggleItem = (row) => {
     }
 
     emit('update:items', [
-        ...props.items,
+        ...items,
         {
             ...row,
             price: 0.00,
             number_samples: 1,
+            type: filters.type,
+            type_of_sample_filter: filters.product,
+            matrix_filter: filters.matrix
         }
     ])
 }
@@ -411,13 +463,16 @@ const tableRowClassName = ({ row }) => {
 }
 
 const handleClose = () => {
+    clearFilters()
     emit('close')
 }
 
-watch(filters, () => getItem(), { deep: true })
-watch(filters, () => listStore.getTypesAnalysis(filters), { deep: true })
+watch(() => filters.matrix, () => {
+    listStore.getTypesAnalysis(filters)
+})
 
 onMounted(async () => {
+    await listStore.getTypesItems()
     await listStore.getConditions()
     await listStore.getTypesSampling()
     await listStore.getTypesAnalysis()
@@ -465,5 +520,9 @@ onMounted(async () => {
 
 :deep(.lims-table .el-table__row) {
     cursor: pointer;
+}
+
+:deep(.el-select__wrapper) {
+    border-radius: 12px !important;
 }
 </style>

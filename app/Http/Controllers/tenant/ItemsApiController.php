@@ -13,6 +13,7 @@ class ItemsApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            $type = $request->input('type');
             $matrix = $request->input('matrix');
             $product = $request->input('product');
             $condition = $request->input('condition');
@@ -25,11 +26,18 @@ class ItemsApiController extends Controller
                     'matrix',
                     'reference',
                     'parameter',
+                    'parameter.connectionsParameter' => fn($q) => $q
+                        ->when($matrix, fn($query) => $query->where('matrix_id', $matrix))
+                        ->when($product, fn($query) => $query->where('type_of_samples_id', $product)),
+                    'parameter.connectionsParameter.matrix',
                     'unitMeasurement',
                     'company',
                 ])
                 ->when($condition, function ($query) use ($condition) {
                     $query->where('condition_id', $condition);
+                })
+                ->when($type, function ($query) use ($type) {
+                    $query->where('type', $type);
                 })
                 ->when($product, function ($query) use ($product) {
                     $query->where(function ($query) use ($product) {

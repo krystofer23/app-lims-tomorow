@@ -1,254 +1,315 @@
 @php
-use Carbon\Carbon;
+    use Carbon\Carbon;
 @endphp
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Orden de servicio {{ $orderService->code ?? $orderService->id }}</title>
     <style>
-        @page { margin: 18px 18px 22px 18px; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #000; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        td, th { border: 1px solid #000; padding: 4px 5px; vertical-align: middle; word-wrap: break-word; }
-        .title { text-align: center; font-weight: bold; font-size: 16px; background-color: #92d050; }
-        .section-green { font-weight: bold; background-color: #92d050; }
-        .label-green { font-weight: bold; background-color: #d9ead3; }
-        .header-soft { background-color: #ebf1de; font-weight: bold; text-align: center; }
-        .spacer td { border: none !important; height: 8px; padding: 0; }
-        .merge-start { vertical-align: top; border-bottom: none !important; }
-        .merge-mid { vertical-align: top; border-top: none !important; border-bottom: none !important; }
-        .merge-end { vertical-align: top; border-top: none !important; }
+        @page {
+            margin: 18px 18px 22px 18px;
+        }
+
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 10px;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 4px 5px;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            background-color: #92d050;
+        }
+
+        .section-green {
+            font-weight: bold;
+            background-color: #92d050;
+        }
+
+        .label-green {
+            font-weight: bold;
+            background-color: #d9ead3;
+        }
+
+        .header-soft {
+            background-color: #ebf1de;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .spacer td {
+            border: none !important;
+            height: 8px;
+            padding: 0;
+        }
+
+        .merge-start {
+            vertical-align: top;
+            border-bottom: none !important;
+        }
+
+        .merge-mid {
+            vertical-align: top;
+            border-top: none !important;
+            border-bottom: none !important;
+        }
+
+        .merge-end {
+            vertical-align: top;
+            border-top: none !important;
+        }
     </style>
 </head>
+
 <body>
     <table>
         <tr>
-            <td colspan="10" class="title">ORDEN DE SERVICIO</td>
+            <td></td>
+            <td colspan="8" class="title">ORDEN DE SERVICIO N°</td>
+            <td>{{ $orderService?->code }}</td>
         </tr>
         <tr>
-            <td colspan="2" class="section-green">ORDEN Nº:</td>
-            <td colspan="2">{{ $orderService->code ?? $orderService->id ?? '-' }}</td>
-            <td colspan="2" class="section-green">Fecha de elaboración:</td>
-            <td colspan="2">{{ Carbon::make($orderService->created_at)->format('Y-m-d') }}</td>
-            <td class="section-green">Fecha de atención:</td>
-            <td>{{ $orderService->date_attention ?? '-' }}</td>
+            <td colspan="10" class="section-green">DOCUMENTO REFERENCIA PARA EL SERVICIO</td>
         </tr>
         <tr>
-            <td colspan="10" class="section-green">INFORMACIÓN DEL CLIENTE</td>
+            <td colspan="2">Numero de Cotización</td>
+            <td colspan="8">#{{ $orderService?->quote?->id }}</td>
         </tr>
         <tr>
-            <td class="label-green">Razón social:</td>
-            <td colspan="9">{{ $company->business_name ?? '-' }}</td>
+            <td colspan="10" class="section-green">DATOS DEL CLIENTE</td>
         </tr>
         <tr>
-            <td class="label-green">Dirección:</td>
-            <td colspan="9">{{ $orderService->direction ?? $company->direction ?? '-' }}</td>
+            <td colspan="2">RAZÓN SOCIAL</td>
+            <td colspan="8">{{ $orderService?->company?->business_name }}</td>
         </tr>
         <tr>
-            <td class="label-green">Contacto:</td>
-            <td colspan="4">{{ $contact?->user?->full_name ?? '-' }}</td>
-            <td class="label-green">Teléfono/Celular:</td>
-            <td colspan="4">{{ $contact?->phone ?? '-' }}</td>
+            <td colspan="2">RUC</td>
+            <td colspan="8">{{ $orderService?->company?->ruc }}</td>
         </tr>
         <tr>
-            <td class="label-green">Email:</td>
-            <td colspan="6">{{ $contact?->email ?? '-' }}</td>
-            <td class="label-green">R.U.C.:</td>
-            <td colspan="2">{{ $company->ruc ?? '-' }}</td>
+            <td colspan="2">DIRECCION</td>
+            <td colspan="8">{{ $orderService?->direction }}</td>
         </tr>
         <tr>
-            <td class="label-green">Referencia:</td>
-            <td colspan="9">{{ $orderService->reference ?? '-' }}</td>
+            <td colspan="2">CONTACTO</td>
+            <td colspan="8">{{ $orderService?->contactCompany?->user?->name }}</td>
+        </tr>
+        <tr>
+            <td colspan="10" class="section-green">DATOS DEL MONITOREO</td>
+        </tr>
+        <tr>
+            <td colspan="2">NOMBRE DEL CLIENTE</td>
+            <td colspan="8">{{ $orderService?->application?->business_name }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">NOMBRE DE CONTACTO EN CAMPO</td>
+            <td colspan="4">{{ $orderService?->contactApplication?->user?->name }}</td>
+            <td colspan="2">CELULAR</td>
+            <td colspan="2">{{ $orderService?->contactApplication?->phone }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">DEPARTAMENTO</td>
+            <td colspan="2">{{ $orderService?->department }}</td>
+            <td colspan="1">PROVINCIA</td>
+            <td colspan="2">{{ $orderService?->province }}</td>
+            <td colspan="1">DISTRITO</td>
+            <td colspan="2">{{ $orderService?->district }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">REF. SOBRE LA UBICACIÓN</td>
+            <td colspan="8">{{ $orderService?->reference }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">PROCEDENCIA</td>
+            <td colspan="8">{{ $orderService?->origin }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">PROYECTO</td>
+            <td colspan="8">{{ $orderService?->project }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">FECHA INICIO DEL SERVICIO</td>
+            <td colspan="8">{{ $orderService?->date_init_service }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">FECHA FIN DEL MONITOREO</td>
+            <td colspan="8">{{ $orderService?->date_end_monitoring }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">PERSONAL PROGRAMADO</td>
+            <td colspan="8"></td>
+        </tr>
+        <tr>
+            <td colspan="2">ESPECIFICAR (DETALLES)</td>
+            <td colspan="8">{{ $orderService?->details }}</td>
+        </tr>
+        <tr>
+            <td colspan="10" class="section-green">DATOS DE INFORMACIÓN SOBRE LOS PUNTOS DE MONITOREO (aumentar las
+                filas según sea necesario)</td>
+        </tr>
+        <tr>
+            <td colspan="2">ESTACIONES DE MONITOREO</td>
+            <td colspan="8">{{ $orderService?->monitoring }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">PROYECTO</td>
+            <td colspan="8">{{ $orderService?->projects }}</td>
         </tr>
 
-        <tr class="spacer"><td colspan="10"></td></tr>
-
-        <tr>
-            <td colspan="10" class="section-green">DATOS DE MONITOREO</td>
-        </tr>
-        <tr>
-            <td class="label-green">Procedencia:</td>
-            <td colspan="4">{{ $orderService->origin ?? '-' }}</td>
-            <td class="label-green">Proyecto:</td>
-            <td colspan="4">{{ $orderService->project ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="label-green">Fecha de salida:</td>
-            <td colspan="2">{{ $orderService->date_output ?? '-' }}</td>
-            <td class="label-green">Fecha de inducción:</td>
-            <td colspan="2">{{ $orderService->date_induction ?? '-' }}</td>
-            <td class="label-green">Inicio monitoreo:</td>
-            <td>{{ $orderService->date_monitoring_init ?? '-' }}</td>
-            <td class="label-green">Fin monitoreo:</td>
-            <td>{{ $orderService->date_monitoring_end ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="label-green">Detalle:</td>
-            <td colspan="9">{{ $orderService->details ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="label-green">Estaciones:</td>
-            <td colspan="9">{{ $orderService->stations_monitoring ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td class="label-green">Proyecto monitoreo:</td>
-            <td colspan="9">{{ $orderService->project_monitoring ?? '-' }}</td>
+        <tr class="spacer">
+            <td colspan="10"></td>
         </tr>
 
-        <tr class="spacer"><td colspan="10"></td></tr>
-
-        @foreach($groupedMatrices as $group)
+        @foreach ($groupedMatrices as $group)
             <tr>
                 <td colspan="10" class="section-green">
                     MATRIZ: {{ strtoupper($group['description']) }}
-                    @if(!empty($group['frequency_label']))
+                    @if (!empty($group['frequency_label']))
                         [{{ $group['frequency_label'] }}]
                     @endif
                 </td>
             </tr>
+
             <tr>
-                <td class="header-soft">Matriz</td>
-                <td class="header-soft">Ensayo</td>
-                <td colspan="2" class="header-soft">Metodología</td>
+                <td class="header-soft">Ítem</td>
+                <td class="header-soft">ENSAYO/ANÁLISIS</td>
+                <td colspan="2" class="header-soft">METODOLOGÍA</td>
                 <td class="header-soft">LCM</td>
-                <td class="header-soft">Unidad</td>
-                <td class="header-soft">N° Muestras</td>
-                <td class="header-soft">Condición</td>
-                <td class="header-soft">Frecuencia</td>
-                <td class="header-soft">Observación</td>
+                <td class="header-soft">UNIDAD</td>
+                <td class="header-soft">N° MUESTRAS</td>
+                <td class="header-soft">SUBCONTRATA<br>(Cuando aplique)</td>
+                <td class="header-soft">EQUIPOS<br>(Cantidad)</td>
+                <td class="header-soft">OBSERVACIONES</td>
             </tr>
-            @foreach($group['items'] as $matriz)
-                @php
-                    $essays = data_get($matriz, 'item.essays', []);
-                    $matrizDescription = data_get($matriz, 'item.description', '-');
-                    $methodology = data_get($matriz, 'item.methodologie.description', '-');
-                    $samples = data_get($matriz, 'item.number_samples', '-');
-                    $condition = collect($essays)
-                        ->pluck('condition.description')
-                        ->filter()
-                        ->unique()
-                        ->implode(', ') ?: '-';
-                    $frequencyLabel = data_get($matriz, 'item.frequency_label', '-');
-                    $observation = data_get($matriz, 'item.observation', '-');
-                    $rowspan = max(count($essays), 1);
-                    $essayTextLength = collect($essays)->sum(function ($essay) {
-                        return strlen((string) data_get($essay, 'description', ''));
-                    });
-                    $contentLength = strlen((string) $matrizDescription)
-                        + strlen((string) $methodology)
-                        + strlen((string) $condition)
-                        + strlen((string) $frequencyLabel)
-                        + strlen((string) $observation)
-                        + $essayTextLength;
-                    $useRealRowspan = count($essays) <= 6 && $contentLength <= 220;
-                @endphp
-                @if(count($essays))
-                    @if($useRealRowspan)
-                        @foreach($essays as $index => $essay)
-                            <tr>
-                                @if($index === 0)
-                                    <td rowspan="{{ $rowspan }}" style="vertical-align: top;">{{ $matrizDescription }}</td>
-                                @endif
-                                <td>{{ data_get($essay, 'description', '-') }}</td>
-                                @if($index === 0)
-                                    <td colspan="2" rowspan="{{ $rowspan }}" style="vertical-align: top;">{{ $methodology }}</td>
-                                @endif
-                                <td>{{ data_get($essay, 'lcm', '-') }}</td>
-                                <td>{{ data_get($essay, 'units_measurement.description', '-') }}</td>
-                                @if($index === 0)
-                                    <td rowspan="{{ $rowspan }}" style="vertical-align: top;">{{ $samples }}</td>
-                                    <td rowspan="{{ $rowspan }}" style="vertical-align: top;">{{ $condition }}</td>
-                                    <td rowspan="{{ $rowspan }}" style="vertical-align: top;">{{ $frequencyLabel }}</td>
-                                    <td rowspan="{{ $rowspan }}" style="vertical-align: top;">{{ $observation }}</td>
-                                @endif
-                            </tr>
-                        @endforeach
-                    @else
-                        @foreach($essays as $index => $essay)
-                            @php
-                                $isFirst = ($index === 0);
-                                $isLast = ($index === count($essays) - 1);
-                                $mergeClass = $isFirst ? 'merge-start' : ($isLast ? 'merge-end' : 'merge-mid');
-                            @endphp
-                            <tr>
-                                <td class="{{ $mergeClass }}">
-                                    {{ $isFirst ? $matrizDescription : '' }}
-                                </td>
-                                <td>{{ data_get($essay, 'description', '-') }}</td>
-                                <td colspan="2" class="{{ $mergeClass }}">
-                                    {{ $isFirst ? $methodology : '' }}
-                                </td>
-                                <td>{{ data_get($essay, 'lcm', '-') }}</td>
-                                <td>{{ data_get($essay, 'units_measurement.description', '-') }}</td>
-                                <td class="{{ $mergeClass }}">
-                                    {{ $isFirst ? $samples : '' }}
-                                </td>
-                                <td class="{{ $mergeClass }}">
-                                    {{ $isFirst ? $condition : '' }}
-                                </td>
-                                <td class="{{ $mergeClass }}">
-                                    {{ $isFirst ? $frequencyLabel : '' }}
-                                </td>
-                                <td class="{{ $mergeClass }}">
-                                    {{ $isFirst ? $observation : '' }}
-                                </td>
-                            </tr>
-                        @endforeach
-                    @endif
-                @else
-                    <tr>
-                        <td style="vertical-align: top;">{{ $matrizDescription }}</td>
-                        <td>-</td>
-                        <td colspan="2">{{ $methodology }}</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>{{ $samples }}</td>
-                        <td>{{ $condition }}</td>
-                        <td>{{ $frequencyLabel }}</td>
-                        <td>{{ $observation }}</td>
-                    </tr>
-                @endif
+
+            @foreach ($group['items'] as $matriz)
+                <tr>
+                    <td class="text-center">{{ $loop->iteration }}</td>
+
+                    <td>
+                        {{ $matriz->essay_description_resolved ?? '-' }}
+                    </td>
+
+                    <td colspan="2">
+                        {{ $matriz->methodology_resolved ?? '-' }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ $matriz->lcm_resolved ?? '-' }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ $matriz->unit_resolved ?? '-' }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ $matriz->samples_resolved ?? '-' }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ '-' }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ '-' }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ $matriz->subcontract_resolved ?? 'NO APLICA' }}
+                    </td>
+                </tr>
             @endforeach
-            <tr class="spacer"><td colspan="10"></td></tr>
+
+            <tr class="spacer">
+                <td colspan="10"></td>
+            </tr>
         @endforeach
 
         <tr>
-            <td colspan="10" class="section-green">SERVICIOS</td>
+            <td colspan="10" class="section-green">CONDICIONES DEL SERVICIO</td>
         </tr>
         <tr>
-            <td colspan="6" class="header-soft">Actividad</td>
-            <td class="header-soft">Días</td>
-            <td class="header-soft">Cantidad</td>
-            <td class="header-soft">Frecuencia</td>
-            <td class="header-soft">Observación</td>
+            <td colspan="2">Servicio incluye</td>
+            <td colspan="8">{{ $orderService?->service_includes }}</td>
         </tr>
-        @forelse($services as $service)
-            <tr>
-                <td colspan="6">{{ data_get($service, 'item.description', '-') }}</td>
-                <td>{{ data_get($service, 'item.days', '-') }}</td>
-                <td>{{ data_get($service, 'item.amount', '-') }}</td>
-                <td>{{ data_get($service, 'item.frequency_label', '-') }}</td>
-                <td>{{ data_get($service, 'item.observation', '-') }}</td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="10">No hay servicios registrados.</td>
-            </tr>
-        @endforelse
-
-        <tr class="spacer"><td colspan="10"></td></tr>
-
         <tr>
-            <td colspan="2" class="section-green">Observaciones:</td>
-            <td colspan="8">{{ $orderService->observations ?? '-' }}</td>
+            <td colspan="2">Hospedaje</td>
+            <td colspan="8">{{ $orderService?->accommodation }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">Viaticos</td>
+            <td colspan="8">{{ $orderService?->travel_expenses }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">Dias de Servicio</td>
+            <td colspan="8">{{ $orderService?->days_service }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">Trasporte de persona</td>
+            <td colspan="8">{{ $orderService?->personal_transport }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">Envio de Muestra</td>
+            <td colspan="8">{{ $orderService?->send_sampling }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">Vigilancia</td>
+            <td colspan="8">{{ $orderService?->surveillance }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">Generador de Electrico</td>
+            <td colspan="8">{{ $orderService?->electric_generator }}</td>
+        </tr>
+        <tr>
+            <td colspan="10" class="section-green">DATOS PARA LA EMISION INFORME</td>
+        </tr>
+        <tr>
+            <td colspan="2">RAZÓN SOCIAL</td>
+            <td colspan="8">{{ $orderService?->companyEmission?->business_name }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">DIRECCION</td>
+            <td colspan="8">{{ $orderService?->companyEmission?->direction }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">TIPO DE DOCUMENTO SOLICITADO</td>
+            <td colspan="8">{{ $orderService?->type_document_required }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">NÚMERO DE COPIAS IMPRESAS </td>
+            <td colspan="8">{{ $orderService?->number_copy }}</td>
+        </tr>
+        <tr>
+            <td colspan="10" class="section-green">Observaciones:</td>
+        </tr>
+        <tr>
+            <td colspan="10">{{ $orderService->observations ?? '-' }}</td>
         </tr>
         <tr>
             <td colspan="2" class="section-green">Realizado por:</td>
             <td colspan="3">{{ $orderService->user?->full_name ?? '-' }}</td>
             <td colspan="2" class="section-green">Código cotización:</td>
-            <td colspan="3">{{ $orderService->quote?->code ?? $orderService->quote_id ?? '-' }}</td>
+            <td colspan="3">#{{ $orderService->quote_id ?? '-' }}</td>
         </tr>
     </table>
 </body>
+
 </html>

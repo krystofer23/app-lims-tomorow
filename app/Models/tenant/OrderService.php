@@ -85,6 +85,26 @@ class OrderService extends TenantModel
         return $this->belongsTo(Company::class, 'company_id');
     }
 
+    public function contactCompany(): BelongsTo
+    {
+        return $this->belongsTo(ContactCompanies::class, 'contact_company');
+    }
+
+    public function application(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'application_id');
+    }
+
+    public function contactApplication(): BelongsTo
+    {
+        return $this->belongsTo(ContactCompanies::class, 'contact_application');
+    }
+
+    public function companyEmission(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_emission_id');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(ItemsOrderService::class, 'order_service_id', 'id');

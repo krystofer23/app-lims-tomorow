@@ -1,30 +1,8 @@
 <template>
-    <div
-        class="flex flex-col gap-4 border-b border-slate-200/80 bg-white px-5 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between lg:px-6">
-        <div class="min-w-0">
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-100">
-                    <i class="fa-solid fa-file-invoice-dollar text-lg"></i>
-                </div>
-
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                        <h1 class="truncate text-lg font-bold tracking-tight text-slate-900">
-                            Cotizaciones
-                        </h1>
-                    </div>
-
-                    <p class="mt-0.5 truncate text-xs text-slate-500">
-                        Registro y control de cotizaciones.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+    <custom-header title="Cotizaciones" description="Registro y control de cotizaciones." icon="fa-solid fa-receipt">
+        <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
             <el-input v-model="filters.search" placeholder="Buscar razón social, cadena o informe..." clearable
-                class="!w-full sm:!w-[360px]">
+                class="!w-full sm:!w-[260px]">
                 <template #prefix>
                     <el-icon class="text-slate-400">
                         <search />
@@ -33,40 +11,82 @@
             </el-input>
 
             <el-button @click="$router.push('/quote-create')" type="primary"
-                class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
-                <i class="fa-solid fa-file-invoice-dollar mr-2"></i>
+                class="!h-8 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
+                <!-- <i class="fa-solid fa-file-invoice-dollar mr-2"></i> -->
                 Agregar Registro
             </el-button>
         </div>
-    </div>
+    </custom-header>
 
-    <div class="bg-white p-5 md:p-6 space-y-6">
-        <el-collapse v-model="activeNames" class="mb-5">
+    <div class="bg-white p-5 space-y-4">
+        <el-collapse v-model="activeNames" class="filters-collapse mb-5">
             <el-collapse-item name="1">
                 <template #title>
-                    <i class="fa-solid fa-filter"></i> Filtros
+                    <div class="flex w-full items-center justify-between pr-4">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-100 text-teal-600 ring-1 ring-cyan-100">
+                                <i class="fa-solid fa-filter text-sm"></i>
+                            </div>
+
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    Filtros de búsqueda
+                                </p>
+                                <p class="text-xs text-slate-400">
+                                    Refina las cotizaciones por comercial, empresa u orden generada
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </template>
+
                 <template #default>
-                    <div class="grid grid-cols-12 w-full gap-3">
-                        <div class="col-span-3">
-                            <p class="font-medium">Comercial</p>
+                    <div class="grid grid-cols-12 gap-4">
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="mb-1.5 block text-xs font-medium text-slate-500">
+                                Comercial
+                            </label>
+
                             <el-select :remote-method="listStore.getUsers" filterable remote reserve-keyword clearable
-                                v-model="filters.comercial_id" placeholder="Seleccionar" class="!w-full" size="small">
-                                <el-option :label="row.full_name" :value="row.id" v-for="row in users"></el-option>
+                                v-model="filters.comercial_id" placeholder="Seleccionar comercial" class="!w-full">
+                                <el-option v-for="row in users" :key="row.id" :label="row.full_name" :value="row.id" />
                             </el-select>
                         </div>
-                        <div class="col-span-3">
-                            <p class="font-medium">Empresa</p>
+
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="mb-1.5 block text-xs font-medium text-slate-500">
+                                Empresa
+                            </label>
+
                             <el-select :remote-method="listStore.getCompanies" filterable remote reserve-keyword
-                                clearable v-model="filters.company_id" placeholder="Seleccionar" class="!w-full"
-                                size="small">
-                                <el-option v-for="row in companies" :label="row.business_name"
-                                    :value="row.id"></el-option>
+                                clearable v-model="filters.company_id" placeholder="Seleccionar empresa"
+                                class="!w-full">
+                                <el-option v-for="row in companies" :key="row.id" :label="row.business_name"
+                                    :value="row.id" />
                             </el-select>
                         </div>
-                        <div class="col-span-3">
-                            <p class="font-medium">OS Generada</p>
-                            <el-switch v-model="filters.is_os" size="small"></el-switch>
+
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="mb-1.5 block text-xs font-medium text-slate-500">
+                                Orden de servicio
+                            </label>
+
+                            <div
+                                class="flex h-10 items-center justify-between rounded-xl border border-slate-200 bg-white px-3">
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
+                                        <i class="fa-solid fa-flask-vial text-xs"></i>
+                                    </span>
+
+                                    <span class="text-sm font-medium text-slate-600">
+                                        OS generada
+                                    </span>
+                                </div>
+
+                                <el-switch v-model="filters.is_os" />
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -74,77 +94,42 @@
         </el-collapse>
 
         <div class="overflow-x-auto">
-            <el-table stripe :data="quotes" v-loading="loading" class="lims-quotes-table w-full">
-                <el-table-column type="index" label="#" width="60" align="center" />
-
-                <el-table-column label="Cliente" min-width="260">
+            <el-table class="border rounded-xl" v-loading="loading" stripe :data="quotes"
+                header-cell-class-name="lims-table-header" size="small">
+                <el-table-column type="index" width="60" align="center" fixed="left">
+                    <template #header>N°</template>
+                </el-table-column>
+                <el-table-column width="300">
+                    <template #header>Cliente</template>
                     <template #default="{ row }">
-                        <div class="flex items-start gap-3">
-                            <!-- <div
-                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
-                                <i class="fa-regular fa-building text-sm"></i>
-                            </div> -->
-
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-bold text-slate-800">
-                                    {{ row.company?.business_name ?? '-' }}
-                                </p>
-
-                                <div class="mt-1 flex flex-wrap items-center gap-1.5">
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                                        RUC: {{ row.company?.ruc ?? '-' }}
-                                    </span>
-
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-cyan-50 px-2.5 py-1 text-[11px] font-semibold text-cyan-700">
-                                        Cliente
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        <p class="truncate font-semibold" v-tippy="row?.company?.business_name">{{
+                            row?.company?.business_name }}</p>
+                        <p>
+                            RUC: {{ row?.company?.ruc }}
+                        </p>
                     </template>
                 </el-table-column>
-
-                <el-table-column label="Solicitante" min-width="260">
+                <el-table-column width="300">
+                    <template #header>Solicitante</template>
                     <template #default="{ row }">
-                        <div class="flex items-start gap-3">
-                            <!-- <div
-                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 ring-1 ring-teal-100">
-                                <i class="fa-regular fa-id-badge text-sm"></i>
-                            </div> -->
-
-                            <div class="min-w-0">
-                                <p class="truncate text-sm font-bold text-slate-800">
-                                    {{ row.applicant?.business_name ?? '-' }}
-                                </p>
-
-                                <div class="mt-1 flex flex-wrap items-center gap-1.5">
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                                        RUC: {{ row.applicant?.ruc ?? '-' }}
-                                    </span>
-
-                                    <span
-                                        class="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold text-teal-700">
-                                        Solicitante
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        <p class="truncate font-semibold" v-tippy="row?.applicant?.business_name">{{
+                            row?.applicant?.business_name }}</p>
+                        <p>
+                            RUC: {{ row?.applicant?.ruc }}
+                        </p>
                     </template>
                 </el-table-column>
-
-                <el-table-column label="Responsable comercial" min-width="210">
+                <el-table-column width="200">
+                    <template #header>Comercial</template>
                     <template #default="{ row }">
                         <div class="flex items-center gap-3 py-1">
                             <div
-                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-slate-200">
-                                <i class="fa-solid fa-user-tie text-xs"></i>
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-slate-200">
+                                <i class="fa-solid fa-user-tie text-[10px]"></i>
                             </div>
 
                             <div class="min-w-0">
-                                <p class="line-clamp-2 text-xs font-bold leading-5 text-slate-700">
+                                <p class="line-clamp-2 text-xs font-semibold">
                                     {{ row.user?.full_name ?? '-' }}
                                 </p>
                                 <p class="text-[11px] font-medium text-slate-400">
@@ -154,12 +139,12 @@
                         </div>
                     </template>
                 </el-table-column>
-
-                <el-table-column label="Orden de servicio" width="170" align="center">
+                <el-table-column width="200">
+                    <template #header>Orden de servicio</template>
                     <template #default="{ row }">
                         <div class="py-1">
                             <span v-if="row?.order_service"
-                                class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+                                class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-700">
                                 <span
                                     class="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600 text-white">
                                     <i class="!m-0 !p-0 fa-solid fa-check text-[9px]"></i>
@@ -168,7 +153,7 @@
                             </span>
 
                             <span v-else
-                                class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
+                                class="inline-flex items-center gap-1.5 rounded-xl bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-700">
                                 <span
                                     class="flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-white">
                                     <i class="!m-0 !p-0 fa-regular fa-alarm-clock text-[9px]"></i>
@@ -178,16 +163,16 @@
                         </div>
                     </template>
                 </el-table-column>
-
-                <el-table-column label="Contacto técnico" min-width="230">
+                <el-table-column width="220">
+                    <template #header>Contacto</template>
                     <template #default="{ row }">
                         <el-popover placement="top" :width="360" trigger="hover">
                             <template #default>
                                 <div class="rounded-2xl bg-white p-3">
                                     <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
                                         <div
-                                            class="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
-                                            <i class="fa-solid fa-address-book text-sm"></i>
+                                            class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+                                            <i class="fa-solid fa-address-book text-base"></i>
                                         </div>
 
                                         <div class="min-w-0 flex-1">
@@ -196,7 +181,7 @@
                                             </h4>
 
                                             <span
-                                                class="mt-1 inline-flex rounded-full bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700">
+                                                class="mt-1 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">
                                                 {{ row.contact?.type || 'Sin tipo' }}
                                             </span>
                                         </div>
@@ -233,23 +218,23 @@
                             </template>
 
                             <template #reference>
-                                <button type="button" v-tippy="'Ver información del contacto'"
-                                    class="inline-flex max-w-full items-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:border-cyan-300 hover:bg-cyan-100 active:scale-[0.98]">
-                                    <i class="fa-solid fa-user-check text-[11px]"></i>
+                                <el-button type="primary" plain v-tippy="'Ver información del contacto'"
+                                    class="!rounded-xl font-semibold">
+                                    <i class="fa-solid fa-user-check text-[11px] me-2"></i>
 
-                                    <span class="max-w-[160px] truncate">
+                                    <span class="max-w-[160px] truncate !text-xs">
                                         {{ row.contact?.user?.full_name || 'Sin contacto' }}
                                     </span>
-                                </button>
+                                </el-button>
                             </template>
                         </el-popover>
                     </template>
                 </el-table-column>
-
-                <el-table-column prop="created_at" label="Fecha de registro" min-width="170" sortable="custom">
+                <el-table-column width="200">
+                    <template #header>Fecha de registro</template>
                     <template #default="{ row }">
                         <div class="space-y-1">
-                            <p class="text-sm font-bold text-slate-800">
+                            <p class="text-sm font-semibold">
                                 {{ formatDate(row?.created_at) }}
                             </p>
 
@@ -260,66 +245,86 @@
                         </div>
                     </template>
                 </el-table-column>
-
-                <el-table-column label="Acciones" width="245" fixed="right" align="center">
+                <el-table-column width="140" fixed="right">
+                    <template #header>Acciones</template>
                     <template #default="{ row }">
-                        <div class="flex items-center justify-center gap-2">
-                            <el-button circle plain :loading="row?.loadingPdf" @click="downloadQuotePdf(row)"
-                                v-tippy="'Descargar cotización PDF'" size="small" type="danger" class="!m-0">
-                                <i class="fa-regular fa-file-pdf"></i>
-                            </el-button>
-
-                            <el-button circle plain :loading="row?.loading" @click="downloadQuoteExcel(row)"
-                                v-tippy="'Descargar cotización Excel'" size="small" type="success" class="!m-0">
-                                <i class="fa-regular fa-file-excel"></i>
-                            </el-button>
-
-                            <el-button v-if="!row?.order_service" circle plain @click="$router.push({
+                        <div class="flex items-center justify-start gap-2">
+                            <button v-if="!row?.order_service" type="button" @click="$router.push({
                                 name: 'orders-services-create',
                                 query: {
                                     quoteId: row.id
                                 }
-                            })" v-tippy="'Generar orden de servicio'" size="small" type="primary" class="!m-0">
-                                <i class="fa-solid fa-flask-vial"></i>
-                            </el-button>
+                            })" v-tippy="'Generar orden de servicio'"
+                                class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-500 text-white shadow-sm shadow-cyan-600/20 transition hover:bg-cyan-700 active:scale-95">
+                                <i class="fa-solid fa-flask-vial text-sm"></i>
+                            </button>
 
-                            <el-button circle plain @click="$router.push({
-                                name: 'quote-update',
-                                params: {
-                                    id: row.id
-                                }
-                            })" v-tippy="'Editar cotización'" size="small" type="warning" class="!m-0">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </el-button>
+                            <el-dropdown trigger="click" placement="bottom-end">
+                                <button type="button"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 active:scale-95">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+                                </button>
 
-                            <el-button circle plain @click="handleDelete(row)" v-tippy="'Eliminar cotización'"
-                                size="small" type="danger" class="!m-0">
-                                <i class="fa-regular fa-trash-can"></i>
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item @click="downloadQuotePdf(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-file-pdf"></i>
+                                                <span>Descargar PDF</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item @click="downloadQuoteExcel(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-file-excel"></i>
+                                                <span>Descargar Excel</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item @click="$router.push({
+                                            name: 'quote-update',
+                                            params: {
+                                                id: row.id
+                                            }
+                                        })">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                                <span>Editar cotización</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item divided @click="handleDelete(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-trash-can"></i>
+                                                <span>Eliminar cotización</span>
+                                            </div>
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
+                        </div>
+                    </template>
+                    <template #empty>
+                        <div class="py-16 text-center">
+                            <div
+                                class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
+                                <i class="fa-solid fa-flask-vial text-2xl"></i>
+                            </div>
+
+                            <h3 class="mt-4 text-sm font-bold text-slate-900">
+                                No hay cotizaciones registradas
+                            </h3>
+
+                            <p class="mt-1 text-sm text-slate-500">
+                                Ajusta los filtros o registra una nueva cotización para continuar.
+                            </p>
+
+                            <el-button class="mt-4 !rounded-xl !font-semibold" plain>
+                                Limpiar filtros
                             </el-button>
                         </div>
                     </template>
                 </el-table-column>
-
-                <template #empty>
-                    <div class="py-16 text-center">
-                        <div
-                            class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
-                            <i class="fa-solid fa-flask-vial text-2xl"></i>
-                        </div>
-
-                        <h3 class="mt-4 text-sm font-bold text-slate-900">
-                            No hay cotizaciones registradas
-                        </h3>
-
-                        <p class="mt-1 text-sm text-slate-500">
-                            Ajusta los filtros o registra una nueva cotización para continuar.
-                        </p>
-
-                        <el-button class="mt-4 !rounded-xl !font-semibold" plain>
-                            Limpiar filtros
-                        </el-button>
-                    </div>
-                </template>
             </el-table>
         </div>
 
@@ -347,6 +352,7 @@ import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
 import ImportItem from '../../../components/tenants/ImportItem.vue';
 import { Search } from '@element-plus/icons-vue';
 import { ElNotification } from 'element-plus';
+import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 
 const activeNames = ref(['1'])
 const listStore = useListStore()
@@ -498,87 +504,51 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-:deep(.el-table th.el-table__cell) {
-    background: #f8fafc;
-    color: #334155;
+:deep(.lims-table-header) {
+    /* background: #fff ; */
+    color: #64748a !important;
+    font-size: 12px;
     font-weight: 700;
-}
-
-:deep(.el-table td.el-table__cell),
-:deep(.el-table th.el-table__cell) {
-    padding: 14px 0;
-}
-
-:deep(.el-popover) {
-    border-radius: 10px !important;
-}
-
-:deep(.custom-table .el-table__cell) {
-    padding-top: 14px;
-    padding-bottom: 14px;
-    vertical-align: middle;
-}
-
-:deep(.custom-table .el-table__row:hover > td.el-table__cell) {
-    background-color: #f8fafc !important;
-}
-
-:deep(.custom-table .el-table__inner-wrapper::before) {
-    display: none;
-}
-
-:deep(.custom-table th.el-table__cell) {
-    border-bottom: 1px solid #e2e8f0 !important;
-}
-
-:deep(.custom-table td.el-table__cell) {
-    border-bottom: 1px solid #f1f5f9 !important;
-}
-
-:deep(.el-input__wrapper) {
-    border-radius: 10px !important;
-}
-
-.lims-quotes-table :deep(.el-table__header th) {
-    background: #f8fafc !important;
-    color: #334155;
-    font-size: 11px;
-    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.045em;
+    background: linear-gradient(180deg, #f8fafc 0%, #f8fafc 100%) !important;
+    height: 42px;
 }
 
-.lims-quotes-table :deep(.el-table__cell) {
-    padding: 15px 0;
+:deep(.filters-collapse) {
+    border: 0;
 }
 
-.lims-quotes-table :deep(.el-table__row) {
-    transition: background-color 0.2s ease;
+:deep(.filters-collapse .el-collapse-item) {
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #ffffff;
+    /* box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05); */
 }
 
-.lims-quotes-table :deep(.el-table__row:hover > td) {
-    background-color: #f0fdfa !important;
+:deep(.filters-collapse .el-collapse-item__header) {
+    height: auto;
+    min-height: 52px;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 0 12px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f8fafc 100%);
 }
 
-.lims-quotes-table :deep(.el-table--striped .el-table__body tr.el-table__row--striped td) {
-    background-color: #fbfdff;
+:deep(.filters-collapse .el-collapse-item__wrap) {
+    border-bottom: 0;
 }
 
-.lims-quotes-table :deep(.el-table__fixed-right) {
-    box-shadow: -10px 0 22px rgba(15, 23, 42, 0.07);
+:deep(.filters-collapse .el-collapse-item__content) {
+    padding: 18px;
 }
 
-.lims-quotes-table :deep(.el-button.is-circle) {
-    width: 32px;
-    height: 32px;
-    border-radius: 11px;
+:deep(.filters-collapse .el-collapse-item__arrow) {
+    color: #64748b;
 }
 
-.lims-quotes-table :deep(.el-loading-mask) {
-    border-radius: 16px;
-}
-
-.lims-quotes-table :deep(.cell) {
-    line-height: 1.35;
+:deep(.filters-collapse .el-input__wrapper),
+:deep(.filters-collapse .el-select__wrapper) {
+    min-height: 40px;
+    border-radius: 12px;
 }
 </style>

@@ -27,7 +27,7 @@ class ItemsQuotes extends TenantModel
 
     protected $casts = [
         'created_at' => LocalTimezone::class,
-        'item' => 'json'
+        'item' => 'array'
     ];
 
     public function quote(): BelongsTo

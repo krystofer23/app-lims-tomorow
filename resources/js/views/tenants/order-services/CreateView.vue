@@ -426,12 +426,6 @@
                                     <i class="fa-solid fa-layer-group me-1"></i>
                                     Agregar matrices
                                 </el-button>
-
-                                <!-- <el-button size="small" class="!rounded-lg" plain type="success"
-                                        @click="showServiceModal = true">
-                                        <i class="fa-solid fa-briefcase-medical me-1"></i>
-                                        Agregar servicios
-                                    </el-button> -->
                             </div>
                         </div>
 
@@ -489,7 +483,8 @@
                                         </td>
 
                                         <td :class="row?.item?.bg" class="px-3 py-2">
-                                            {{ row?.matrix?.description }}
+                                            {{ row?.matrix?.description ??
+                                                row?.parameter?.connections_parameter?.[0]?.matrix?.description ?? '-' }}
                                         </td>
 
                                         <td :class="row?.item?.bg" class="px-3 py-2 text-slate-700">
@@ -514,7 +509,8 @@
 
                                         <td :class="row?.item?.bg" class="relative px-3 py-2 text-right">
                                             <el-button-group size="small">
-                                                <el-button v-tippy="'Cambiar valores'" class="!rounded-l-lg">
+                                                <el-button @click="changeValues(row)" v-tippy="'Cambiar valores'"
+                                                    class="!rounded-l-lg">
                                                     <i class="fa-brands fa-unity"></i>
                                                 </el-button>
                                                 <el-button @click.stop="itemDelete(index)" type="danger" plain

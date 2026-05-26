@@ -1,28 +1,7 @@
 <template>
-    <div
-        class="flex flex-col gap-4 border-b border-slate-200/80 bg-white px-5 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between lg:px-6">
-        <div class="min-w-0">
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-100">
-                    <i class="fa-regular fa-file-lines text-lg"></i>
-                </div>
-
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                        <h1 class="truncate text-lg font-bold tracking-tight text-slate-900">
-                            Gestión de Muestras
-                        </h1>
-                    </div>
-
-                    <p class="mt-0.5 truncate text-xs text-slate-500">
-                        Registro y control de cadenas de custodia, informes y muestras.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+    <custom-header title="Gestión de Muestras"
+        description="Registro y control de cadenas de custodia, informes y muestras." icon="fa-regular fa-file-lines">
+        <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
             <el-input v-model="filters.search" placeholder="Buscar razón social, cadena o informe..." clearable
                 class="!w-full sm:!w-[360px]">
                 <template #prefix>
@@ -35,10 +14,180 @@
             <el-button @click="() => {
                 dialogVisible = true
             }" type="primary"
-                class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
-                <i class="fa-regular fa-file-lines mr-2"></i>
+                class="!h-8 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
+                <!-- <i class="fa-regular fa-file-lines mr-2"></i> -->
                 Agregar Registro
             </el-button>
+        </div>
+    </custom-header>
+
+    <div class="bg-white p-5 space-y-4">
+        <el-collapse v-model="activeNames" class="filters-collapse mb-5">
+            <el-collapse-item name="1">
+                <template #title>
+                    <div class="flex w-full items-center justify-between pr-4">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-100 text-teal-600 ring-1 ring-cyan-100">
+                                <i class="fa-solid fa-filter text-sm"></i>
+                            </div>
+
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    Filtros de búsqueda
+                                </p>
+                                <p class="text-xs text-slate-400">
+                                    Refina las cotizaciones por comercial, empresa u orden generada
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <template #default>
+                </template>
+            </el-collapse-item>
+        </el-collapse>
+
+        <div class="overflow-x-auto">
+            <el-table class="border rounded-xl" stripe :data="orders" v-loading="loading"
+                header-cell-class-name="lims-table-header" size="small">
+                <el-table-column type="index" width="60" align="center" fixed="left">
+                    <template #header>N°</template>
+                </el-table-column>
+                <el-table-column width="300">
+                    <template #header>Razón Social</template>
+                    <template #default="{ row }">
+                        <p class="truncate font-semibold" v-tippy="row?.company?.business_name">{{
+                            row?.company?.business_name }}</p>
+                        <p>
+                            RUC: {{ row?.company?.ruc }}
+                        </p>
+                    </template>
+                </el-table-column>
+                <el-table-column width="300">
+                    <template #header>Solicitante</template>
+                    <template #default="{ row }">
+                        <div class="flex items-center gap-3 py-1">
+                            <div
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-slate-200">
+                                <i class="fa-solid fa-user-tie text-[10px]"></i>
+                            </div>
+
+                            <div class="min-w-0">
+                                <p class="line-clamp-2 text-xs font-semibold">
+                                    {{ row?.user?.full_name ?? '-' }}
+                                </p>
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column width="200">
+                    <template #header>N° Orden de Servicio</template>
+                    <template #default="{ row }">
+                        <p class="truncate font-semibold">
+                            {{ row.code }}
+                        </p>
+                    </template>
+                </el-table-column>
+                <el-table-column width="200">
+                    <template #header>N° Cadena de Custodia</template>
+                    <template #default="{ row }">
+
+                    </template>
+                </el-table-column>
+                <el-table-column width="200">
+                    <template #header>N° de Informe de Ensayo</template>
+                    <template #default="{ row }">
+                        <div class="space-y-1">
+                            <p class="text-sm font-semibold">
+                                {{ formatDate(row?.created_at) }}
+                            </p>
+
+                            <p class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                                <i class="fa-regular fa-clock text-[11px]"></i>
+                                {{ formatTime(row?.created_at) }}
+                            </p>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column width="140" fixed="right">
+                    <template #header>Acciones</template>
+                    <template #default="{ row }">
+                        <div class="flex items-center justify-start gap-2">
+                            <el-dropdown trigger="click" placement="bottom-end">
+                                <button type="button"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 active:scale-95">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+                                </button>
+
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item @click="downloadOrderServicePdf(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-file-pdf"></i>
+                                                <span>Descargar PDF</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item @click="downloadOrderServiceExcel(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-file-excel"></i>
+                                                <span>Descargar Excel</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item @click="onEdit(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                                <span>Editar orden</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item divided @click="onDelete(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-trash-can"></i>
+                                                <span>Eliminar orden</span>
+                                            </div>
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
+                        </div>
+                    </template>
+                    <template #empty>
+                        <div class="py-16 text-center">
+                            <div
+                                class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
+                                <i class="fa-solid fa-flask-vial text-2xl"></i>
+                            </div>
+
+                            <h3 class="mt-4 text-sm font-bold text-slate-900">
+                                No hay cotizaciones registradas
+                            </h3>
+
+                            <p class="mt-1 text-sm text-slate-500">
+                                Ajusta los filtros o registra una nueva cotización para continuar.
+                            </p>
+
+                            <el-button class="mt-4 !rounded-xl !font-semibold" plain>
+                                Limpiar filtros
+                            </el-button>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+
+        <div class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm text-slate-500">
+                Mostrando <span class="font-semibold text-slate-700">{{ orders.length }}</span> de
+                <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
+            </p>
+
+            <el-pagination background layout="prev, pager, next, sizes" :total="pagination.total"
+                v-model:page-size="pagination.per_page" v-model:current-page="pagination.current_page"
+                :page-sizes="[10, 20, 50, 100]" @change="getOrders" />
         </div>
     </div>
 
@@ -117,18 +266,6 @@
             </div>
         </div> -->
 
-        <el-collapse>
-            <el-collapse-item>
-                <template #title>
-                    <i class="fa-solid fa-filter"></i>
-                    Filtros
-                </template>
-                <div class="grid grid-cols-12">
-
-                </div>
-            </el-collapse-item>
-        </el-collapse>
-
         <div class="grid grid-cols-12">
             <div class="col-span-6 rounded-2xl border border-slate-200 bg-white p-4">
                 <div class="flex flex-col gap-3 md:flex-row md:items-end">
@@ -199,7 +336,7 @@
                 <el-table-column label="N° Cadena de Custodia" min-width="190">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.number_chain || '-' }}
+                            {{ row.number_chain || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -207,7 +344,7 @@
                 <el-table-column label="N° de Informe de Ensayo" min-width="200">
                     <template #default="{ row }">
                         <span class="font-medium text-slate-700">
-                            {{ row.content?.number_report || '-' }}
+                            {{ row.number_report || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -216,7 +353,7 @@
                     <template #default="{ row }">
                         <span
                             class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                            {{ row.content?.type_sample || '-' }}
+                            {{ row?.type_of_sample?.description || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -224,7 +361,7 @@
                 <el-table-column label="Matriz" min-width="160">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.matriz || '-' }}
+                            {{ row.matrix?.description || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -232,7 +369,7 @@
                 <el-table-column label="Muestra número N°" min-width="180">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.number_sample || '-' }}
+                            {{ row?.number_sample || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -241,7 +378,7 @@
                     <template #default="{ row }">
                         <span
                             class="inline-flex min-w-[36px] justify-center rounded-lg bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
-                            {{ row.content?.number_essays || 0 }}
+                            {{ row?.number_essays || 0 }}
                         </span>
                     </template>
                 </el-table-column>
@@ -249,7 +386,7 @@
                 <el-table-column label="Fecha y Hora de Recepción" min-width="220">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.date_reception || '-' }}
+                            {{ row?.date_reception || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -257,7 +394,8 @@
                 <el-table-column label="Fecha y Hora de Muestreo (Inicio)" min-width="240">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.date_sampling_init || '-' }}
+                            {{ row?.date_sampling_init_date || '-' }}
+                            {{ row?.date_sampling_init_time || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -265,7 +403,8 @@
                 <el-table-column label="Fecha y Hora de Muestreo (Final)" min-width="240">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.date_sampling_end || '-' }}
+                            {{ row?.date_sampling_end_date || '-' }}
+                            {{ row?.date_sampling_end_time || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -273,7 +412,7 @@
                 <el-table-column label="Fecha pactada" min-width="180">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.date_agreed || '-' }}
+                            {{ row?.date_agreed || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -281,7 +420,7 @@
                 <el-table-column label="Muestreo por" min-width="180">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.company_sampling_id || '-' }}
+                            {{ row?.company_sampling_id || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -289,7 +428,7 @@
                 <el-table-column label="Código de Laboratorio" min-width="280">
                     <template #default="{ row }">
                         <span class="font-mono text-xs text-slate-700 break-words">
-                            {{ row.content?.code_lab || '-' }}
+                            {{ row?.code_lab || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -297,7 +436,7 @@
                 <el-table-column label="Código de estación de muestreo" min-width="240">
                     <template #default="{ row }">
                         <span class="font-mono text-xs text-slate-700 break-words">
-                            {{ row.content?.code_season || '-' }}
+                            {{ row?.code_season || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -305,8 +444,8 @@
                 <el-table-column label="Condición del reporte" min-width="190">
                     <template #default="{ row }">
                         <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
-                            :class="getConditionClass(row.content?.condition_report)">
-                            {{ row.content?.condition_report || '-' }}
+                            :class="getConditionClass(rownt?.condition_report)">
+                            {{ row?.condition_report || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -314,7 +453,7 @@
                 <el-table-column label="Laboratorio Sub-Contrata" min-width="220">
                     <template #default="{ row }">
                         <span class="text-sm text-slate-700">
-                            {{ row.content?.other_company_id || '-' }}
+                            {{ row?.other_company_id || '-' }}
                         </span>
                     </template>
                 </el-table-column>
@@ -426,250 +565,183 @@
                     </div>
                 </section>
 
-                <div class="mb-4 flex items-center gap-3">
-                    <div
-                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 ring-1 ring-sky-200">
-                        <i class="fa-solid fa-link"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                            Datos de cadena de custodia
-                        </h4>
-                        <p class="text-xs text-slate-500">
-                            Datos operativos y de trazabilidad del registro.
-                        </p>
-                    </div>
-                </div>
-
-                <section class="rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">N° Cadena de custodia</label>
-                            <el-input v-model="form.number_chain" clearable size="large" placeholder="Ingrese cadena" />
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">N° Informe de ensayo</label>
-                            <el-input v-model="form.number_report" clearable size="large"
-                                placeholder="Ingrese informe" />
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">Tipo de muestra</label>
-                            <el-select v-model="form.type_of_sample_id" clearable size="large" placeholder="Seleccionar"
-                                class="w-full" filterable>
-                                <el-option :label="row.description" :value="row.id" v-for="row in typesSampling" />
-                            </el-select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">Matriz</label>
-                            <el-select v-model="form.matrix_id" clearable size="large" filterable
-                                placeholder="Seleccionar">
-                                <el-option :label="row.description" :value="row.id" v-for="row in matrixs"></el-option>
-                            </el-select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">Muestra N°</label>
-                            <el-input v-model="form.number_sample" clearable size="large" :min="1" class="w-full"
-                                placeholder="Ingrese número" />
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">N° de ensayos</label>
-                            <el-input v-model="form.number_essays" clearable size="large" :min="0" class="w-full"
-                                placeholder="Ingrese cantidad" />
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">
-                                Fecha y hora de recepción
-                            </label>
-
-                            <el-date-picker style="width: 100%;" v-model="form.date_reception" type="datetime"
-                                placeholder="Seleccionar fecha y hora" format="DD/MM/YYYY HH:mm"
-                                value-format="YYYY-MM-DD HH:mm:ss" clearable size="large" class="w-full" />
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-slate-700">
-                                    Fecha muestreo (Inicio)
-                                </label>
-
-                                <el-date-picker style="width: 100%;" v-model="form.date_sampling_init_date" type="date"
-                                    placeholder="Seleccionar fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD"
-                                    clearable size="large" class="w-full" />
+                <el-tabs type="card">
+                    <el-tab-pane>
+                        <template #label>
+                            <div class="flex items-center gap-2.5">
+                                <div
+                                    class="flex h-7 w-7 items-center justify-center rounded-xl bg-sky-50 text-sky-600 ring-1 ring-sky-200">
+                                    <i class="fa-solid fa-link text-xs"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold uppercase tracking-wide text-slate-700">
+                                        Datos de cadena de custodia
+                                    </h4>
+                                    <p class="-mt-0.5 text-[10px] text-slate-500">
+                                        Datos operativos y de trazabilidad del registro.
+                                    </p>
+                                </div>
                             </div>
+                        </template>
 
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-slate-700">
-                                    Hora muestreo (Inicio)
-                                </label>
+                        <section class="rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">N° Cadena de custodia</label>
+                                    <el-input v-model="form.number_chain" clearable size="large"
+                                        placeholder="Ingrese cadena" />
+                                </div>
 
-                                <el-time-picker style="width: 100%;" v-model="form.date_sampling_init_time"
-                                    placeholder="Seleccionar hora" format="HH:mm" value-format="HH:mm:ss" clearable
-                                    size="large" class="w-full" />
-                            </div>
-                        </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">N° Informe de ensayo</label>
+                                    <el-input v-model="form.number_report" clearable size="large"
+                                        placeholder="Ingrese informe" />
+                                </div>
 
-                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-slate-700">
-                                    Fecha muestreo (Fin)
-                                </label>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Tipo de muestra</label>
+                                    <el-select v-model="form.type_of_sample_id" clearable size="large"
+                                        placeholder="Seleccionar" class="w-full" filterable>
+                                        <el-option :label="row.description" :value="row.id"
+                                            v-for="row in typesSampling" />
+                                    </el-select>
+                                </div>
 
-                                <el-date-picker style="width: 100%;" v-model="form.date_sampling_end_date" type="date"
-                                    placeholder="Seleccionar fecha" format="DD/MM/YYYY" value-format="YYYY-MM-DD"
-                                    clearable size="large" class="w-full" />
-                            </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Matriz</label>
+                                    <el-select v-model="form.matrix_id" clearable size="large" filterable
+                                        placeholder="Seleccionar">
+                                        <el-option :label="row.description" :value="row.id"
+                                            v-for="row in matrixs"></el-option>
+                                    </el-select>
+                                </div>
 
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-slate-700">
-                                    Hora muestreo (Fin)
-                                </label>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Muestra N°</label>
+                                    <el-input v-model="form.number_sample" clearable size="large" :min="1"
+                                        class="w-full" placeholder="Ingrese número" />
+                                </div>
 
-                                <el-time-picker style="width: 100%;" v-model="form.date_sampling_end_time"
-                                    placeholder="Seleccionar hora" format="HH:mm" value-format="HH:mm:ss" clearable
-                                    size="large" class="w-full" />
-                            </div>
-                        </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">N° de ensayos</label>
+                                    <el-input v-model="form.number_essays" clearable size="large" :min="0"
+                                        class="w-full" placeholder="Ingrese cantidad" />
+                                </div>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">
-                                Fecha pactada
-                            </label>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">
+                                        Fecha y hora de recepción
+                                    </label>
 
-                            <el-date-picker style="width: 100%;" v-model="form.date_agreed" type="date"
-                                placeholder="Seleccionar fecha y hora" format="DD/MM/YYYY"
-                                value-format="YYYY-MM-DD HH:mm:ss" clearable size="large" class="w-full" />
-                        </div>
+                                    <el-date-picker style="width: 100%;" v-model="form.date_reception" type="datetime"
+                                        placeholder="Seleccionar fecha y hora" format="DD/MM/YYYY HH:mm"
+                                        value-format="YYYY-MM-DD HH:mm:ss" clearable size="large" class="w-full" />
+                                </div>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">
-                                Muestreo Por
-                            </label>
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-slate-700">
+                                            Fecha muestreo (Inicio)
+                                        </label>
 
-                            <el-select v-model="form.company_sampling_id" clearable filterable
-                                :remote-method="remoteMethodCompany" :loading="loadingCompany" class="w-full"
-                                placeholder="Selecciona una empresa" size="large">
-                                <el-option v-for="row in [
-                                    { business_name: 'CLIENTE' },
-                                    { business_name: 'GREENLAB PERÚ S.A.C.' }
-                                ]" :label="row.business_name" :value="row.business_name"></el-option>
-                            </el-select>
-                        </div>
+                                        <el-date-picker style="width: 100%;" v-model="form.date_sampling_init_date"
+                                            type="date" placeholder="Seleccionar fecha" format="DD/MM/YYYY"
+                                            value-format="YYYY-MM-DD" clearable size="large" class="w-full" />
+                                    </div>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">Código laboratorio</label>
-                            <el-input v-model="form.code_lab" clearable size="large" placeholder="Ingrese código" />
-                        </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-slate-700">
+                                            Hora muestreo (Inicio)
+                                        </label>
 
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">Código estación</label>
-                            <el-input v-model="form.code_season" clearable size="large"
-                                placeholder="Ingrese estación" />
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">Condición del reporte</label>
-                            <el-select clearable v-model="form.condition_report" size="large" placeholder="Seleccionar"
-                                class="w-full">
-                                <el-option label="Normal" value="Normal" />
-                                <el-option label="Observado" value="Observado" />
-                                <el-option label="Urgente" value="Urgente" />
-                            </el-select>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-slate-700">Laboratorio Sub-Contrata</label>
-                            <el-select v-model="form.other_company_id" clearable filterable
-                                :remote-method="remoteMethodCompany" :loading="loadingCompany" class="w-full"
-                                placeholder="Selecciona una empresa" size="large">
-                                <el-option v-for="company in companies" :key="company.id" :label="company.business_name"
-                                    :value="company.id" />
-                            </el-select>
-                        </div>
-                    </div>
-                </section>
-
-                <div class="mb-4 flex items-center gap-3">
-                    <div
-                        class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-200">
-                        <i class="fa-solid fa-file-lines"></i>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                            Detalles adicionales
-                        </h4>
-                        <p class="text-xs text-slate-500">
-                            Información complementaria del registro.
-                        </p>
-                    </div>
-                </div>
-
-                <section class="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 md:p-5">
-                    <div class="grid grid-cols-1 gap-5 md:grid-cols-12">
-                        <section
-                            class="col-span-12 md:col-span-7 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <div class="mb-4 flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-3">
-                                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-600">
-                                        <i class="fa-solid fa-list-check text-sm"></i>
-                                    </span>
-
-                                    <div>
-                                        <h3 class="text-sm font-bold text-slate-800">
-                                            Análisis requeridos
-                                        </h3>
-                                        <p class="text-xs text-slate-400">
-                                            Parámetros solicitados para la muestra
-                                        </p>
+                                        <el-time-picker style="width: 100%;" v-model="form.date_sampling_init_time"
+                                            placeholder="Seleccionar hora" format="HH:mm" value-format="HH:mm:ss"
+                                            clearable size="large" class="w-full" />
                                     </div>
                                 </div>
 
-                                <el-button size="" type="primary" plain @click="() => {
-                                    visible = true
-                                }">
-                                    [+]
-                                    Parametros
-                                </el-button>
-                            </div>
+                                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-slate-700">
+                                            Fecha muestreo (Fin)
+                                        </label>
 
-                            <div class="overflow-hidden rounded-xl border border-slate-200">
-                                <el-table :data="form.parameters" size="small" class="custom-parameter-table"
-                                    empty-text="No hay parámetros agregados">
-                                    <el-table-column label="Parámetro" min-width="220">
-                                        <template #default="{ row }">
-                                            <div class="flex items-center gap-2">
-                                                <span
-                                                    class="grid h-7 w-7 place-items-center rounded-lg bg-slate-100 text-slate-500">
-                                                    <i class="fa-solid fa-vial text-xs"></i>
-                                                </span>
+                                        <el-date-picker style="width: 100%;" v-model="form.date_sampling_end_date"
+                                            type="date" placeholder="Seleccionar fecha" format="DD/MM/YYYY"
+                                            value-format="YYYY-MM-DD" clearable size="large" class="w-full" />
+                                    </div>
 
-                                                <el-input :model-value="row.description" readonly
-                                                    class="parameter-input" />
-                                            </div>
-                                        </template>
-                                    </el-table-column>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-slate-700">
+                                            Hora muestreo (Fin)
+                                        </label>
 
-                                    <el-table-column label="Acción" width="95" align="center">
-                                        <template #default="scope">
-                                            <el-tooltip content="Eliminar parámetro" placement="top">
-                                                <el-button @click="remove(scope.$index)" type="danger" plain circle
-                                                    class="!h-8 !w-8 !rounded-xl hover:scale-105 transition-all duration-200">
-                                                    <i class="fa-regular fa-trash-can text-sm"></i>
-                                                </el-button>
-                                            </el-tooltip>
-                                        </template>
-                                    </el-table-column>
-                                </el-table>
+                                        <el-time-picker style="width: 100%;" v-model="form.date_sampling_end_time"
+                                            placeholder="Seleccionar hora" format="HH:mm" value-format="HH:mm:ss"
+                                            clearable size="large" class="w-full" />
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">
+                                        Fecha pactada
+                                    </label>
+
+                                    <el-date-picker style="width: 100%;" v-model="form.date_agreed" type="date"
+                                        placeholder="Seleccionar fecha y hora" format="DD/MM/YYYY"
+                                        value-format="YYYY-MM-DD HH:mm:ss" clearable size="large" class="w-full" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">
+                                        Muestreo Por
+                                    </label>
+
+                                    <el-select v-model="form.company_sampling_id" clearable filterable
+                                        :remote-method="remoteMethodCompany" :loading="loadingCompany" class="w-full"
+                                        placeholder="Selecciona una empresa" size="large">
+                                        <el-option v-for="row in [
+                                            { business_name: 'CLIENTE' },
+                                            { business_name: 'GREENLAB PERÚ S.A.C.' }
+                                        ]" :label="row.business_name" :value="row.business_name"></el-option>
+                                    </el-select>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Código laboratorio</label>
+                                    <el-input v-model="form.code_lab" clearable size="large"
+                                        placeholder="Ingrese código" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Código estación</label>
+                                    <el-input v-model="form.code_season" clearable size="large"
+                                        placeholder="Ingrese estación" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Condición del reporte</label>
+                                    <el-select clearable v-model="form.condition_report" size="large"
+                                        placeholder="Seleccionar" class="w-full">
+                                        <el-option label="Normal" value="Normal" />
+                                        <el-option label="Observado" value="Observado" />
+                                        <el-option label="Urgente" value="Urgente" />
+                                    </el-select>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Laboratorio Sub-Contrata</label>
+                                    <el-select v-model="form.other_company_id" clearable filterable
+                                        :remote-method="remoteMethodCompany" :loading="loadingCompany" class="w-full"
+                                        placeholder="Selecciona una empresa" size="large">
+                                        <el-option v-for="company in companies" :key="company.id"
+                                            :label="company.business_name" :value="company.id" />
+                                    </el-select>
+                                </div>
                             </div>
                         </section>
 
-                        <section
-                            class="col-span-12 md:col-span-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <section class="mt-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                             <div class="mb-4 flex items-center gap-3">
                                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-amber-50 text-amber-600">
                                     <i class="fa-regular fa-note-sticky text-sm"></i>
@@ -688,8 +760,120 @@
                             <el-input v-model="form.observations" type="textarea" :rows="7" resize="none"
                                 placeholder="Ingrese observaciones..." class="custom-textarea" />
                         </section>
-                    </div>
-                </section>
+                    </el-tab-pane>
+                    <el-tab-pane>
+                        <template #label>
+                            <div class="flex items-center gap-2.5">
+                                <div
+                                    class="flex h-7 w-7 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-1 ring-violet-200">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold uppercase tracking-wide text-slate-700">
+                                        Detalles adicionales
+                                    </h4>
+                                    <p class="-mt-0.5 text-[10px] text-slate-500">
+                                        Información complementaria del registro.
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+                        <section class="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 md:p-5">
+                            <div class="grid grid-cols-1 gap-5 md:grid-cols-12">
+                                <section class="col-span-12 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                    <div class="mb-4 flex items-center justify-between gap-3">
+                                        <div class="flex items-center gap-3">
+                                            <span
+                                                class="grid h-9 w-9 place-items-center rounded-xl bg-blue-50 text-blue-600">
+                                                <i class="fa-solid fa-list-check text-sm"></i>
+                                            </span>
+
+                                            <div>
+                                                <h3 class="text-sm font-bold text-slate-800">
+                                                    Análisis requeridos
+                                                </h3>
+                                                <p class="text-xs text-slate-400">
+                                                    Parámetros solicitados para la muestra
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <el-button size="" class="!rounded-lg" type="primary" plain @click="() => {
+                                            visible = true
+                                        }">
+                                            [+]
+                                            Parametros
+                                        </el-button>
+                                    </div>
+
+                                    <div class="overflow-hidden rounded-xl border border-slate-200">
+                                        <el-table :data="form.parameters" size="small" class="custom-parameter-table"
+                                            empty-text="No hay parámetros agregados">
+                                            <el-table-column label="Acreditación" width="120">
+                                                <template #default="{ row }">
+                                                    <div class="flex items-center gap-2">
+                                                        {{ row?.condition?.description }}
+                                                    </div>
+                                                </template>
+                                            </el-table-column>
+
+                                            <el-table-column label="Parámetro" min-width="220">
+                                                <template #default="{ row }">
+                                                    <div class="flex items-center gap-2">
+                                                        <span
+                                                            class="grid h-7 w-7 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                                                            <i class="fa-solid fa-vial text-xs"></i>
+                                                        </span>
+
+                                                        {{ row?.parameter?.description }}
+                                                    </div>
+                                                </template>
+                                            </el-table-column>
+
+                                            <el-table-column label="Unidad de Medida" min-width="220">
+                                                <template #default="{ row }">
+                                                    <div class="flex items-center gap-2">
+                                                        <span
+                                                            class="grid h-7 w-7 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                                                            <i class="fa-solid fa-ruler-combined text-xs"></i>
+                                                        </span>
+
+                                                        {{ row?.unit_measurement?.description }}
+                                                    </div>
+                                                </template>
+                                            </el-table-column>
+
+                                            <el-table-column label="LCM" min-width="120">
+                                                <template #default="{ row }">
+                                                    <div class="flex items-center gap-2">
+                                                        <span
+                                                            class="grid h-7 w-7 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                                                            <i class="fa-solid fa-gauge-simple-high text-xs"></i>
+                                                        </span>
+
+                                                        {{ row?.lcm }}
+                                                    </div>
+                                                </template>
+                                            </el-table-column>
+
+                                            <el-table-column label="Acción" width="95" align="center">
+                                                <template #default="scope">
+                                                    <el-tooltip content="Eliminar parámetro" placement="top">
+                                                        <el-button @click="remove(scope.$index)" type="danger" plain
+                                                            circle
+                                                            class="!h-8 !w-8 !rounded-xl hover:scale-105 transition-all duration-200">
+                                                            <i class="fa-regular fa-trash-can text-sm"></i>
+                                                        </el-button>
+                                                    </el-tooltip>
+                                                </template>
+                                            </el-table-column>
+                                        </el-table>
+                                    </div>
+                                </section>
+                            </div>
+                        </section>
+                    </el-tab-pane>
+                </el-tabs>
             </div>
         </div>
 
@@ -716,16 +900,10 @@
         </template>
     </el-dialog>
 
-    <select-type :number_chain="filters.number_chain" :visible="visibleSelectType" @close="() => {
-        visibleSelectType = false
-    }" />
-
-    <confirm-dialog ref="confirmRef" />
-
-    <el-dialog v-model="visible" width="820px" class="!rounded-2xl" destroy-on-close>
+    <el-dialog v-model="visible" width="1020px" align-center class="!rounded-2xl" destroy-on-close>
         <template #header>
             <div class="flex items-start gap-3">
-                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
+                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500">
                     <i class="fa-solid fa-sliders"></i>
                 </div>
 
@@ -733,7 +911,7 @@
                     <h2 class="text-lg font-semibold text-slate-800">
                         Seleccionar parámetros
                     </h2>
-                    <p class="text-sm text-slate-500">
+                    <p class="-mt-2 text-sm text-slate-500">
                         Busca y revisa los parámetros disponibles.
                     </p>
                 </div>
@@ -743,10 +921,6 @@
         <div class="space-y-4">
             <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 shadow-sm">
                 <div class="mb-4 flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-600">
-                        <i class="fa-solid fa-filter"></i>
-                    </div>
-
                     <div>
                         <h3 class="text-sm font-bold text-slate-800">
                             Filtros de búsqueda
@@ -758,11 +932,10 @@
                 </div>
 
                 <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-12 md:col-span-4">
+                    <div class="col-span-12 md:col-span-3">
                         <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
-                            <div
-                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                                <i class="fa-solid fa-layer-group text-xs"></i>
+                            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100">
+                                <i class="fa-solid fa-certificate text-teal-500 text-xs"></i>
                             </div>
                             <span>Acreditación</span>
                         </div>
@@ -776,7 +949,43 @@
                         </el-select>
                     </div>
 
-                    <div class="col-span-12 md:col-span-4">
+                    <div class="col-span-12 md:col-span-3">
+                        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <div
+                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                                <i class="fa-solid fa-layer-group text-xs"></i>
+                            </div>
+                            <span>Tipo de muestra</span>
+                        </div>
+                        <el-select disabled v-model="form.type_of_sample_id" clearable filterable size="large"
+                            placeholder="Seleccionar tipo" class="w-full">
+                            <template #prefix>
+                                <i class="fa-solid fa-tags text-slate-400"></i>
+                            </template>
+                            <el-option :label="row.description" :value="row.id"
+                                v-for="row in typesSampling"></el-option>
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-3">
+                        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <div
+                                class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                                <i class="fa-solid fa-layer-group text-xs"></i>
+                            </div>
+                            <span>Matriz</span>
+                        </div>
+
+                        <el-select disabled v-model="form.matrix_id" clearable filterable size="large"
+                            placeholder="Seleccionar tipo" class="w-full">
+                            <template #prefix>
+                                <i class="fa-solid fa-tags text-slate-400"></i>
+                            </template>
+                            <el-option :label="row.description" :value="row.id" v-for="row in matrixs"></el-option>
+                        </el-select>
+                    </div>
+
+                    <div class="col-span-12 md:col-span-3">
                         <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
                             <div
                                 class="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
@@ -795,10 +1004,10 @@
             </div>
 
             <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <el-table v-loading="loadingParameter" :data="parameters" height="420" stripe
+                <el-table size="small" v-loading="loadingParameter" :data="parameters" height="280" stripe
                     empty-text="No se encontraron parámetros" class="parameter-table" @row-click="toggleItem"
                     :row-class-name="tableRowClassName">
-                    <el-table-column label="" width="70" align="center">
+                    <el-table-column fixed="left" label="" width="70" align="center">
                         <template #default="{ row }">
                             <div class="mx-auto flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200"
                                 :class="isSelected(row)
@@ -809,10 +1018,9 @@
                         </template>
                     </el-table-column>
 
-                    <el-table-column min-width="300">
+                    <el-table-column min-width="140">
                         <template #header>
                             <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-flask text-cyan-600"></i>
                                 <span>Acreditación</span>
                             </div>
                         </template>
@@ -828,10 +1036,10 @@
                         </template>
                     </el-table-column>
 
-                    <el-table-column min-width="300">
+                    <el-table-column min-width="240">
                         <template #header>
                             <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-flask text-cyan-600"></i>
+                                <i class="fa-solid fa-vial text-cyan-600"></i>
                                 <span>Parámetro</span>
                             </div>
                         </template>
@@ -846,6 +1054,101 @@
                                 <div class="flex flex-col">
                                     <span class="text-sm font-semibold text-slate-700">
                                         {{ row?.parameter?.description || 'Sin descripción' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column min-width="300">
+                        <template #header>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-flask-vial text-indigo-600"></i>
+                                <span>Ensayo</span>
+                            </div>
+                        </template>
+
+                        <template #default="{ row }">
+                            <div class="flex items-center gap-3 py-1">
+                                <div
+                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                                    <i class="fa-solid fa-vial-circle-check text-sm"></i>
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-slate-700">
+                                        {{ row?.reference?.code || 'Sin descripción' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column min-width="300">
+                        <template #header>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-microscope text-purple-600"></i>
+                                <span>Metodología</span>
+                            </div>
+                        </template>
+
+                        <template #default="{ row }">
+                            <div class="flex items-center gap-3 py-1">
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-slate-700">
+                                        {{ row?.reference?.title || 'Sin descripción' }}
+                                    </span>
+                                    <p v-if="row?.type" class="text-xs text-slate-400 mt-0.5">
+                                        Tipo: {{ row?.type }}
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column min-width="200">
+                        <template #header>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-ruler-combined text-orange-600"></i>
+                                <span>Unidad</span>
+                            </div>
+                        </template>
+
+                        <template #default="{ row }">
+                            <div class="flex items-center gap-3 py-1">
+                                <div
+                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                                    <i class="fa-solid fa-ruler-combined text-sm"></i>
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-slate-700">
+                                        {{ row?.unit_measurement?.description || row?.unitMeasurement?.description ||
+                                            'Sin descripción' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </template>
+                    </el-table-column>
+
+                    <el-table-column min-width="140">
+                        <template #header>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-gauge-simple-high text-rose-600"></i>
+                                <span>LCM</span>
+                            </div>
+                        </template>
+
+                        <template #default="{ row }">
+                            <div class="flex items-center gap-3 py-1">
+                                <div
+                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                                    <i class="fa-solid fa-gauge-simple-high text-sm"></i>
+                                </div>
+
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-slate-700">
+                                        {{ row?.lcm || 'Sin descripción' }}
                                     </span>
                                 </div>
                             </div>
@@ -877,10 +1180,16 @@
                 <el-pagination background small layout="prev, pager, next" :total="paginationParameter.total"
                     v-model:page-size="paginationParameter.per_page"
                     v-model:current-page="paginationParameter.current_page"
-                    @current-change="(page) => listStore.getParameters(page, form.matrix_id, form.type_of_sample_id, condition, type_of_analysis)" />
+                    @current-change="(page) => listStore.getParameters(page, form.matrix_id, form.type_of_sample_id, condition, type_of_analysis, form.order_id)" />
             </div>
         </div>
     </el-dialog>
+
+    <select-type :number_chain="filters.number_chain" :visible="visibleSelectType" @close="() => {
+        visibleSelectType = false
+    }" />
+
+    <confirm-dialog ref="confirmRef" />
 </template>
 
 <script setup>
@@ -893,6 +1202,7 @@ import tenant from '../../../stores/tenant';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
 import SelectType from './modals/SelectType.vue';
 import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
+import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 
 const { width: windowWidth } = useWindowSize();
 
@@ -1009,7 +1319,7 @@ const emptyForm = () => ({
     company_sampling_id: null,
     code_lab: null,
     code_season: null,
-    condition_report: null,
+    condition_report: 'Normal',
     other_company_id: null,
     parameters: [],
     observations: null,
@@ -1282,7 +1592,7 @@ watch(() => form.type_of_sample_id, async () => {
 watch(
     () => [form.matrix_id, form.type_of_sample_id, condition.value, type_of_analysis.value],
     ([matrixId, typeOfSampleId, conditionId, type_of_analysisId]) => {
-        listStore.getParameters(1, matrixId, typeOfSampleId, conditionId, type_of_analysisId)
+        listStore.getParameters(1, matrixId, typeOfSampleId, conditionId, type_of_analysisId, form.order_id)
     }
 )
 
@@ -1373,7 +1683,7 @@ onMounted(async () => {
 }
 
 .custom-textarea :deep(.el-textarea__inner:focus) {
-    border-color: #f59e0b;
+    /* border-color: #f59e0b; */
     box-shadow: 0 0 0 4px #fef3c7;
 }
 
@@ -1418,5 +1728,9 @@ onMounted(async () => {
 
 :deep(.lims-table .el-table__row) {
     cursor: pointer;
+}
+
+:deep(.el-select__wrapper) {
+    border-radius: 12px !important;
 }
 </style>

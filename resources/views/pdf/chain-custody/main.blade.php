@@ -129,14 +129,13 @@
 </head>
 
 <body>
-
     <div class="header">
         <table class="header-table">
             <tr>
                 <td>
                     <div class="">
                         <img src="{{ storage_path('app/public/logos/logo.jpg') }}" alt="logo" class="logo"
-                            width="200px" height="75px">
+                            width="170px" height="75px">
                     </div>
                 </td>
                 <td class="meta">
@@ -169,12 +168,12 @@
         <tr>
             <td class="info-label">Matriz</td>
             <td class="info-separator">:</td>
-            <td class="info-value">{{ $matriz ?? '' }}</td>
+            <td class="info-value">{{ $matrix ?? '' }}</td>
         </tr>
         <tr>
             <td class="info-label">Fecha de entrega</td>
             <td class="info-separator">:</td>
-            <td class="info-value">{{ $date_agreed ?? '' }}</td>
+            <td class="info-value">{{ $delivery_date ?? '' }}</td>
         </tr>
         <tr>
             <td class="info-label">Hora</td>
@@ -191,22 +190,22 @@
         <thead>
             <tr>
                 <th>Código de Laboratorio<br>(muestras)</th>
-                <th colspan="{{ max(($maxColumns ?? 1) - 1, 1) }}">
+                <th colspan={{ $maxColumns }}">
                     Análisis Requeridos
                 </th>
             </tr>
         </thead>
 
         <tbody>
-            @forelse ($rows as $row)
+            @forelse ($parameters as $param)
                 <tr>
-                    @foreach ($row as $cell)
-                        <td>
-                            {{ $cell ?? '-' }}
-                        </td>
+                    <td>{{ $param['cod_lab'] ?? '-' }}</td>
+
+                    @foreach ($param['parameters'] ?? [] as $row)
+                        <td>{{ $row['parameter']['description'] ?? '-' }}</td>
                     @endforeach
 
-                    @for ($i = count($row); $i < $maxColumns; $i++)
+                    @for ($i = count($param['parameters'] ?? []); $i < ($maxColumns ?? 2) - 1; $i++)
                         <td>-</td>
                     @endfor
                 </tr>

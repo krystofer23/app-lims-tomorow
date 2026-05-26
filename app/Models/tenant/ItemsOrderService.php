@@ -24,7 +24,7 @@ class ItemsOrderService extends TenantModel
 
     protected $casts = [
         'created_at' => LocalTimezone::class,
-        'item' => 'json'
+        'item' => 'array'
     ];
 
     public function orderService(): BelongsTo

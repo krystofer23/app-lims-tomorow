@@ -104,7 +104,6 @@
             vertical-align: top;
         }
 
-        /* Fallback visual merge for long blocks that may cross pages in DomPDF */
         .merge-start {
             vertical-align: top;
             border-bottom: none !important;
@@ -196,70 +195,28 @@
 
             @foreach ($group['items'] as $matriz)
                 @php
-                    $matrizDescription = data_get($matriz, 'item.matrix.description', '-');
-                    $essayDescription = data_get($matriz, 'item.parameter.description', '-');
+                    $matrizDescription = $matriz->matrix_description_resolved ?? 'Sin matriz';
+                    $essayDescription = $matriz->essay_description_resolved ?? '-';
+                    $methodology = $matriz->methodology_resolved ?? '-';
+                    $lcm = $matriz->lcm_resolved ?? '-';
+                    $unit = $matriz->unit_resolved ?? '-';
+                    $samples = $matriz->samples_resolved ?? '-';
+                    $condition = $matriz->condition_resolved ?? '-';
 
-                    $methodologyCode = data_get($matriz, 'item.reference.code', '');
-                    $methodologyTitle = data_get($matriz, 'item.reference.title', '');
-
-                    $methodology = trim($methodologyCode . ' - ' . $methodologyTitle);
-                    $methodology = $methodology !== '-' && $methodology !== '' ? $methodology : '-';
-
-                    $lcm = data_get($matriz, 'item.lcm', '-');
-                    $unit = data_get($matriz, 'item.unit_measurement.description', '-');
-                    $samples = data_get($matriz, 'item.number_samples', $matriz->amount ?? '-');
-                    $condition = data_get($matriz, 'item.condition.description', '-');
-
-                    $priceUnitFmt = number_format(
-                        (float) ($matriz->price_unit ?? data_get($matriz, 'item.unit_price', 0)),
-                        2,
-                        ',',
-                        '.',
-                    );
-                    $totalFmt = number_format(
-                        (float) ($matriz->total ?? data_get($matriz, 'item.price', 0)),
-                        2,
-                        ',',
-                        '.',
-                    );
+                    $priceUnitFmt = number_format((float) ($matriz->price_unit_resolved ?? 0), 2, ',', '.');
+                    $totalFmt = number_format((float) ($matriz->total_resolved ?? 0), 2, ',', '.');
                 @endphp
 
                 <tr>
-                    <td style="vertical-align: top;">
-                        {{ $matrizDescription }}
-                    </td>
-
-                    <td>
-                        {{ $essayDescription }}
-                    </td>
-
-                    <td colspan="2">
-                        {{ $methodology }}
-                    </td>
-
-                    <td>
-                        {{ $lcm }}
-                    </td>
-
-                    <td>
-                        {{ $unit }}
-                    </td>
-
-                    <td class="text-center">
-                        {{ $samples }}
-                    </td>
-
-                    <td>
-                        {{ $condition }}
-                    </td>
-
-                    <td class="text-right">
-                        {{ $priceUnitFmt }}
-                    </td>
-
-                    <td class="text-right">
-                        {{ $totalFmt }}
-                    </td>
+                    <td style="vertical-align: top;">{{ $matrizDescription }}</td>
+                    <td>{{ $essayDescription }}</td>
+                    <td colspan="2">{{ $methodology }}</td>
+                    <td>{{ $lcm }}</td>
+                    <td>{{ $unit }}</td>
+                    <td class="text-center">{{ $samples }}</td>
+                    <td>{{ $condition }}</td>
+                    <td class="text-right">{{ $priceUnitFmt }}</td>
+                    <td class="text-right">{{ $totalFmt }}</td>
                 </tr>
             @endforeach
 
