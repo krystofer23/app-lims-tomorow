@@ -49,223 +49,6 @@
             </el-collapse-item>
         </el-collapse>
 
-        <div class="overflow-x-auto">
-            <el-table class="border rounded-xl" stripe :data="orders" v-loading="loading"
-                header-cell-class-name="lims-table-header" size="small">
-                <el-table-column type="index" width="60" align="center" fixed="left">
-                    <template #header>N°</template>
-                </el-table-column>
-                <el-table-column width="300">
-                    <template #header>Razón Social</template>
-                    <template #default="{ row }">
-                        <p class="truncate font-semibold" v-tippy="row?.company?.business_name">{{
-                            row?.company?.business_name }}</p>
-                        <p>
-                            RUC: {{ row?.company?.ruc }}
-                        </p>
-                    </template>
-                </el-table-column>
-                <el-table-column width="300">
-                    <template #header>Solicitante</template>
-                    <template #default="{ row }">
-                        <div class="flex items-center gap-3 py-1">
-                            <div
-                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-slate-200">
-                                <i class="fa-solid fa-user-tie text-[10px]"></i>
-                            </div>
-
-                            <div class="min-w-0">
-                                <p class="line-clamp-2 text-xs font-semibold">
-                                    {{ row?.user?.full_name ?? '-' }}
-                                </p>
-                            </div>
-                        </div>
-                    </template>
-                </el-table-column>
-                <el-table-column width="200">
-                    <template #header>N° Orden de Servicio</template>
-                    <template #default="{ row }">
-                        <p class="truncate font-semibold">
-                            {{ row.code }}
-                        </p>
-                    </template>
-                </el-table-column>
-                <el-table-column width="200">
-                    <template #header>N° Cadena de Custodia</template>
-                    <template #default="{ row }">
-
-                    </template>
-                </el-table-column>
-                <el-table-column width="200">
-                    <template #header>N° de Informe de Ensayo</template>
-                    <template #default="{ row }">
-                        <div class="space-y-1">
-                            <p class="text-sm font-semibold">
-                                {{ formatDate(row?.created_at) }}
-                            </p>
-
-                            <p class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                                <i class="fa-regular fa-clock text-[11px]"></i>
-                                {{ formatTime(row?.created_at) }}
-                            </p>
-                        </div>
-                    </template>
-                </el-table-column>
-                <el-table-column width="140" fixed="right">
-                    <template #header>Acciones</template>
-                    <template #default="{ row }">
-                        <div class="flex items-center justify-start gap-2">
-                            <el-dropdown trigger="click" placement="bottom-end">
-                                <button type="button"
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 active:scale-95">
-                                    <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
-                                </button>
-
-                                <template #dropdown>
-                                    <el-dropdown-menu>
-                                        <el-dropdown-item @click="downloadOrderServicePdf(row)">
-                                            <div class="flex items-center gap-2 text-sm">
-                                                <i class="fa-regular fa-file-pdf"></i>
-                                                <span>Descargar PDF</span>
-                                            </div>
-                                        </el-dropdown-item>
-
-                                        <el-dropdown-item @click="downloadOrderServiceExcel(row)">
-                                            <div class="flex items-center gap-2 text-sm">
-                                                <i class="fa-regular fa-file-excel"></i>
-                                                <span>Descargar Excel</span>
-                                            </div>
-                                        </el-dropdown-item>
-
-                                        <el-dropdown-item @click="onEdit(row)">
-                                            <div class="flex items-center gap-2 text-sm">
-                                                <i class="fa-regular fa-pen-to-square"></i>
-                                                <span>Editar orden</span>
-                                            </div>
-                                        </el-dropdown-item>
-
-                                        <el-dropdown-item divided @click="onDelete(row)">
-                                            <div class="flex items-center gap-2 text-sm">
-                                                <i class="fa-regular fa-trash-can"></i>
-                                                <span>Eliminar orden</span>
-                                            </div>
-                                        </el-dropdown-item>
-                                    </el-dropdown-menu>
-                                </template>
-                            </el-dropdown>
-                        </div>
-                    </template>
-                    <template #empty>
-                        <div class="py-16 text-center">
-                            <div
-                                class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
-                                <i class="fa-solid fa-flask-vial text-2xl"></i>
-                            </div>
-
-                            <h3 class="mt-4 text-sm font-bold text-slate-900">
-                                No hay cotizaciones registradas
-                            </h3>
-
-                            <p class="mt-1 text-sm text-slate-500">
-                                Ajusta los filtros o registra una nueva cotización para continuar.
-                            </p>
-
-                            <el-button class="mt-4 !rounded-xl !font-semibold" plain>
-                                Limpiar filtros
-                            </el-button>
-                        </div>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </div>
-
-        <div class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-sm text-slate-500">
-                Mostrando <span class="font-semibold text-slate-700">{{ orders.length }}</span> de
-                <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
-            </p>
-
-            <el-pagination background layout="prev, pager, next, sizes" :total="pagination.total"
-                v-model:page-size="pagination.per_page" v-model:current-page="pagination.current_page"
-                :page-sizes="[10, 20, 50, 100]" @change="getOrders" />
-        </div>
-    </div>
-
-    <div class="bg-white p-5 md:p-6 space-y-6">
-        <!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div
-                class="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-slate-500">Total registros</p>
-                        <h3 class="mt-2 text-3xl font-bold text-slate-800">
-                            {{ pagination.total }}
-                        </h3>
-                    </div>
-                    <div
-                        class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-600 group-hover:bg-slate-200 transition">
-                        <i class="fa-solid fa-database text-lg"></i>
-                    </div>
-                </div>
-
-                <div class="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-slate-100 opacity-40"></div>
-            </div>
-
-            <div
-                class="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-slate-500">Muestras Aire</p>
-                        <h3 class="mt-2 text-3xl font-bold text-sky-600">
-
-                        </h3>
-                    </div>
-                    <div
-                        class="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100 text-sky-600 group-hover:bg-sky-200 transition">
-                        <i class="fa-solid fa-wind text-lg"></i>
-                    </div>
-                </div>
-
-                <div class="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-sky-100 opacity-40"></div>
-            </div>
-
-            <div
-                class="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-slate-500">Muestras Suelo</p>
-                        <h3 class="mt-2 text-3xl font-bold text-emerald-600">
-
-                        </h3>
-                    </div>
-                    <div
-                        class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200 transition">
-                        <i class="fa-solid fa-seedling text-lg"></i>
-                    </div>
-                </div>
-
-                <div class="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-emerald-100 opacity-40"></div>
-            </div>
-
-            <div
-                class="group relative overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition hover:shadow-md">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-slate-500">Condición Normal</p>
-                        <h3 class="mt-2 text-3xl font-bold text-violet-600">
-
-                        </h3>
-                    </div>
-                    <div
-                        class="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-600 group-hover:bg-violet-200 transition">
-                        <i class="fa-solid fa-circle-check text-lg"></i>
-                    </div>
-                </div>
-
-                <div class="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-violet-100 opacity-40"></div>
-            </div>
-        </div> -->
-
         <div class="grid grid-cols-12">
             <div class="col-span-6 rounded-2xl border border-slate-200 bg-white p-4">
                 <div class="flex flex-col gap-3 md:flex-row md:items-end">
@@ -295,60 +78,58 @@
         </div>
 
         <div class="overflow-x-auto">
-            <el-table :data="receptions" v-loading="loading" stripe :header-cell-style="headerStyle"
-                :row-class-name="rowClassName" class="custom-table w-full" table-layout="auto">
-                <el-table-column fixed="left">
+            <el-table class="border rounded-xl" stripe :data="receptions" v-loading="loading"
+                header-cell-class-name="lims-table-header" size="small">
+                <el-table-column type="index" width="60" align="center" fixed="left">
+                    <template #header>N°</template>
+                </el-table-column>
+                <el-table-column width="300">
+                    <template #header>Razón Social</template>
                     <template #default="{ row }">
-                        <el-button v-tippy="'Replicar'" size="small" type="warning" plain @click="toReply(row)">
-                            <i class="fa-solid fa-repeat"></i>
-                        </el-button>
+                        <p class="truncate font-semibold" v-tippy="row?.company?.business_name">{{
+                            row?.company?.business_name }}</p>
+                        <p>
+                            RUC: {{ row?.company?.ruc }}
+                        </p>
                     </template>
                 </el-table-column>
-
-                <el-table-column label="Razón Social" min-width="220">
+                <el-table-column width="300">
+                    <template #header>Solicitante</template>
                     <template #default="{ row }">
-                        <div class="min-w-0">
-                            <p class="font-semibold text-slate-800 text-xs max-w-[140px]">
-                                {{ row.company?.business_name || '-' }}
-                            </p>
+                        <div class="flex items-center gap-3 py-1">
+                            <!-- <div
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-slate-200">
+                                <i class="fa-solid fa-user-tie text-[10px]"></i>
+                            </div> -->
+
+                            <div class="min-w-0">
+                                <p class="line-clamp-2 text-xs font-semibold">
+                                    {{ row?.application?.business_name ?? '-' }}
+                                </p>
+                            </div>
                         </div>
                     </template>
                 </el-table-column>
-
-                <el-table-column label="Solicitante" min-width="220">
+                <el-table-column width="200">
+                    <template #header>N° Orden de Servicio</template>
                     <template #default="{ row }">
-                        <div class="min-w-0">
-                            <p class="font-semibold text-slate-800 text-xs max-w-[140px]">
-                                {{ row.application?.business_name || '-' }}
-                            </p>
-                        </div>
+                        <p class="truncate font-semibold">
+                            {{ row?.order?.code }}
+                        </p>
                     </template>
                 </el-table-column>
-
-                <el-table-column label="N° Orden de Servicio" min-width="190">
+                <el-table-column width="200">
+                    <template #header>N° Cadena de Custodia</template>
                     <template #default="{ row }">
-                        <span class="inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-                            {{ row.order?.code || '-' }}
-                        </span>
+                        {{ row?.number_chain }}
                     </template>
                 </el-table-column>
-
-                <el-table-column label="N° Cadena de Custodia" min-width="190">
+                <el-table-column width="200">
+                    <template #header>N° de Informe de Ensayo</template>
                     <template #default="{ row }">
-                        <span class="text-sm text-slate-700">
-                            {{ row.number_chain || '-' }}
-                        </span>
+                        {{ row?.number_report }}
                     </template>
                 </el-table-column>
-
-                <el-table-column label="N° de Informe de Ensayo" min-width="200">
-                    <template #default="{ row }">
-                        <span class="font-medium text-slate-700">
-                            {{ row.number_report || '-' }}
-                        </span>
-                    </template>
-                </el-table-column>
-
                 <el-table-column label="Tipo de muestra" min-width="180">
                     <template #default="{ row }">
                         <span
@@ -457,18 +238,55 @@
                         </span>
                     </template>
                 </el-table-column>
-
-                <el-table-column fixed="right" width="120" label="Acciones">
+                <el-table-column width="140" fixed="right">
+                    <template #header>Acciones</template>
                     <template #default="{ row }">
-                        <el-button-group>
-                            <el-button plain @click="handleEdit(row)" size="small" type="warning" v-tippy="'Editar'">
-                                <i class="fa-regular fa-pen-to-square"></i>
+                        <div class="flex items-center justify-start gap-2">
+                            <el-dropdown trigger="click" placement="bottom-end">
+                                <button type="button"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 active:scale-95">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+                                </button>
+
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item @click="handleEdit(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                                <span>Editar registro</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item divided @click="handleDelete(row.id)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-trash-can"></i>
+                                                <span>Eliminar registro</span>
+                                            </div>
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
+                        </div>
+                    </template>
+                    <template #empty>
+                        <div class="py-16 text-center">
+                            <div
+                                class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
+                                <i class="fa-solid fa-flask-vial text-2xl"></i>
+                            </div>
+
+                            <h3 class="mt-4 text-sm font-bold text-slate-900">
+                                No hay cotizaciones registradas
+                            </h3>
+
+                            <p class="mt-1 text-sm text-slate-500">
+                                Ajusta los filtros o registra una nueva cotización para continuar.
+                            </p>
+
+                            <el-button class="mt-4 !rounded-xl !font-semibold" plain>
+                                Limpiar filtros
                             </el-button>
-                            <el-button plain @click="handleDelete(row.id)" size="small" type="danger"
-                                v-tippy="'Eliminar'">
-                                <i class="fa-regular fa-trash-can"></i>
-                            </el-button>
-                        </el-button-group>
+                        </div>
                     </template>
                 </el-table-column>
 
@@ -737,6 +555,18 @@
                                         <el-option v-for="company in companies" :key="company.id"
                                             :label="company.business_name" :value="company.id" />
                                     </el-select>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Codigo de la muestra</label>
+                                    <el-input clearable size="large" placeholder="Ingrese el codigo de muestra"
+                                        v-model="form.code_sample" />
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-medium text-slate-700">Coordenadas (WGS-84)</label>
+                                    <el-input clearable size="large" placeholder="Ingrese las coordenadas"
+                                        type="textarea" v-model="form.coordinate" />
                                 </div>
                             </div>
                         </section>
@@ -1323,6 +1153,8 @@ const emptyForm = () => ({
     other_company_id: null,
     parameters: [],
     observations: null,
+    code_sample: null,
+    coordinate: 'E:\nN:'
 })
 
 const form = reactive(emptyForm())
@@ -1552,6 +1384,8 @@ const handleEdit = (row) => {
     form.other_company_id = row.other_company_id
     form.parameters = row.parameters
     form.observations = row.observations
+    form.code_sample = row.code_sample
+    form.coordinate = row.coordinate
 }
 
 const getOrder = async () => {
@@ -1566,6 +1400,16 @@ const getOrder = async () => {
     catch (e) {
         handleErrorsExeption(e)
     }
+}
+
+const formatDate = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("es-PE", { year: "numeric", month: "short", day: "2-digit" });
+}
+
+const formatTime = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 }
 
 watch(() => form.order_id, async (newVal) => {

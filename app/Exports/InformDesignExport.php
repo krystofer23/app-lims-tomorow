@@ -56,9 +56,9 @@ class InformDesignExport implements FromArray, WithStyles, WithColumnWidths, Wit
         $rows[4][3] = $this->mapData['direction'];
         $rows[5][3] = $this->mapData['application'];
 
-        $rows[6][3] = $this->mapData['project'];
-        $rows[7][3] = $this->mapData['origin'];
-        $rows[8][3] = $this->mapData['reference'];
+        // $rows[6][3] = $this->mapData['project'];
+        // $rows[7][3] = $this->mapData['origin'];
+        $rows[6][3] = $this->mapData['reference'];
         $rows[9][3] = $this->mapData['sampling_performed_by'];
         $rows[10][3] = $this->mapData['sample_quantity'];
         $rows[11][3] = $this->mapData['product'];
@@ -116,59 +116,21 @@ class InformDesignExport implements FromArray, WithStyles, WithColumnWidths, Wit
         $rows[45][4] = 'L.C.M.';
         $rows[45][8] = 'Resultados';
 
-        $rows[46][0] = 'CTM 022';
-        $rows[47][0] = '- Nitrogen Oxides (NOx) , as NO2';
-        $rows[47][3] = 'mg/Nm³';
-        $rows[47][4] = '2,05';
-        $rows[48][0] = '- Nitric Oxide (NO)';
-        $rows[48][3] = 'mg/Nm³';
-        $rows[48][4] = '1,34';
-        $rows[49][0] = '- Nitrogen Dioxide (NO₂)';
-        $rows[49][3] = 'mg/Nm³';
-        $rows[49][4] = '0,21';
-        $rows[50][0] = '- Hydrogen Sulfide';
-        $rows[50][3] = 'mg/Nm³';
-        $rows[50][4] = '0,15';
-        $rows[51][0] = '- Total Hydrocarbons';
-        $rows[51][3] = 'mg/Nm³';
-        $rows[51][4] = '7,14';
-        $rows[52][0] = '- Carbon Dioxide';
-        $rows[52][3] = '%';
-        $rows[52][4] = '0,01';
+        $currentRow = 46;
 
-        $rows[53][0] = 'CTM 030';
-        $rows[54][0] = '- Nitrogen Oxides (NOx) , as NO2.';
-        $rows[54][3] = 'mg/Nm³';
-        $rows[54][4] = '2,05';
-        $rows[55][0] = '- Nitric Oxide (NO).';
-        $rows[55][3] = 'mg/Nm³';
-        $rows[55][4] = '1,34';
-        $rows[56][0] = '- Nitrogen Dioxide (NO₂).';
-        $rows[56][3] = 'mg/Nm³';
-        $rows[56][4] = '0,21';
-        $rows[57][0] = '- Carbon Monoxide (CO)';
-        $rows[57][3] = 'mg/Nm³';
-        $rows[57][4] = '1,25';
-        $rows[58][0] = '- Oxygen (O₂)';
-        $rows[58][3] = '%';
-        $rows[58][4] = '0,01';
-        $rows[59][0] = '- Hydrogen Sulfide';
-        $rows[59][3] = 'mg/Nm³';
-        $rows[59][4] = '0,15';
-        $rows[60][0] = '- Total Hydrocarbons';
-        $rows[60][3] = 'mg/Nm³';
-        $rows[60][4] = '7,14';
-        $rows[61][0] = '- Carbon Dioxide';
-        $rows[61][3] = '%';
-        $rows[61][4] = '0,01';
+        foreach (($this->mapData['analysis_groups'] ?? []) as $group) {
+            $rows[$currentRow][0] = $group['type_of_analysis'] ?? 'SIN TIPO DE ENSAYO';
 
-        $rows[62][0] = 'CTM 034';
-        $rows[63][0] = '- Hydrogen Sulfide.';
-        $rows[63][3] = 'mg/Nm³';
-        $rows[63][4] = '0,15';
-        $rows[64][0] = '- Total Hydrocarbons.';
-        $rows[64][3] = 'mg/Nm³';
-        $rows[64][4] = '7,14';
+            $currentRow++;
+
+            foreach (($group['parameters'] ?? []) as $parameter) {
+                $rows[$currentRow][0] = '- ' . ($parameter['parameter'] ?? '-');
+                $rows[$currentRow][3] = $parameter['unit'] ?? '-';
+                $rows[$currentRow][4] = $parameter['lcm'] ?? '-';
+
+                $currentRow++;
+            }
+        }
 
         return $rows;
     }
@@ -306,6 +268,23 @@ class InformDesignExport implements FromArray, WithStyles, WithColumnWidths, Wit
 
                 // Área de impresión de la primera página/diseño
                 $sheet->getPageSetup()->setPrintArea('A1:L65');
+
+                $currentRow = 47;
+
+                foreach (($this->mapData['analysis_groups'] ?? []) as $group) {
+                    $sheet->getStyle("A{$currentRow}:L{$currentRow}")
+                        ->getFont()
+                        ->setBold(true);
+
+                    $this->topBorder($sheet, "A{$currentRow}:L{$currentRow}");
+                    $this->bottomBorder($sheet, "A{$currentRow}:L{$currentRow}");
+
+                    $currentRow++;
+
+                    foreach (($group['parameters'] ?? []) as $parameter) {
+                        $currentRow++;
+                    }
+                }
             },
         ];
     }

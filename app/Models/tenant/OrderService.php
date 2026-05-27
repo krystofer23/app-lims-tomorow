@@ -51,6 +51,9 @@ class OrderService extends TenantModel
         'number_copy',
         'code',
         'observations',
+        'date_exit',
+        'date_induction',
+        'date_init_monitoring',
     ];
 
     protected $casts = [
@@ -60,6 +63,9 @@ class OrderService extends TenantModel
         'date_output' => LocalTimezone::class,
         'created_at' => LocalTimezone::class,
         'date_attention' => LocalTimezone::class,
+        'date_exit' => LocalTimezone::class,
+        'date_induction' => LocalTimezone::class,
+        'date_init_monitoring' => LocalTimezone::class,
         'conditions' => 'json',
         'emision_data' => 'json',
         'users' => 'json',

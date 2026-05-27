@@ -94,6 +94,8 @@ class ReceptionApiController extends Controller
                 'other_company_id' => $input['other_company_id'] ?? null,
                 'observations' => $input['observations'] ?? null,
                 'parameters' => $input['parameters'] ?? null,
+                'code_sample' => $input['code_sample'] ?? null,
+                'coordinate' => $input['coordinate'] ?? null,
             ]);
 
             Record::create([
@@ -151,6 +153,8 @@ class ReceptionApiController extends Controller
                 'other_company_id' => $input['other_company_id'] ?? null,
                 'observations' => $input['observations'] ?? null,
                 'parameters' => $input['parameters'] ?? null,
+                'code_sample' => $input['code_sample'] ?? null,
+                'coordinate' => $input['coordinate'] ?? null,
             ]);
 
             Record::create([

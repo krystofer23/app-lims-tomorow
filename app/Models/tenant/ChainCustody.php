@@ -35,6 +35,8 @@ class ChainCustody extends TenantModel
         'other_company_id',
         'observations',
         'parameters',
+        'code_sample',
+        'coordinate',
     ];
 
     protected $casts = [

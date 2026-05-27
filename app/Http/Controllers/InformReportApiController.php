@@ -6,6 +6,7 @@ use App\Exports\InformDesignExport;
 use App\Models\tenant\ChainCustody;
 use App\Models\tenant\OrderService;
 use App\Models\tenant\OtsGenerate;
+use App\Models\tenant\TypeOfAnalysis;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -45,16 +46,10 @@ class InformReportApiController extends Controller
                 ->values()
                 ->toArray();
 
-                
-            Log::info($parameters);
-            Log::info($matrixIds);
-
             $chainCustody = ChainCustody::query()
                 ->where('order_id', $orderId)
                 ->whereIn('matrix_id', $matrixIds)
                 ->get();
-
-            Log::info($chainCustody);
 
             $sampleQuantity = $chainCustody
                 ->sum(fn($item) => (int) ($item->number_sample ?? 0));
@@ -85,6 +80,97 @@ class InformReportApiController extends Controller
             $dateOfReceipt = $dateReception[0]['date'] ?? '-';
             $timeOfReceipt = $dateReception[0]['hour'] ?? '-';
 
+            $codesLab = $chainCustody->pluck('code_lab')->filter()->values()->toArray();
+            $codesSamples = $chainCustody->pluck('code_sample')->filter()->values()->toArray();
+
+            $datesSample = $chainCustody
+                ->pluck('date_reception')
+                ->filter()
+                ->map(function ($date) {
+                    $carbon = Carbon::parse($date);
+                    return $carbon->format('Y-m-d');
+                })
+                ->values()
+                ->toArray();
+
+            $hoursSample = $chainCustody
+                ->pluck('date_reception')
+                ->filter()
+                ->map(function ($date) {
+                    $carbon = Carbon::parse($date);
+                    return $carbon->format('H:i');
+                })
+                ->values()
+                ->toArray();
+
+            $coordinates = $chainCustody->pluck('coordinate')->filter()->values()->toArray();
+
+            // Ordenear por tipo de analisis => parametros
+            // Tipo de ensayo - unidad - lcm - resultados (Lab)
+
+            $typeAnalysisIds = $parameters
+                ->map(function ($row) {
+                    $item = data_get($row, 'item', []);
+
+                    return data_get($item, 'parameter.type_of_analysis_id')
+                        ?? data_get($item, 'type_of_analysis_id');
+                })
+                ->filter()
+                ->unique()
+                ->values()
+                ->toArray();
+
+            $typeAnalysisMap = TypeOfAnalysis::whereIn('id', $typeAnalysisIds)
+                ->pluck('description', 'id')
+                ->toArray();
+
+            $analysisGroups = $parameters
+                ->map(function ($row) use ($typeAnalysisMap) {
+                    $item = data_get($row, 'item', []);
+
+                    $typeAnalysisId = data_get($item, 'parameter.type_of_analysis_id')
+                        ?? data_get($item, 'type_of_analysis_id');
+
+                    return [
+                        'type_of_analysis' =>
+                        data_get($item, 'parameter.type_of_analysis.description')
+                            ?? data_get($item, 'type_of_analysis.description')
+                            ?? ($typeAnalysisMap[$typeAnalysisId] ?? 'SIN TIPO DE ENSAYO'),
+
+                        'parameter' =>
+                        data_get($item, 'parameter.description')
+                            ?? data_get($item, 'description')
+                            ?? data_get($item, 'name')
+                            ?? '-',
+
+                        'unit' =>
+                        data_get($item, 'parameter.unit_measurement.description')
+                            ?? data_get($item, 'unit_measurement.description')
+                            ?? data_get($item, 'unit')
+                            ?? '-',
+
+                        'lcm' =>
+                        data_get($item, 'parameter.lcm')
+                            ?? data_get($item, 'lcm')
+                            ?? '-',
+                    ];
+                })
+                ->groupBy('type_of_analysis')
+                ->map(function ($items, $typeOfAnalysis) {
+                    return [
+                        'type_of_analysis' => $typeOfAnalysis,
+                        'parameters' => $items->map(function ($item) {
+                            return [
+                                'parameter' => $item['parameter'],
+                                'unit' => $item['unit'],
+                                'lcm' => $item['lcm'],
+                            ];
+                        })->values()->toArray(),
+                    ];
+                })
+                ->values()
+                ->toArray();
+
             $mapData = [
                 'company' => $order?->company?->business_name,
                 'direction' => $order?->direction,
@@ -100,6 +186,16 @@ class InformReportApiController extends Controller
                 'time_of_receipt' => $timeOfReceipt,
                 'test_period' => '-',
                 'date_of_issue' => '-',
+
+                'codes_lab' => $codesLab,
+                'codes_samples' => $codesSamples,
+                'dates_samples' => $datesSample,
+                'hours_samples' => $hoursSample,
+                'category' => $type,
+                'coordinates' => $coordinates,
+
+                'sampling_point_description' => '-',
+                'analysis_groups' => $analysisGroups,
             ];
 
             return Excel::download(
