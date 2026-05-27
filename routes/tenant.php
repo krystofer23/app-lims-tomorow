@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\InformReportApiController;
 use App\Http\Controllers\tenant\AuthApiController;
 use App\Http\Controllers\tenant\CompaniesApiController;
 use App\Http\Controllers\tenant\ConditionsApiController;
@@ -68,6 +69,8 @@ Route::middleware([
         });
 
         Route::middleware([JWTMiddleware::class])->group(function () {
+
+            Route::post('download-inform-report/{orderId}', [InformReportApiController::class, 'downloadDesign']);
 
             Route::controller(UbigeoApiController::class)->prefix('ubigeo')->group(function () {
 

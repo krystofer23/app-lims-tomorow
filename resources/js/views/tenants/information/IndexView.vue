@@ -73,6 +73,8 @@
         </el-collapse>
     </div>
 
+    <el-button :loading="loadingDownload" @click="downloadTest">Download Test</el-button>
+
     <el-dialog v-model="state" width="820px" class="search-os-dialog !rounded-2xl" align-center destroy-on-close>
         <template #header>
             <div class="flex items-center gap-3">
@@ -213,6 +215,8 @@ import { Plus, Search } from '@element-plus/icons-vue'
 import { useListStore } from '../../../stores/list';
 import OSViewModal from '../../../components/tenants/OSViewModal.vue';
 import { useOsViewModalStore } from '../../../stores/os-view-modal';
+import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
+import tenant from '../../../stores/tenant';
 
 const listStore = useListStore()
 const osViewModalStore = useOsViewModalStore()
@@ -249,6 +253,37 @@ const handleFormat = () => {
 const handleOs = (orderId) => {
     osViewModalStore.state = true
     osViewModalStore.orderId = orderId
+}
+
+const loadingDownload = ref(false)
+
+const downloadTest = async () => {
+    loadingDownload.value = true
+
+    try {
+        const response = await tenant.post(`/download-inform-report/7`, {
+            type: 'AGUA'
+        }, {
+            responseType: 'blob',
+        })
+
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+
+        link.href = url
+        link.setAttribute('download', 'download-inform-report.xlsx')
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+
+        window.URL.revokeObjectURL(url)
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        loadingDownload.value = false
+    }
 }
 
 onMounted(() => {
