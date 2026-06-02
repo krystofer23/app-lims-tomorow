@@ -5,6 +5,7 @@ namespace App\Models\tenant;
 use App\Casts\LocalTimezone;
 use App\Models\Tenant\User;
 use App\Models\TenantModel;
+use App\Models\tenant\LaboratoryResults;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -64,7 +65,6 @@ class OrderService extends TenantModel
         'created_at' => LocalTimezone::class,
         'date_attention' => LocalTimezone::class,
         'date_exit' => LocalTimezone::class,
-        'date_induction' => LocalTimezone::class,
         'date_init_monitoring' => LocalTimezone::class,
         'conditions' => 'json',
         'emision_data' => 'json',
@@ -81,7 +81,7 @@ class OrderService extends TenantModel
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function reviwed(): BelongsTo
+    public function validator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviwed_id');
     }
@@ -114,5 +114,10 @@ class OrderService extends TenantModel
     public function items(): HasMany
     {
         return $this->hasMany(ItemsOrderService::class, 'order_service_id', 'id');
+    }
+
+    public function results(): HasMany
+    {
+        return $this->hasMany(LaboratoryResults::class, 'order_id', 'id');
     }
 }

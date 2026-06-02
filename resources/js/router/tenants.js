@@ -189,5 +189,23 @@ export const routesTenants = [
         name: 'import-test',
         component: () => import('../views/tenants/imports/IndexView.vue'),
         meta: { scope: 'tenant' }
-    }
+    },
+    {
+        path: '/laboratory',
+        name: 'laboratory',
+        component: () => import('../views/tenants/laboratory/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/laboratory-show',
+        name: 'laboratory-show',
+        component: () => import('../views/tenants/laboratory/CreateView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/operations',
+        name: 'operations',
+        component: () => import('../views/tenants/operations/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
 ]

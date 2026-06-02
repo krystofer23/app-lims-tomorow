@@ -261,7 +261,7 @@ const downloadTest = async () => {
     loadingDownload.value = true
 
     try {
-        const response = await tenant.post(`/download-inform-report/7`, {
+        const response = await tenant.post(`/download-inform-report/9`, {
             type: 'AGUA'
         }, {
             responseType: 'blob',

@@ -10,6 +10,7 @@ use App\Http\Controllers\tenant\ConsultingRucApiController;
 use App\Http\Controllers\tenant\EssaysApiController;
 use App\Http\Controllers\tenant\ImportApiController;
 use App\Http\Controllers\tenant\ItemsApiController;
+use App\Http\Controllers\tenant\LaboratoryApiController;
 use App\Http\Controllers\tenant\ListApiController;
 use App\Http\Controllers\tenant\LogisticCatsApiController;
 use App\Http\Controllers\tenant\MatrizApiController;
@@ -71,6 +72,10 @@ Route::middleware([
         Route::middleware([JWTMiddleware::class])->group(function () {
 
             Route::post('download-inform-report/{orderId}', [InformReportApiController::class, 'downloadDesign']);
+
+            Route::get('lab-orders-show/{orderId}', [LaboratoryApiController::class, 'show']);
+            Route::post('lab-orders-store', [LaboratoryApiController::class, 'store']);
+            Route::get('lab-orders', [LaboratoryApiController::class, 'orders']);
 
             Route::controller(UbigeoApiController::class)->prefix('ubigeo')->group(function () {
 

@@ -7,6 +7,7 @@ use App\Models\tenant\ChainCustody;
 use App\Models\tenant\OrderService;
 use App\Models\tenant\OtsGenerate;
 use App\Models\tenant\TypeOfAnalysis;
+use App\Models\tenant\LaboratoryResults;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -80,30 +81,29 @@ class InformReportApiController extends Controller
             $dateOfReceipt = $dateReception[0]['date'] ?? '-';
             $timeOfReceipt = $dateReception[0]['hour'] ?? '-';
 
-            $codesLab = $chainCustody->pluck('code_lab')->filter()->values()->toArray();
-            $codesSamples = $chainCustody->pluck('code_sample')->filter()->values()->toArray();
-
-            $datesSample = $chainCustody
-                ->pluck('date_reception')
-                ->filter()
-                ->map(function ($date) {
-                    $carbon = Carbon::parse($date);
-                    return $carbon->format('Y-m-d');
-                })
+            $samples = $chainCustody
                 ->values()
-                ->toArray();
+                ->map(function ($item) {
+                    $date = null;
+                    $hour = null;
 
-            $hoursSample = $chainCustody
-                ->pluck('date_reception')
-                ->filter()
-                ->map(function ($date) {
-                    $carbon = Carbon::parse($date);
-                    return $carbon->format('H:i');
+                    if (!empty($item->date_reception)) {
+                        $carbon = Carbon::parse($item->date_reception);
+                        $date = $carbon->format('Y-m-d');
+                        $hour = $carbon->format('H:i');
+                    }
+
+                    return [
+                        'code_lab' => $item->code_lab ?? '-',
+                        'code_sample' => $item->code_sample ?? '-',
+                        'date_sample' => $date ?? '-',
+                        'hour_sample' => $hour ?? '-',
+
+                        // OJO AQUÍ
+                        'coordinate' => $item->coordinate ?? '-',
+                    ];
                 })
-                ->values()
                 ->toArray();
-
-            $coordinates = $chainCustody->pluck('coordinate')->filter()->values()->toArray();
 
             // Ordenear por tipo de analisis => parametros
             // Tipo de ensayo - unidad - lcm - resultados (Lab)
@@ -124,12 +124,71 @@ class InformReportApiController extends Controller
                 ->pluck('description', 'id')
                 ->toArray();
 
+            $laboratoryResults = LaboratoryResults::query()
+                ->where('order_id', $orderId)
+                ->get()
+                ->keyBy(function ($row) {
+                    return $row->item_id . '_' . $row->chain_custody_id;
+                });
+
+            $sampleIndexByChainCustodyId = $chainCustody
+                ->values()
+                ->pluck('id')
+                ->flip();
+
             $analysisGroups = $parameters
-                ->map(function ($row) use ($typeAnalysisMap) {
+                ->map(function ($row) use (
+                    $typeAnalysisMap,
+                    $laboratoryResults,
+                    $chainCustody,
+                    $sampleIndexByChainCustodyId
+                ) {
                     $item = data_get($row, 'item', []);
+
+                    if (is_string($item)) {
+                        $item = json_decode($item, true) ?: [];
+                    }
+
+                    $realItemId = data_get($row, 'item_id')
+                        ?? data_get($item, 'id');
 
                     $typeAnalysisId = data_get($item, 'parameter.type_of_analysis_id')
                         ?? data_get($item, 'type_of_analysis_id');
+
+                    $results = [];
+
+                    foreach ($chainCustody as $custody) {
+                        $parametersJson = $custody->parameters ?? [];
+
+                        if (is_string($parametersJson)) {
+                            $parametersJson = json_decode($parametersJson, true) ?: [];
+                        }
+
+                        if (!is_array($parametersJson)) {
+                            $parametersJson = [];
+                        }
+
+                        $existsInCustody = collect($parametersJson)->contains(function ($parameter) use ($realItemId) {
+                            return (int) data_get($parameter, 'id') === (int) $realItemId;
+                        });
+
+                        if (!$existsInCustody) {
+                            continue;
+                        }
+
+                        $key = $realItemId . '_' . $custody->id;
+
+                        $savedResult = $laboratoryResults->get($key);
+
+                        $results[] = [
+                            'chain_custody_id' => $custody->id,
+                            'code_lab' => $custody->code_lab,
+                            'code_sample' => $custody->code_sample,
+                            'code_season' => $custody->code_season,
+                            'coordinate' => $custody->coordinate,
+                            'result' => $savedResult?->result ?? '',
+                        ];
+                    }
 
                     return [
                         'type_of_analysis' =>
@@ -153,6 +212,8 @@ class InformReportApiController extends Controller
                         data_get($item, 'parameter.lcm')
                             ?? data_get($item, 'lcm')
                             ?? '-',
+
+                        'results' => $results,
                     ];
                 })
                 ->groupBy('type_of_analysis')
@@ -164,6 +225,56 @@ class InformReportApiController extends Controller
                                 'parameter' => $item['parameter'],
                                 'unit' => $item['unit'],
                                 'lcm' => $item['lcm'],
+                                'results' => $item['results'] ?? [],
+                            ];
+                        })->values()->toArray(),
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            $analysisGroupsMethodology = $parameters
+                ->map(function ($row) use ($typeAnalysisMap) {
+                    $item = data_get($row, 'item', []);
+
+                    $typeAnalysisId = data_get($item, 'parameter.type_of_analysis_id')
+                        ?? data_get($item, 'type_of_analysis_id');
+
+                    return [
+                        'type_of_analysis' =>
+                        data_get($item, 'parameter.type_of_analysis.description')
+                            ?? data_get($item, 'type_of_analysis.description')
+                            ?? ($typeAnalysisMap[$typeAnalysisId] ?? 'SIN TIPO DE ENSAYO'),
+
+                        'parameter' =>
+                        data_get($item, 'parameter.description')
+                            ?? data_get($item, 'description')
+                            ?? data_get($item, 'name')
+                            ?? '-',
+
+                        'code' =>
+                        data_get($item, 'parameter.reference.code')
+                            ?? data_get($item, 'reference.code')
+                            ?? '-',
+
+                        'title' =>
+                        data_get($item, 'parameter.reference.title')
+                            ?? data_get($item, 'reference.title')
+                            ?? '-',
+                    ];
+                })
+                ->unique(function ($item) {
+                    return $item['parameter'] . '|' . $item['code'] . '|' . $item['title'];
+                })
+                ->groupBy('type_of_analysis')
+                ->map(function ($items, $typeOfAnalysis) {
+                    return [
+                        'type_of_analysis' => $typeOfAnalysis,
+                        'parameters' => $items->map(function ($item) {
+                            return [
+                                'parameter' => $item['parameter'],
+                                'code' => $item['code'],
+                                'title' => $item['title'],
                             ];
                         })->values()->toArray(),
                     ];
@@ -187,15 +298,13 @@ class InformReportApiController extends Controller
                 'test_period' => '-',
                 'date_of_issue' => '-',
 
-                'codes_lab' => $codesLab,
-                'codes_samples' => $codesSamples,
-                'dates_samples' => $datesSample,
-                'hours_samples' => $hoursSample,
+                'samples' => $samples,
                 'category' => $type,
-                'coordinates' => $coordinates,
 
                 'sampling_point_description' => '-',
                 'analysis_groups' => $analysisGroups,
+
+                'analysis_groups_methodology' => $analysisGroupsMethodology
             ];
 
             return Excel::download(

@@ -454,14 +454,6 @@
                                             N° de muestras
                                         </th>
                                         <th
-                                            class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                                            P. Unit.
-                                        </th>
-                                        <th
-                                            class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                                            Precio
-                                        </th>
-                                        <th
                                             class="px-3 py-2 text-right text-[11px] font-bold uppercase tracking-wide text-slate-500">
                                             Acciones
                                         </th>
@@ -497,14 +489,6 @@
 
                                         <td :class="row?.item?.bg" class="px-3 py-2 text-center">
                                             <el-input size="small" v-model="row.number_samples" />
-                                        </td>
-
-                                        <td :class="row?.item?.bg" class="px-3 py-2 text-center">
-                                            <el-input size="small" v-model="row.unit_price" />
-                                        </td>
-
-                                        <td :class="row?.item?.bg" class="px-3 py-2 text-center">
-                                            {{ row?.price }}
                                         </td>
 
                                         <td :class="row?.item?.bg" class="relative px-3 py-2 text-right">
@@ -589,7 +573,7 @@
         </el-tabs>
     </div>
 
-    <matriz-modal :items="form.items" :show-matrix-modal="showMatrixModal" @close="() => {
+    <matriz-modal v-model:items="form.items" :show-matrix-modal="showMatrixModal" @close="() => {
         showMatrixModal = false
     }" />
 
@@ -597,6 +581,125 @@
         state = false
         matrizId = null
     }" />
+
+    <el-dialog v-model="visibleValue" width="620px" align-center class="parameter-dialog !rounded-lg">
+        <template #header>
+            <div>
+                <h2 class="text-base font-semibold text-gray-800">
+                    Configurar parámetro
+                </h2>
+                <p class="text-xs text-gray-500">
+                    Selecciona unidad de medida y LCM.
+                </p>
+            </div>
+        </template>
+
+        <div class="space-y-4">
+            <div v-if="rowValue && rowValue?.operations" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="overflow-hidden rounded-xl border border-gray-200">
+                    <div class="border-b bg-blue-50 px-3 py-2">
+                        <h3 class="text-xs font-semibold uppercase text-blue-700">
+                            Unidad de medida
+                        </h3>
+                    </div>
+
+                    <div class="divide-y divide-gray-100">
+                        <div v-for="(reference, index) in unitReferences" :key="`unit-${index}`"
+                            class="flex items-center justify-between gap-2 px-3 py-2 hover:bg-gray-50">
+                            <div class="min-w-0">
+                                <p class="text-xs font-medium text-gray-700">
+                                    {{ reference.unit }}
+                                </p>
+                                <p class="text-[11px] text-gray-400">
+                                    {{ reference.condition }}
+                                </p>
+                            </div>
+
+                            <div class="flex min-w-0 items-center gap-2">
+                                <span class="max-w-[90px] truncate text-xs text-gray-600">
+                                    {{ rowValue?.operations?.units_measurements?.[index] ?? '-' }}
+                                </span>
+
+                                <el-button v-tippy="'Seleccionar'" size="small" type="primary" plain circle
+                                    :disabled="!rowValue?.operations?.units_measurements?.[index]"
+                                    @click="selectUnit(rowValue.operations.units_measurements?.[index] ?? null)">
+                                    <i class="fa-regular fa-hand-pointer text-xs"></i>
+                                </el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-hidden rounded-xl border border-gray-200">
+                    <div class="border-b bg-emerald-50 px-3 py-2">
+                        <h3 class="text-xs font-semibold uppercase text-emerald-700">
+                            LCM
+                        </h3>
+                    </div>
+
+                    <div class="divide-y divide-gray-100">
+                        <div v-for="(reference, index) in lcmReferences" :key="`lcm-${index}`"
+                            class="flex items-center justify-between gap-2 px-3 py-2 hover:bg-gray-50">
+                            <div class="min-w-0">
+                                <p class="text-xs font-medium text-gray-700">
+                                    {{ reference.unit }}
+                                </p>
+                                <p class="text-[11px] text-gray-400">
+                                    {{ reference.condition }}
+                                </p>
+                            </div>
+
+                            <div class="flex min-w-0 items-center gap-2">
+                                <span class="max-w-[90px] truncate text-xs text-gray-600">
+                                    {{ rowValue?.operations?.lcms?.[index] ?? '-' }}
+                                </span>
+
+                                <el-button v-tippy="'Seleccionar'" size="small" type="success" plain circle
+                                    :disabled="!rowValue?.operations?.lcms?.[index]"
+                                    @click="lcm = rowValue.operations.lcms?.[index] ?? null">
+                                    <i class="fa-regular fa-hand-pointer text-xs"></i>
+                                </el-button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 md:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-gray-600">
+                        Unidad de medida
+                    </label>
+
+                    <el-select v-model="unit_measurent" :remote-method="listStore.getUnitsMeasurement" filterable remote
+                        reserve-keyword clearable placeholder="Seleccionar unidad" class="w-full" size="small">
+                        <el-option v-for="row in unitsMeasurement" :key="row.id" :label="row.description"
+                            :value="row.id" />
+                    </el-select>
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-gray-600">
+                        LCM
+                    </label>
+
+                    <el-input v-model="lcm" placeholder="LCM" size="small" clearable />
+                </div>
+            </div>
+        </div>
+
+        <template #footer>
+            <div class="flex justify-end gap-2">
+                <el-button class="!rounded-lg" size="small" @click="visibleValue = false">
+                    Cancelar
+                </el-button>
+
+                <el-button class="!rounded-lg" size="small" type="primary" @click="saveChangeValues()">
+                    Guardar
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 
 <script setup>
@@ -685,6 +788,72 @@ const showMatrixModal = ref(false)
 const loadingSubmit = ref(false)
 const router = useRouter()
 const route = useRoute()
+
+const unitsMeasurement = computed(() => listStore.unitsMeasurement)
+const visibleValue = ref(false)
+const rowValue = ref(null)
+const unit_measurent = ref(null)
+const lcm = ref(null)
+
+const unitReferences = [
+    {
+        unit: 'mg/Nm³',
+        condition: '0° y 1 atm',
+    },
+    {
+        unit: 'mg/m³',
+        condition: '25° y 1 atm',
+    },
+    {
+        unit: 'mg/m³',
+        condition: '20° y 1 atm',
+    },
+    {
+        unit: 'PPM / %',
+        condition: '10-6 mol/mol',
+    },
+];
+
+const lcmReferences = [
+    {
+        unit: 'mg/Nm³',
+        condition: '0° y 1 atm',
+    },
+    {
+        unit: 'mg/m³',
+        condition: '25° y 1 atm',
+    },
+    {
+        unit: 'mg/m³',
+        condition: '20° y 1 atm',
+    },
+    {
+        unit: 'PPM',
+        condition: '10-6 mol/mol',
+    },
+];
+
+const selectUnit = async (uni) => {
+    await listStore.getUnitsMeasurement(uni)
+    unit_measurent.value = listStore.unitsMeasurement[0]?.id ?? null
+}
+
+const changeValues = async (row) => {
+    rowValue.value = row
+
+    unit_measurent.value = row.unit_measurement_id;
+    lcm.value = row.lcm;
+
+    await listStore.getUnitsMeasurement(row.unit_measurement_id)
+    visibleValue.value = true
+}
+
+const saveChangeValues = async () => {
+    rowValue.value.unit_measurement_id = unit_measurent.value
+    rowValue.value.lcm = lcm.value
+
+    visibleValue.value = false
+}
 
 const itemDelete = (index) => {
     form.items.splice(index, 1)
@@ -962,6 +1131,7 @@ onMounted(async () => {
     form.date_attention = `${year}-${month}-${day}`
 
     await listStore.getCompanies()
+    await listStore.getUnitsMeasurement()
     await listStore.getUsers()
 
     await getDepartments()

@@ -250,6 +250,13 @@
 
                                 <template #dropdown>
                                     <el-dropdown-menu>
+                                        <el-dropdown-item @click="handleReply(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                                <span>Replicar registro</span>
+                                            </div>
+                                        </el-dropdown-item>
+
                                         <el-dropdown-item @click="handleEdit(row)">
                                             <div class="flex items-center gap-2 text-sm">
                                                 <i class="fa-regular fa-pen-to-square"></i>
@@ -506,8 +513,8 @@
                                     </label>
 
                                     <el-date-picker style="width: 100%;" v-model="form.date_agreed" type="date"
-                                        placeholder="Seleccionar fecha y hora" format="DD/MM/YYYY"
-                                        value-format="YYYY-MM-DD HH:mm:ss" clearable size="large" class="w-full" />
+                                        placeholder="Seleccionar" format="DD/MM/YYYY" value-format="YYYY-MM-DD"
+                                        clearable size="large" class="w-full" />
                                 </div>
 
                                 <div class="space-y-2">
@@ -1035,6 +1042,7 @@ import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
 import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 
 const { width: windowWidth } = useWindowSize();
+const activeNames = ref(['1'])
 
 const listStore = useListStore()
 const dialogVisible = ref(false)
@@ -1388,6 +1396,35 @@ const handleEdit = (row) => {
     form.coordinate = row.coordinate
 }
 
+const handleReply = (row) => {
+    dialogVisible.value = true
+
+    form.company_id = row.company_id
+    form.application_id = row.application_id
+    form.order_id = row.order_id
+    form.number_chain = row.number_chain
+    form.number_report = row.number_report
+    form.type_of_sample_id = row.type_of_sample_id
+    form.matrix_id = row.matrix_id
+    form.number_sample = row.number_sample
+    form.number_essays = row.number_essays
+    form.date_reception = row.date_reception
+    form.date_sampling_init_date = row.date_sampling_init_date
+    form.date_sampling_init_time = row.date_sampling_init_time
+    form.date_sampling_end_date = row.date_sampling_end_date
+    form.date_sampling_end_time = row.date_sampling_end_time
+    form.date_agreed = row.date_agreed
+    form.company_sampling_id = row.company_sampling_id
+    form.code_lab = row.code_lab
+    form.code_season = row.code_season
+    form.condition_report = row.condition_report
+    form.other_company_id = row.other_company_id
+    form.parameters = row.parameters
+    form.observations = row.observations
+    form.code_sample = row.code_sample
+    form.coordinate = row.coordinate
+}
+
 const getOrder = async () => {
     try {
         const { data } = await tenant.get(`order-service/${form.order_id}`)
@@ -1411,6 +1448,97 @@ const formatTime = (iso) => {
     const d = new Date(iso);
     return d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 }
+
+const isBusinessDay = (date) => {
+    const day = date.getDay()
+
+    // 0 = domingo, 6 = sábado
+    return day !== 0 && day !== 6
+}
+
+const moveToNextBusinessDay = (date) => {
+    const newDate = new Date(date)
+
+    while (!isBusinessDay(newDate)) {
+        newDate.setDate(newDate.getDate() + 1)
+    }
+
+    return newDate
+}
+
+const addBusinessDaysCountingStartDate = (startDate, daysToAdd) => {
+    let date = moveToNextBusinessDay(startDate)
+    let addedDays = 0
+
+    while (addedDays < daysToAdd) {
+        if (isBusinessDay(date)) {
+            addedDays++
+        }
+
+        if (addedDays < daysToAdd) {
+            date.setDate(date.getDate() + 1)
+        }
+    }
+
+    return date
+}
+
+const formatDateToYMD = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+
+    return `${year}-${month}-${day}`
+}
+
+const calculateDateAgreed = (dateReception) => {
+    if (!dateReception) return null
+
+    // Element Plus te da: YYYY-MM-DD HH:mm:ss
+    // Mejor convertirlo a formato compatible con JS.
+    const receptionDate = new Date(String(dateReception).replace(' ', 'T'))
+
+    if (Number.isNaN(receptionDate.getTime())) {
+        return null
+    }
+
+    const baseDate = new Date(receptionDate)
+
+    // Si es desde las 2:00 pm, se cuenta desde el siguiente día
+    if (baseDate.getHours() >= 14) {
+        baseDate.setDate(baseDate.getDate() + 1)
+    }
+
+    const agreedDate = addBusinessDaysCountingStartDate(baseDate, 9)
+
+    return formatDateToYMD(agreedDate)
+}
+
+watch(
+    () => form.date_reception,
+    (dateReception) => {
+        form.date_agreed = calculateDateAgreed(dateReception)
+    }
+)
+
+watch(
+    () => form.date_reception,
+    (dateReception) => {
+        form.date_agreed = calculateDateAgreed(dateReception)
+    }
+)
+
+watch(
+    () => [form.number_chain, form.number_sample],
+    ([numberChain, numberSample]) => {
+        if (!numberChain || !numberSample) {
+            form.code_lab = null
+            return
+        }
+
+        form.code_lab = `${numberChain}-${numberSample}`
+    }
+)
 
 watch(() => form.order_id, async (newVal) => {
     if (newVal) {

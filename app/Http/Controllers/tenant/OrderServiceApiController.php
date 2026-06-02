@@ -29,7 +29,6 @@ class OrderServiceApiController extends Controller
             $data = OrderService::query()
                 ->with([
                     'user',
-                    'reviwed',
                     'company',
                     'contactCompany.user'
                 ])

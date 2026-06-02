@@ -773,17 +773,17 @@
         </template>
 
         <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" v-if="rowValue.content">
-                <div class="rounded-xl border border-gray-200 overflow-hidden">
-                    <div class="bg-blue-50 px-3 py-2 border-b">
-                        <h3 class="text-xs font-semibold text-blue-700 uppercase">
+            <div v-if="rowValue && rowValue?.operations" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="overflow-hidden rounded-xl border border-gray-200">
+                    <div class="border-b bg-blue-50 px-3 py-2">
+                        <h3 class="text-xs font-semibold uppercase text-blue-700">
                             Unidad de medida
                         </h3>
                     </div>
 
                     <div class="divide-y divide-gray-100">
                         <div v-for="(reference, index) in unitReferences" :key="`unit-${index}`"
-                            class="px-3 py-2 flex items-center justify-between gap-2 hover:bg-gray-50">
+                            class="flex items-center justify-between gap-2 px-3 py-2 hover:bg-gray-50">
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-gray-700">
                                     {{ reference.unit }}
@@ -793,14 +793,14 @@
                                 </p>
                             </div>
 
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span class="text-xs text-gray-600 truncate max-w-[90px]">
-                                    {{ rowValue.content?.units_measurements?.[index] ?? '-' }}
+                            <div class="flex min-w-0 items-center gap-2">
+                                <span class="max-w-[90px] truncate text-xs text-gray-600">
+                                    {{ rowValue?.operations?.units_measurements?.[index] ?? '-' }}
                                 </span>
 
-                                <el-button v-if="rowValue.content?.units_measurements?.[index]" v-tippy="'Seleccionar'"
-                                    size="small" type="primary" plain circle
-                                    @click="selectUnit(rowValue.content.units_measurements[index])">
+                                <el-button v-tippy="'Seleccionar'" size="small" type="primary" plain circle
+                                    :disabled="!rowValue?.operations?.units_measurements?.[index]"
+                                    @click="selectUnit(rowValue.operations.units_measurements?.[index] ?? null)">
                                     <i class="fa-regular fa-hand-pointer text-xs"></i>
                                 </el-button>
                             </div>
@@ -808,16 +808,16 @@
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-gray-200 overflow-hidden">
-                    <div class="bg-emerald-50 px-3 py-2 border-b">
-                        <h3 class="text-xs font-semibold text-emerald-700 uppercase">
+                <div class="overflow-hidden rounded-xl border border-gray-200">
+                    <div class="border-b bg-emerald-50 px-3 py-2">
+                        <h3 class="text-xs font-semibold uppercase text-emerald-700">
                             LCM
                         </h3>
                     </div>
 
                     <div class="divide-y divide-gray-100">
                         <div v-for="(reference, index) in lcmReferences" :key="`lcm-${index}`"
-                            class="px-3 py-2 flex items-center justify-between gap-2 hover:bg-gray-50">
+                            class="flex items-center justify-between gap-2 px-3 py-2 hover:bg-gray-50">
                             <div class="min-w-0">
                                 <p class="text-xs font-medium text-gray-700">
                                     {{ reference.unit }}
@@ -827,13 +827,14 @@
                                 </p>
                             </div>
 
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span class="text-xs text-gray-600 truncate max-w-[90px]">
-                                    {{ rowValue.content?.lcms?.[index] ?? '-' }}
+                            <div class="flex min-w-0 items-center gap-2">
+                                <span class="max-w-[90px] truncate text-xs text-gray-600">
+                                    {{ rowValue?.operations?.lcms?.[index] ?? '-' }}
                                 </span>
 
-                                <el-button v-if="rowValue.content?.lcms?.[index]" v-tippy="'Seleccionar'" size="small"
-                                    type="success" plain circle @click="lcm = rowValue.content.lcms[index]">
+                                <el-button v-tippy="'Seleccionar'" size="small" type="success" plain circle
+                                    :disabled="!rowValue?.operations?.lcms?.[index]"
+                                    @click="lcm = rowValue.operations.lcms?.[index] ?? null">
                                     <i class="fa-regular fa-hand-pointer text-xs"></i>
                                 </el-button>
                             </div>
@@ -842,9 +843,9 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-xl bg-gray-50 border border-gray-200 p-3">
+            <div class="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3 md:grid-cols-2">
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">
+                    <label class="mb-1 block text-xs font-medium text-gray-600">
                         Unidad de medida
                     </label>
 
@@ -856,7 +857,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">
+                    <label class="mb-1 block text-xs font-medium text-gray-600">
                         LCM
                     </label>
 
@@ -945,7 +946,7 @@ const lcmReferences = [
 
 const selectUnit = async (uni) => {
     await listStore.getUnitsMeasurement(uni)
-    unit_measurent.value = listStore.unitsMeasurement[0].id
+    unit_measurent.value = listStore.unitsMeasurement[0]?.id ?? null
 }
 
 const loadingCompany = ref(false)
