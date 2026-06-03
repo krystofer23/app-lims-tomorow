@@ -1,268 +1,363 @@
 <template>
-    <div
-        class="flex flex-col gap-4 border-b border-slate-200/80 bg-white px-5 py-4 shadow-sm lg:flex-row lg:items-center lg:justify-between lg:px-6">
-        <div class="min-w-0">
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-100">
-                    <i class="fa-solid fa-file-shield text-lg"></i>
-                </div>
-
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2">
-                        <h1 class="truncate text-lg font-bold tracking-tight text-slate-900">
-                            Módulo de informes
-                        </h1>
-                    </div>
-
-                    <p class="mt-0.5 truncate text-xs text-slate-500">
-                        Gestiona informes en base a las órdenes de servicio
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+    <custom-header title="Módulo de informes" description="Gestiona informes en base a las órdenes de servicio."
+        icon="fa-regular fa-file-lines">
+        <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
             <el-input v-model="filters.search" placeholder="Buscar razón social, cadena o informe..." clearable
                 class="!w-full sm:!w-[360px]">
                 <template #prefix>
                     <el-icon class="text-slate-400">
-                        <search />
+                        <Search />
                     </el-icon>
                 </template>
             </el-input>
-
-            <el-button @click="generateInformation" type="primary"
-                class="!h-9 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
-                <i class="fa-solid fa-file-shield mr-2"></i>
-                Generar Informe
-            </el-button>
         </div>
-    </div>
+    </custom-header>
 
-    <div class="bg-white p-5 md:p-6 space-y-6">
-        <el-collapse class="mb-5">
+    <div class="bg-white p-5 space-y-4">
+        <el-collapse v-model="activeNames" class="filters-collapse mb-5">
             <el-collapse-item name="1">
                 <template #title>
-                    <i class="fa-solid fa-filter"></i> Filtros
+                    <div class="flex w-full items-center justify-between pr-4">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-100 text-teal-600 ring-1 ring-cyan-100">
+                                <i class="fa-solid fa-filter text-sm"></i>
+                            </div>
+
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    Filtros de búsqueda
+                                </p>
+                                <p class="text-xs text-slate-400">
+                                    Refina las cotizaciones por comercial, empresa u orden generada
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </template>
+
                 <template #default>
-                    <!-- <div class="grid grid-cols-12 w-full gap-3">
-                        <div class="col-span-3">
-                            <p class="font-medium">Comercial</p>
-                            <el-select v-model="filters.comercial_id" placeholder="Seleccionar" class="!w-full"
-                                size="small" clearable>
-                                <el-option v-for="row in comerciales"></el-option>
+                    <div class="grid grid-cols-12 gap-4">
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="mb-1.5 block text-xs font-medium text-slate-500">
+                                Empresa
+                            </label>
+
+                            <el-select :remote-method="listStore.getCompanies" filterable remote reserve-keyword
+                                clearable v-model="filters.company_id" placeholder="Seleccionar empresa"
+                                class="!w-full">
+                                <el-option v-for="row in companies" :key="row.id" :label="row.business_name"
+                                    :value="row.id" />
                             </el-select>
                         </div>
-                        <div class="col-span-3">
-                            <p class="font-medium">Empresa</p>
-                            <el-select v-model="filters.company_id" placeholder="Seleccionar" class="!w-full"
-                                size="small" clearable>
-                                <el-option v-for="row in companies" :label="row.business_name"
-                                    :value="row.id"></el-option>
-                            </el-select>
-                        </div>
-                        <div class="col-span-3">
-                            <p class="font-medium">OS Generada</p>
-                            <el-switch v-model="filters.is_os" size="small"></el-switch>
-                        </div>
-                    </div> -->
+                    </div>
                 </template>
             </el-collapse-item>
         </el-collapse>
+
+        <div class="overflow-x-auto">
+            <el-table class="border rounded-xl" stripe :data="orders" v-loading="loading"
+                header-cell-class-name="lims-table-header" size="small">
+                <el-table-column type="index" width="60" align="center" fixed="left">
+                    <template #header>N°</template>
+                </el-table-column>
+                <el-table-column width="300">
+                    <template #header>Empresa</template>
+                    <template #default="{ row }">
+                        <p class="truncate font-semibold" v-tippy="row?.company?.business_name">{{
+                            row?.company?.business_name }}</p>
+                        <p>
+                            RUC: {{ row?.company?.ruc }}
+                        </p>
+                    </template>
+                </el-table-column>
+                <el-table-column width="300">
+                    <template #header>Solicitante</template>
+                    <template #default="{ row }">
+                        <p class="truncate font-semibold" v-tippy="row?.company?.business_name">{{
+                            row?.company?.business_name }}</p>
+                        <p>
+                            RUC: {{ row?.company?.ruc }}
+                        </p>
+                    </template>
+                </el-table-column>
+                <el-table-column width="200">
+                    <template #header>OS</template>
+                    <template #default="{ row }">
+                        <p class="truncate font-semibold">
+                            {{ row.code }}
+                        </p>
+                    </template>
+                </el-table-column>
+                <el-table-column width="200">
+                    <template #header>Fecha de registro</template>
+                    <template #default="{ row }">
+                        <div class="space-y-1">
+                            <p class="text-sm font-semibold">
+                                {{ formatDate(row?.created_at) }}
+                            </p>
+
+                            <p class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                                <i class="fa-regular fa-clock text-[11px]"></i>
+                                {{ formatTime(row?.created_at) }}
+                            </p>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column width="140" fixed="right">
+                    <template #header>Acciones</template>
+                    <template #default="{ row }">
+                        <div class="flex items-center justify-start gap-2">
+                            <el-dropdown trigger="click" placement="bottom-end">
+                                <button type="button"
+                                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 active:scale-95">
+                                    <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+                                </button>
+
+                                <template #dropdown>
+                                    <el-dropdown-menu>
+                                        <el-dropdown-item divide @click="() => {
+                                            visible = true
+                                            orderId = row.id
+                                        }">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-solid fa-file-circle-plus"></i>
+                                                <span>Generar Plantillas</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item divided @click="downloadOrderServicePdf(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-file-pdf"></i>
+                                                <span>Descargar PDF</span>
+                                            </div>
+                                        </el-dropdown-item>
+
+                                        <el-dropdown-item @click="downloadOrderServiceExcel(row)">
+                                            <div class="flex items-center gap-2 text-sm">
+                                                <i class="fa-regular fa-file-excel"></i>
+                                                <span>Descargar Excel</span>
+                                            </div>
+                                        </el-dropdown-item>
+                                    </el-dropdown-menu>
+                                </template>
+                            </el-dropdown>
+                        </div>
+                    </template>
+                    <template #empty>
+                        <div class="py-16 text-center">
+                            <div
+                                class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
+                                <i class="fa-solid fa-flask-vial text-2xl"></i>
+                            </div>
+
+                            <h3 class="mt-4 text-sm font-bold text-slate-900">
+                                No hay cotizaciones registradas
+                            </h3>
+
+                            <p class="mt-1 text-sm text-slate-500">
+                                Ajusta los filtros o registra una nueva cotización para continuar.
+                            </p>
+
+                            <el-button class="mt-4 !rounded-xl !font-semibold" plain>
+                                Limpiar filtros
+                            </el-button>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+
+        <div class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-sm text-slate-500">
+                Mostrando <span class="font-semibold text-slate-700">{{ orders.length }}</span> de
+                <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
+            </p>
+
+            <el-pagination background layout="prev, pager, next, sizes" :total="pagination.total"
+                v-model:page-size="pagination.per_page" v-model:current-page="pagination.current_page"
+                :page-sizes="[10, 20, 50, 100]" @change="listStore.getOrderServices()" />
+        </div>
     </div>
 
-    <el-button :loading="loadingDownload" @click="downloadTest">Download Test</el-button>
-
-    <el-dialog v-model="state" width="820px" class="search-os-dialog !rounded-2xl" align-center destroy-on-close>
+    <el-dialog v-model="visible" align-center @close="() => {
+        visible = false
+        orderId = null
+    }" width="680px" class="template-dialog !rounded-lg" :show-close="true">
         <template #header>
-            <div class="flex items-center gap-3">
-                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
-                    <i class="fa-solid fa-magnifying-glass text-lg"></i>
-                </div>
-
+            <div class="flex items-start justify-between gap-4 border-b border-slate-200 px-1 pb-4">
                 <div>
-                    <h2 class="text-lg font-semibold text-slate-800">Buscar Orden de Servicio</h2>
-                    <p class="text-sm text-slate-500">
-                        Busca una OS por código y selecciónala de la lista.
-                    </p>
+                    <div
+                        class="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 ring-1 ring-teal-200">
+                        <span class="h-2 w-2 rounded-full bg-teal-500"></span>
+                        Generación de plantillas
+                    </div>
+
+                    <h2 class="mt-3 text-lg font-bold text-slate-900">
+                        Generar Plantillas
+                    </h2>
+
+                    <div class="mt-3 grid grid-cols-1 gap-2 text-sm text-slate-600 sm:grid-cols-3">
+                        <div v-loading="loadingModal" class="rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
+                            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                OS
+                            </p>
+                            <p class="mt-1 font-semibold text-slate-800">
+                                {{ order?.code || 'No indica' }}
+                            </p>
+                        </div>
+
+                        <div v-loading="loadingModal" class="rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
+                            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                Empresa
+                            </p>
+                            <p class="mt-1 truncate font-semibold text-slate-800">
+                                {{ order?.company.business_name || 'No indica' }}
+                            </p>
+                        </div>
+
+                        <div v-loading="loadingModal" class="rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-200">
+                            <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                                Solicitante
+                            </p>
+                            <p class="mt-1 truncate font-semibold text-slate-800">
+                                {{ order?.application.business_name || 'No indica' }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
 
-        <div class="space-y-5">
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div class="flex flex-col gap-3 sm:flex-row">
-                    <el-input placeholder="Ejemplo: OS-0003" clearable class="custom-input flex-1">
-                        <template #prefix>
-                            <i class="fa-solid fa-hashtag text-slate-400"></i>
-                        </template>
-                    </el-input>
-
-                    <el-button type="primary"
-                        class="custom-search-btn !h-[44px] !rounded-xl !border-0 !bg-emerald-400 !px-5 hover:!bg-emerald-500"
-                        v-tippy="'Buscar'">
-                        <i class="fa-solid fa-magnifying-glass mr-2"></i>
-                        Buscar
-                    </el-button>
-                </div>
+        <div class="pt-2">
+            <div class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Selecciona el tipo de muestra para generar la plantilla correspondiente.
             </div>
 
-            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div class="border-b border-slate-100 px-4 py-3">
-                    <h3 class="text-sm font-semibold text-slate-700">Resultados encontrados</h3>
-                </div>
-
-                <el-table v-loading="loadingOrderService" :data="orderServices" stripe class="custom-table"
-                    empty-text="No se encontraron órdenes de servicio">
-                    <el-table-column label="Empresa" min-width="260">
-                        <template #default="{ row }">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
-                                    <i class="fa-solid fa-building"></i>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="truncate font-medium text-slate-800">
-                                        {{ row?.company?.business_name || '---' }}
-                                    </p>
-                                    <p class="truncate text-xs text-slate-500">
-                                        Cliente / Empresa
-                                    </p>
-                                </div>
+            <el-table :data="order?.types ?? []" v-loading="loadingModal" header-cell-class-name="lims-table-header"
+                size="small" class="overflow-hidden rounded-2xl border border-slate-200"
+                empty-text="No hay tipos de muestra disponibles">
+                <el-table-column label="Tipo de muestra" min-width="220">
+                    <template #default="{ row }">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600 ring-1 ring-teal-100">
+                                <i class="fa-solid fa-flask"></i>
                             </div>
-                        </template>
-                    </el-table-column>
 
-                    <el-table-column label="OS" min-width="180" align="center">
-                        <template #default="{ row }">
-                            <span class="inline-flex rounded-lg bg-teal-400 text-white px-3 py-1 text-xs font-semibold">
-                                {{ row.code || 'OS-0000' }}
-                            </span>
-                        </template>
-                    </el-table-column>
+                            <div>
+                                <p class="font-semibold text-slate-800">
+                                    {{ row }}
+                                </p>
+                                <p class="text-xs text-slate-400">
+                                    Plantilla disponible
+                                </p>
+                            </div>
+                        </div>
+                    </template>
+                </el-table-column>
 
-                    <el-table-column label="Acciones" min-width="160" align="center">
-                        <template #default="{ row }">
-                            <el-button-group>
-                                <el-button @click="handleOs(row.id)" v-tippy="'Ver OS'" size="small">
-                                    <i class="fa-solid fa-eye"></i>
-                                </el-button>
-                                <el-button v-tippy="'Ver cadena de custodia'" size="small" type="warning">
-                                    <i class="fa-solid fa-file-circle-check"></i>
-                                </el-button>
-                                <el-button @click="handleFormat" v-tippy="'Generar informe'" type="primary"
-                                    size="small">
-                                    <i class="fa-solid fa-file-import"></i>
-                                </el-button>
-                            </el-button-group>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </div>
-
-            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p class="text-sm text-slate-500">
-                    Mostrando <span class="font-semibold text-slate-700">{{ orderServices.length }}</span> de
-                    <span class="font-semibold text-slate-700">{{ paginationOrderService.total }}</span> registros
-                </p>
-
-                <el-pagination background layout="prev, pager, next, sizes" :total="paginationOrderService.total"
-                    v-model:page-size="paginationOrderService.per_page"
-                    v-model:current-page="paginationOrderService.current_page" :page-sizes="[10, 20, 50, 100]"
-                    @change="getOrderServices" />
-            </div>
+                <el-table-column label="Acciones" width="180" align="center">
+                    <template #default="{ row }">
+                        <el-button-group>
+                            <el-button :loading="row.loading" class="!rounded-l-lg" v-tippy="'Generar PDf'"
+                                type="primary" plain>
+                                <i class="fa-regular fa-file-pdf"></i>
+                            </el-button>
+                            <el-button :loading="row.loading" @click="downloadTest(row, orderId)" class="!rounded-r-lg"
+                                v-tippy="'Generar Excel'" type="info" plain>
+                                <i class="fa-regular fa-file-excel"></i>
+                            </el-button>
+                        </el-button-group>
+                    </template>
+                </el-table-column>
+            </el-table>
         </div>
-    </el-dialog>
 
-    <el-dialog v-model="stateFormat" width="520px" class="search-os-dialog !rounded-2xl" align-center destroy-on-close>
-        <template #header>
-            <div class="flex items-center gap-3">
-                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
-                    <i class="fa-solid fa-list-check text-lg"></i>
-                </div>
-
-                <div>
-                    <h2 class="text-lg font-semibold text-slate-800">Seleccionar Formato</h2>
-                    <p class="text-sm text-slate-500">
-                        Selecciona un formato a generar
-                    </p>
-                </div>
+        <template #footer>
+            <div class="flex justify-end gap-3 border-t border-slate-200 pt-4">
+                <button type="button"
+                    class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    @click="() => {
+                        visible = false
+                        orderId = null
+                    }">
+                    Cancelar
+                </button>
             </div>
         </template>
-
-        <el-table>
-            <el-table-column label="Formato">
-
-            </el-table-column>
-            <el-table-column label="Acciones">
-                <template #default="{ row }">
-                    <el-button-group>
-                        <el-button>Seleccionar</el-button>
-                    </el-button-group>
-                </template>
-            </el-table-column>
-        </el-table>
     </el-dialog>
-
-    <OSViewModal />
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Plus, Search } from '@element-plus/icons-vue'
 import { useListStore } from '../../../stores/list';
 import OSViewModal from '../../../components/tenants/OSViewModal.vue';
 import { useOsViewModalStore } from '../../../stores/os-view-modal';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
 import tenant from '../../../stores/tenant';
+import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 
 const listStore = useListStore()
-const osViewModalStore = useOsViewModalStore()
+const orders = computed(() => listStore.ordersServices)
+const loading = computed(() => listStore.loadingOrderService)
+const pagination = computed(() => listStore.paginationOrderService)
 
-const state = ref(false)
-const orderServices = computed(() => listStore.ordersServices)
-const paginationOrderService = computed(() => listStore.paginationOrderService)
-const loadingOrderService = computed(() => listStore.loadingOrderService)
-
-const stateFormat = ref(false)
-
-const filters = reactive({
-    search: '',
-    tipoMuestra: '',
-    matriz: '',
-    condicion: '',
-    fechaRecepcion: ''
-})
+const visible = ref(false)
+const orderId = ref(null)
+const order = ref(null)
 
 const activeNames = ref(['1'])
 
-const generateInformation = () => {
-    state.value = true
-}
+watch(() => orderId.value, (newVal) => {
+    if (newVal) {
+        getInformationOrder()
+    }
+})
 
-const getOrderServices = async (p) => {
-    listStore.getOrderServices(null, p)
-}
+const loadingModal = ref(false)
 
-const handleFormat = () => {
-    stateFormat.value = true
-}
-
-const handleOs = (orderId) => {
-    osViewModalStore.state = true
-    osViewModalStore.orderId = orderId
-}
-
-const loadingDownload = ref(false)
-
-const downloadTest = async () => {
-    loadingDownload.value = true
+const getInformationOrder = async () => {
+    loadingModal.value = true
 
     try {
-        const response = await tenant.post(`/download-inform-report/9`, {
-            type: 'AGUA'
+        const { data } = await tenant.get(`information/${orderId.value}`)
+
+        if (data.data) {
+            order.value = data.data
+        }
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        loadingModal.value = false
+    }
+}
+
+const activeName = ref(['1'])
+const filters = reactive({
+    search: '',
+    company_id: null
+})
+
+const companies = computed(() => listStore.companies)
+
+const formatDate = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("es-PE", { year: "numeric", month: "short", day: "2-digit" });
+}
+
+const formatTime = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+}
+
+const downloadTest = async (type, order_id) => {
+    try {
+        const response = await tenant.post(`information/download-inform-report/${order_id}`, {
+            type: type
         }, {
             responseType: 'blob',
         })
@@ -281,13 +376,11 @@ const downloadTest = async () => {
     catch (e) {
         handleErrorsExeption(e)
     }
-    finally {
-        loadingDownload.value = false
-    }
 }
 
 onMounted(() => {
     listStore.getOrderServices()
+    listStore.getCompanies()
 })
 </script>
 
@@ -331,5 +424,71 @@ onMounted(() => {
 
 :deep(.el-input__wrapper) {
     border-radius: 10px !important;
+}
+
+:deep(.lims-table-header) {
+    /* background: #fff ; */
+    color: #64748a !important;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #f8fafc 0%, #f8fafc 100%) !important;
+    height: 42px;
+}
+
+:deep(.filters-collapse) {
+    border: 0;
+}
+
+:deep(.filters-collapse .el-collapse-item) {
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #ffffff;
+    /* box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05); */
+}
+
+:deep(.filters-collapse .el-collapse-item__header) {
+    height: auto;
+    min-height: 52px;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 0 12px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f8fafc 100%);
+}
+
+:deep(.filters-collapse .el-collapse-item__wrap) {
+    border-bottom: 0;
+}
+
+:deep(.filters-collapse .el-collapse-item__content) {
+    padding: 18px;
+}
+
+:deep(.filters-collapse .el-collapse-item__arrow) {
+    color: #64748b;
+}
+
+:deep(.filters-collapse .el-input__wrapper),
+:deep(.filters-collapse .el-select__wrapper) {
+    min-height: 40px;
+    border-radius: 12px;
+}
+
+.template-dialog {
+    border-radius: 18px !important;
+    overflow: hidden;
+}
+
+.template-dialog .el-dialog__header {
+    margin-right: 0 !important;
+    padding: 24px 24px 12px 24px !important;
+}
+
+.template-dialog .el-dialog__body {
+    padding: 12px 24px 20px 24px !important;
+}
+
+.template-dialog .el-dialog__footer {
+    padding: 0 24px 20px 24px !important;
 }
 </style>

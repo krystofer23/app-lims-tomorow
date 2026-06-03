@@ -1042,7 +1042,6 @@ import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
 import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 
 const { width: windowWidth } = useWindowSize();
-const activeNames = ref(['1'])
 
 const listStore = useListStore()
 const dialogVisible = ref(false)
@@ -1052,6 +1051,8 @@ const loadingCompany = ref(false)
 const companies = computed(() => listStore.companies)
 const conditions = computed(() => listStore.conditions)
 const typesAnalysis = computed(() => listStore.typesAnalysis)
+
+const activeName = ref(['1'])
 
 const typesSampling = ref([])
 const matrixs = ref([])

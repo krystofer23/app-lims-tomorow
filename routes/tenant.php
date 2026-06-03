@@ -71,7 +71,11 @@ Route::middleware([
 
         Route::middleware([JWTMiddleware::class])->group(function () {
 
-            Route::post('download-inform-report/{orderId}', [InformReportApiController::class, 'downloadDesign']);
+            Route::controller(InformReportApiController::class)->prefix('information')->group(function () {
+
+                Route::get('/{orderId}', 'show');
+                Route::post('download-inform-report/{orderId}', 'downloadDesign');
+            });
 
             Route::get('lab-orders-show/{orderId}', [LaboratoryApiController::class, 'show']);
             Route::post('lab-orders-store', [LaboratoryApiController::class, 'store']);

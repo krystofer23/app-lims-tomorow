@@ -12,11 +12,47 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class InformReportApiController extends Controller
 {
+    public function show($orderId): JsonResponse
+    {
+        try {
+            $order = OrderService::with([
+                'items',
+                'company:id,business_name,ruc',
+                'application:id,business_name,ruc',
+            ])->findOrFail($orderId);
+
+            $types = $order->items
+                ->pluck('item.type')
+                ->filter()
+                ->unique()
+                ->values();
+
+            $mapData = [
+                'id' => $order->id,
+                'company_id' => $order->company_id,
+                'application_id' => $order->application_id,
+                'department' => $order->department,
+                'district' => $order->district,
+                'province' => $order->province,
+                'code' => $order->code,
+                'company' => $order->company,
+                'application' => $order->application,
+                'types' => $types,
+                'items' => $order->items,
+            ];
+
+            return $this->sendResponse($mapData, 'Enviando datos de la orden');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
     public function downloadDesign(int $orderId, Request $request)
     {
         try {
