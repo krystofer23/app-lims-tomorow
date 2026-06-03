@@ -260,12 +260,11 @@
                 <el-table-column label="Acciones" width="180" align="center">
                     <template #default="{ row }">
                         <el-button-group>
-                            <el-button :loading="row.loading" class="!rounded-l-lg" v-tippy="'Generar PDf'"
-                                type="primary" plain>
+                            <el-button class="!rounded-l-lg" v-tippy="'Generar PDf'" type="primary" plain>
                                 <i class="fa-regular fa-file-pdf"></i>
                             </el-button>
-                            <el-button :loading="row.loading" @click="downloadTest(row, orderId)" class="!rounded-r-lg"
-                                v-tippy="'Generar Excel'" type="info" plain>
+                            <el-button :loading="loadingDownload === row" @click="downloadTest(row, orderId)"
+                                class="!rounded-r-lg" v-tippy="'Generar Excel'" type="info" plain>
                                 <i class="fa-regular fa-file-excel"></i>
                             </el-button>
                         </el-button-group>
@@ -354,7 +353,11 @@ const formatTime = (iso) => {
     return d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 }
 
+const loadingDownload = ref(null)
+
 const downloadTest = async (type, order_id) => {
+    loadingDownload.value = type
+
     try {
         const response = await tenant.post(`information/download-inform-report/${order_id}`, {
             type: type
@@ -375,6 +378,9 @@ const downloadTest = async (type, order_id) => {
     }
     catch (e) {
         handleErrorsExeption(e)
+    }
+    finally {
+        loadingDownload.value = null
     }
 }
 
