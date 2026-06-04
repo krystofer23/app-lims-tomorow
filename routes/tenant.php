@@ -74,7 +74,8 @@ Route::middleware([
             Route::controller(InformReportApiController::class)->prefix('information')->group(function () {
 
                 Route::get('/{orderId}', 'show');
-                Route::post('download-inform-report/{orderId}', 'downloadDesign');
+                Route::get('view-inform-report-pdf/{orderId}', 'downloadDesignPdf');
+                Route::post('download-inform-report-excel/{orderId}', 'downloadDesignExcel');
             });
 
             Route::get('lab-orders-show/{orderId}', [LaboratoryApiController::class, 'show']);

@@ -260,7 +260,8 @@
                 <el-table-column label="Acciones" width="180" align="center">
                     <template #default="{ row }">
                         <el-button-group>
-                            <el-button class="!rounded-l-lg" v-tippy="'Generar PDf'" type="primary" plain>
+                            <el-button :loading="loadingPdf === row" @click="viewPdf(row, orderId)"
+                                class="!rounded-l-lg" v-tippy="'Generar PDf'" type="primary" plain>
                                 <i class="fa-regular fa-file-pdf"></i>
                             </el-button>
                             <el-button :loading="loadingDownload === row" @click="downloadTest(row, orderId)"
@@ -297,6 +298,7 @@ import { useOsViewModalStore } from '../../../stores/os-view-modal';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption';
 import tenant from '../../../stores/tenant';
 import CustomHeader from '../../../components/tenants/CustomHeader.vue';
+import { usePdfViewerStore } from '../../../stores/pdf-viewer.js';
 
 const listStore = useListStore()
 const orders = computed(() => listStore.ordersServices)
@@ -354,12 +356,43 @@ const formatTime = (iso) => {
 }
 
 const loadingDownload = ref(null)
+const loadingPdf = ref(null)
+
+const pdfViewerStore = usePdfViewerStore()
+
+const viewPdf = async (type, order_id) => {
+    loadingPdf.value = type
+
+    try {
+        const response = await tenant.get(`information/view-inform-report-pdf/${order_id}`, {
+            responseType: 'blob',
+            params: {
+                type: type
+            }
+        })
+
+        const blob = new Blob([response.data], {
+            type: 'application/pdf'
+        })
+
+        const pdfUrl = window.URL.createObjectURL(blob)
+
+        pdfViewerStore.url = pdfUrl
+        pdfViewerStore.state = true
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        loadingPdf.value = null
+    }
+}
 
 const downloadTest = async (type, order_id) => {
     loadingDownload.value = type
 
     try {
-        const response = await tenant.post(`information/download-inform-report/${order_id}`, {
+        const response = await tenant.post(`information/download-inform-report-excel/${order_id}`, {
             type: type
         }, {
             responseType: 'blob',
