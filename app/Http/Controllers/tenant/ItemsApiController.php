@@ -19,6 +19,10 @@ class ItemsApiController extends Controller
             $condition = $request->input('condition');
             $typeOfAnalysis = $request->input('type_of_analysis');
 
+            $parameter = $request->input('parameter');
+            $condition_id = $request->input('condition_id');
+            $type_of_sample_id = $request->input('type_of_sample_id');
+
             $data = Item::query()
                 ->with([
                     'typeOfSample',
@@ -30,11 +34,15 @@ class ItemsApiController extends Controller
                         ->when($matrix, fn($query) => $query->where('matrix_id', $matrix))
                         ->when($product, fn($query) => $query->where('type_of_samples_id', $product)),
                     'parameter.connectionsParameter.matrix',
+                    'parameter.connectionsParameter.typeOfSample',
                     'unitMeasurement',
                     'company',
                 ])
                 ->when($condition, function ($query) use ($condition) {
                     $query->where('condition_id', $condition);
+                })
+                ->when($condition_id, function ($query) use ($condition_id) {
+                    $query->where('condition_id', $condition_id);
                 })
                 ->when($type, function ($query) use ($type) {
                     $query->where('type', $type);
@@ -44,6 +52,14 @@ class ItemsApiController extends Controller
                         $query->where('type_of_sample_id', $product)
                             ->orWhereHas('parameter.connectionsParameter', function ($query) use ($product) {
                                 $query->where('type_of_samples_id', $product);
+                            });
+                    });
+                })
+                ->when($type_of_sample_id, function ($query) use ($type_of_sample_id) {
+                    $query->where(function ($query) use ($type_of_sample_id) {
+                        $query->where('type_of_sample_id', $type_of_sample_id)
+                            ->orWhereHas('parameter.connectionsParameter', function ($query) use ($type_of_sample_id) {
+                                $query->where('type_of_samples_id', $type_of_sample_id);
                             });
                     });
                 })
@@ -58,6 +74,11 @@ class ItemsApiController extends Controller
                 ->when($typeOfAnalysis, function ($query) use ($typeOfAnalysis) {
                     $query->whereHas('parameter', function ($query) use ($typeOfAnalysis) {
                         $query->where('type_of_analysis_id', $typeOfAnalysis);
+                    });
+                })
+                ->when($parameter, function ($query) use ($parameter) {
+                    $query->whereHas('parameter', function ($query) use ($parameter) {
+                        $query->where('description', 'like', "%$parameter%");
                     });
                 })
                 ->paginate(15);

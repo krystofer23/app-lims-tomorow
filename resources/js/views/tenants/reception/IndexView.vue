@@ -225,7 +225,7 @@
                 <el-table-column label="Condición del reporte" min-width="190">
                     <template #default="{ row }">
                         <span class="inline-flex rounded-full px-3 py-1 text-xs font-medium"
-                            :class="getConditionClass(rownt?.condition_report)">
+                            :class="getConditionClass(row?.condition_report)">
                             {{ row?.condition_report || '-' }}
                         </span>
                     </template>
@@ -273,26 +273,6 @@
                                     </el-dropdown-menu>
                                 </template>
                             </el-dropdown>
-                        </div>
-                    </template>
-                    <template #empty>
-                        <div class="py-16 text-center">
-                            <div
-                                class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100">
-                                <i class="fa-solid fa-flask-vial text-2xl"></i>
-                            </div>
-
-                            <h3 class="mt-4 text-sm font-bold text-slate-900">
-                                No hay cotizaciones registradas
-                            </h3>
-
-                            <p class="mt-1 text-sm text-slate-500">
-                                Ajusta los filtros o registra una nueva cotización para continuar.
-                            </p>
-
-                            <el-button class="mt-4 !rounded-xl !font-semibold" plain>
-                                Limpiar filtros
-                            </el-button>
                         </div>
                     </template>
                 </el-table-column>

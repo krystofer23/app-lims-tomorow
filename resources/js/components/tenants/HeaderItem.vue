@@ -637,26 +637,26 @@ const menus = computed(() => {
                     subtitle: "Laboratorio",
                     children: [
                         {
-                            key: "laboratory-analysis",
-                            title: "Analisis de Laboratorio",
-                            desc: "Modulo de analisis de laboratorio",
+                            key: "items",
+                            title: "Items",
+                            desc: "Modulo de items/parametros",
                             iconBg: "bg-purple-50 text-purple-700",
                             icon: "fa-solid fa-flask-vial",
                         },
-                        {
-                            key: "matriz",
-                            title: "Matriz",
-                            desc: "Modulo de matrices",
-                            iconBg: "bg-orange-50 text-orange-700",
-                            icon: "fa-solid fa-table-cells-large",
-                        },
-                        {
-                            key: "essays",
-                            title: "Ensayos",
-                            desc: "Modulo de ensayos",
-                            iconBg: "bg-blue-50 text-blue-700",
-                            icon: "fa-solid fa-clipboard-check",
-                        },
+                        // {
+                        //     key: "matriz",
+                        //     title: "Matriz",
+                        //     desc: "Modulo de matrices",
+                        //     iconBg: "bg-orange-50 text-orange-700",
+                        //     icon: "fa-solid fa-table-cells-large",
+                        // },
+                        // {
+                        //     key: "essays",
+                        //     title: "Ensayos",
+                        //     desc: "Modulo de ensayos",
+                        //     iconBg: "bg-blue-50 text-blue-700",
+                        //     icon: "fa-solid fa-clipboard-check",
+                        // },
                         {
                             key: "methodologies",
                             title: "Metodologias",

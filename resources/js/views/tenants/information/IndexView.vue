@@ -234,7 +234,7 @@
                 Selecciona el tipo de muestra para generar la plantilla correspondiente.
             </div>
 
-            <el-table :data="order?.types ?? []" v-loading="loadingModal" header-cell-class-name="lims-table-header"
+            <el-table :data="order?.items ?? []" v-loading="loadingModal" header-cell-class-name="lims-table-header"
                 size="small" class="overflow-hidden rounded-2xl border border-slate-200"
                 empty-text="No hay tipos de muestra disponibles">
                 <el-table-column label="Tipo de muestra" min-width="220">
@@ -247,7 +247,7 @@
 
                             <div>
                                 <p class="font-semibold text-slate-800">
-                                    {{ row }}
+                                    {{ row?.type }}
                                 </p>
                                 <p class="text-xs text-slate-400">
                                     Plantilla disponible
@@ -260,12 +260,14 @@
                 <el-table-column label="Acciones" width="180" align="center">
                     <template #default="{ row }">
                         <el-button-group>
-                            <el-button :loading="loadingPdf === row" @click="viewPdf(row, orderId)"
-                                class="!rounded-l-lg" v-tippy="'Generar PDf'" type="primary" plain>
+                            <el-button :loading="loadingPdf === row?.type"
+                                @click="viewPdf(row?.type, orderId, 'INACAL')" class="!rounded-l-lg"
+                                v-tippy="'Generar PDf'" type="primary" plain>
                                 <i class="fa-regular fa-file-pdf"></i>
                             </el-button>
-                            <el-button :loading="loadingDownload === row" @click="downloadTest(row, orderId)"
-                                class="!rounded-r-lg" v-tippy="'Generar Excel'" type="info" plain>
+                            <el-button :loading="loadingDownload === row?.type"
+                                @click="downloadTest(row.type, orderId, 'INACAL')" class="!rounded-r-lg"
+                                v-tippy="'Generar Excel'" type="info" plain>
                                 <i class="fa-regular fa-file-excel"></i>
                             </el-button>
                         </el-button-group>
@@ -360,14 +362,15 @@ const loadingPdf = ref(null)
 
 const pdfViewerStore = usePdfViewerStore()
 
-const viewPdf = async (type, order_id) => {
+const viewPdf = async (type, order_id, condition) => {
     loadingPdf.value = type
 
     try {
         const response = await tenant.get(`information/view-inform-report-pdf/${order_id}`, {
             responseType: 'blob',
             params: {
-                type: type
+                type: type,
+                condition: condition,
             }
         })
 
@@ -388,12 +391,13 @@ const viewPdf = async (type, order_id) => {
     }
 }
 
-const downloadTest = async (type, order_id) => {
+const downloadTest = async (type, order_id, condition) => {
     loadingDownload.value = type
 
     try {
         const response = await tenant.post(`information/download-inform-report-excel/${order_id}`, {
-            type: type
+            type: type,
+            condition: condition
         }, {
             responseType: 'blob',
         })

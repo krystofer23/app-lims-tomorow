@@ -18,6 +18,93 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class InformReportApiController extends Controller
 {
+    protected $legends;
+
+    public function __construct()
+    {
+        $this->legends = [
+            'AGUA' => [
+                'legend' => "
+                    Leyenda:
+                    (z): Resolución cuantificable del equipo
+                    L.C.M: Límite de cuantificación del Método
+                    \"<\": Menor que el L.C.M. indicado
+                    ¤: Información proporcionada en la cadena por el cliente
+                    Las muestras recibidas cumplen con las condiciones necesarias para la realización de los análisis solicitados.
+
+                ",
+            ],
+            'AIRE' => [
+                'legend' => "
+                    Leyenda:
+                    (z): Resolución cuantificable del equipo
+                    L.C.M: Límite de cuantificación del Método
+                    \"<\": Menor que el L.C.M. indicado
+                    ¤: Información proporcionada en la cadena por el cliente
+                    ⁽ᵃ⁾: Tiempo de muestro 1 hora
+                    ⁽ᵇ⁾: Tiempo de muestro 8 horas
+                    ⁽ᶜ⁾: Tiempo de muestro 24 horas
+                    Las muestras recibidas cumplen con las condiciones necesarias para la realización de los análisis solicitados.
+                ",
+            ],
+            'SUELO' => [
+                'legend' => "
+                    Leyenda:
+                    L.C.M: Límite de cuantificación del Método
+                    \"<\": Menor que el L.C.M. indicado
+                    Las muestras recibidas cumplen con las condiciones necesarias para la realización de los análisis solicitados.
+                    ¤: Información proporcionada en la cadena por el cliente
+                    Los parametros indicados estan expresados en  mg/Kg PS
+                    PS: Peso seco
+                ",
+            ],
+            'VIBRACION' => [
+                'legend' => "",
+            ],
+            'SALUD OCUPACIONAL' => [
+                'legend' => "
+                    Leyenda:
+                    L.C.M: Límite de cuantificación del Método
+                    \"<\": Menor que el L.C.M. indicado
+                    ¤: Información proporcionada en la cadena por el cliente
+                    Las muestras recibidas cumplen con las condiciones necesarias para la realización de los análisis solicitados.
+                ",
+            ],
+            'RUIDO' => [
+                'legend' => "
+                    Leyenda:
+                    (z) Resolución cuantificable; dB(A): Decibelio A.
+                    \"LAeqT\" = Nivel de Presión Acústica Continuo Equivalente Ponderado A, \"LAmín.\" = Nivel de Presión Sonora Mínimo, \"LAmáx.\" Nivel de Presión Sonora Máximo.
+                    * Corresponde a la incertidumbre asociada al LAeqt
+                    L.C.M Límite de cuantificación del Método
+                ",
+            ],
+            'RNI' => [
+                'legend' => "
+                    (*): Información obtenida directamente del equipo de medición.
+                    Leyenda:
+                    µT = microTesla, A/m = amperio/metro, V/m = voltios/metro
+                    L.C.M = Límite de cuantificación del método,  L.D.M: Límite de detección del método
+                    \"<\" = Menor que el L.C.M o L.D.M indicado, \">\" = Mayor al rango lineal permitido por la técnica analítica
+                ",
+            ],
+            'EMISIONES' => [
+                'legend' => "
+                    Leyenda:
+                    L.C.M: Límite de cuantificación del Método
+                    V/I: Valor indeterminado
+                    (z): Resolución cuantificable del equipo
+                    \"<\": Menor que el L.C.M. indicado
+                    Condiciones Normales: Los resultados están expresados a 0 °C, 1013.25 mBar
+                    Condiciones Estándar: Los resultados están expresados a 20 °C, 1013.25 mBar
+                    Condiciones Estándar: Los resultados están expresados a 25 °C, 1013.25 mBar
+                    ⁽ᵠ⁾: Corresponde al ángulo de desviación promedio del flujo de la chimenea evaluada.
+                    ppm: Los resultados están expresados en 10-6 mol/mol
+                ",
+            ]
+        ];
+    }
+
     public function show($orderId): JsonResponse
     {
         try {
@@ -33,6 +120,16 @@ class InformReportApiController extends Controller
                 ->unique()
                 ->values();
 
+            $items = $types->map(function ($type) use ($order) {
+                $itemsByType = $order->items->where('item.type', $type);
+
+                return [
+                    'type' => $type,
+                    'inacal' => $itemsByType->where('item.condition_id', 1)->isNotEmpty(),
+                    'ias' => $itemsByType->where('item.condition_id', 2)->isNotEmpty(),
+                ];
+            })->values();
+
             $mapData = [
                 'id' => $order->id,
                 'company_id' => $order->company_id,
@@ -44,7 +141,7 @@ class InformReportApiController extends Controller
                 'company' => $order->company,
                 'application' => $order->application,
                 'types' => $types,
-                'items' => $order->items,
+                'items' => $items,
             ];
 
             return $this->sendResponse($mapData, 'Enviando datos de la orden');
@@ -87,6 +184,7 @@ class InformReportApiController extends Controller
     private function buildInformDesignData(int $orderId, Request $request)
     {
         $type = $request->input('type');
+        $condition = $request->input('condition');
 
         $order = OrderService::with([
             'items',
@@ -350,8 +448,10 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
+        $legend = $this->legends[$type]['legend'] ?? '';
+
         $mapData = [
-            'report_number' => $order->report_number ?? 'XXX-XX-I',
+            'report_number' => $chainCustody[0]?->number_report ?? 'XXX-XX-I',
 
             'company' => $order?->company?->business_name,
             'direction' => $order?->direction ?? $order?->company?->direction,
@@ -375,8 +475,10 @@ class InformReportApiController extends Controller
             'sampling_point_description' => '-',
             'analysis_groups' => $analysisGroups,
             'analysis_groups_methodology' => $analysisGroupsMethodology,
+
+            'legend' => $legend
         ];
 
         return $mapData;
     }
-}
+};

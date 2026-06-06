@@ -208,4 +208,9 @@ export const routesTenants = [
         component: () => import('../views/tenants/operations/IndexView.vue'),
         meta: { scope: 'tenant' }
     },
+    {
+        path: '/items',
+        name: 'items',
+        component: () => import('../views/tenants/items/IndexView.vue')
+    }
 ]

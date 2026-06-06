@@ -24,7 +24,7 @@
             color: #111;
             background-size: cover;
             background-position: center;
-            background-image: url("{{ public_path('preliminar.png') }}"); 
+            background-image: url("{{ public_path('preliminar.png') }}");
             background-repeat: no-repeat;
             background-position: center top;
         }
@@ -205,6 +205,7 @@
         .legend {
             margin-top: 1.5mm;
             font-family: DejaVu Serif, serif;
+            white-space: pre-line;
             font-size: 7px;
             line-height: 1.18;
         }
@@ -275,11 +276,6 @@
     $samples = $data['samples'] ?? [];
     $sampleCount = max(count($samples), 1);
 
-    $reportNumber = $data['report_number']
-        ?? $data['number_report']
-        ?? $data['inform_number']
-        ?? 'XXX-XX-I';
-
     $category = $data['category'] ?? $data['product'] ?? '-';
     $subCategory = $data['sub_category'] ?? $data['product'] ?? '-';
 
@@ -337,9 +333,8 @@
     }
 @endphp
 
-{{-- PÁGINA 1 --}}
 <div class="page">
-    <p class="title">INFORME DE ENSAYO N° {{ $reportNumber }}</p>
+    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
     <p class="subtitle">CON VALOR OFICIAL</p>
 
     <table class="general-table">
@@ -364,12 +359,12 @@
             <td class="general-value">{{ $data['reference'] ?? '' }}</td>
         </tr>
         <tr>
-            <td class="general-label">Proyecto ¤</td>
+            <td class="general-label">Proyecto {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
             <td class="general-colon">:</td>
             <td class="general-value">{{ $data['project'] ?? '' }}</td>
         </tr>
         <tr>
-            <td class="general-label">Procedencia ¤</td>
+            <td class="general-label">Procedencia {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
             <td class="general-colon">:</td>
             <td class="general-value">{{ $data['origin'] ?? '' }}</td>
         </tr>
@@ -427,9 +422,8 @@
     <div class="page-number">1 de 3</div>
 </div>
 
-{{-- PÁGINA 2 --}}
 <div class="page">
-    <p class="title">INFORME DE ENSAYO N° {{ $reportNumber }}</p>
+    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
     <p class="subtitle">CON VALOR OFICIAL</p>
 
     <div class="section-title">
@@ -589,21 +583,14 @@
     </table>
 
     <div class="legend">
-        Leyenda:<br>
-        L.C.M: Límite de cuantificación del Método<br>
-        "&lt;": Menor que el L.C.M. indicado<br>
-        Las muestras recibidas cumplen con las condiciones necesarias para realización de los análisis solicitados.<br>
-        ¤: Información proporcionada en la cadena por el cliente<br>
-        Los parámetros indicados están expresados en mg/Kg PS<br>
-        PS: Peso seco
+        {{ $data['legend'] }}
     </div>
 
     <div class="page-number">2 de 3</div>
 </div>
 
-{{-- PÁGINA 3 --}}
 <div class="page">
-    <p class="title">INFORME DE ENSAYO N° {{ $reportNumber }}</p>
+    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
     <p class="subtitle">CON VALOR OFICIAL</p>
 
     <div class="section-title">
