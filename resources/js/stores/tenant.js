@@ -4,7 +4,7 @@ import { useAuthStore } from "./auth";
 import { useRouter } from "vue-router";
 
 const domain = window.location.hostname;
-const VITE_API_URL = `http://${domain}/tenant`;
+const VITE_API_URL = `https://${domain}/tenant`;
 
 const tenant = axios.create({
     baseURL: `${VITE_API_URL}/`,
@@ -43,18 +43,16 @@ tenant.interceptors.response.use(
                 return tenant(originalRequest);
             }
             catch (e) {
-                // ElNotification({
-                //     message: `
-                //         Cerrando sesión
-                //     `,
-                //     type: 'error',
-                //     dangerouslyUseHTMLString: true
-                // });
+                ElNotification({
+                    message: `
+                        Cerrando sesión
+                    `,
+                    type: 'error',
+                    dangerouslyUseHTMLString: true
+                });
 
-                // localStorage.removeItem('token');
-                // localStorage.removeItem('user');
-
-                // router.push({ name: 'login' });
+                localStorage.removeItem('token')
+                router.push({ name: 'login' })
             }
         }
 
@@ -73,18 +71,16 @@ tenant.interceptors.response.use(
                 return tenant(originalRequest);
             }
             catch (e) {
-                // ElNotification({
-                //     message: `
-                //         Cerrando sesión
-                //     `,
-                //     type: 'error',
-                //     dangerouslyUseHTMLString: true
-                // });
+                ElNotification({
+                    message: `
+                        Cerrando sesión
+                    `,
+                    type: 'error',
+                    dangerouslyUseHTMLString: true
+                })
 
-                // localStorage.removeItem('token');
-                // localStorage.removeItem('user');
-
-                // router.push({ name: 'login' });
+                localStorage.removeItem('token')
+                router.push({ name: 'login' })
             }
         }
 
