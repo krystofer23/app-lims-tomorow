@@ -69,6 +69,19 @@
 
                         <div class="col-span-12 md:col-span-4">
                             <label class="mb-1.5 block text-xs font-medium text-slate-500">
+                                Solicitante
+                            </label>
+
+                            <el-select :remote-method="listStore.getCompanies" filterable remote reserve-keyword
+                                clearable v-model="filters.application_id" placeholder="Seleccionar empresa"
+                                class="!w-full">
+                                <el-option v-for="row in companies" :key="row.id" :label="row.business_name"
+                                    :value="row.id" />
+                            </el-select>
+                        </div>
+
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="mb-1.5 block text-xs font-medium text-slate-500">
                                 Orden de servicio
                             </label>
 
@@ -376,7 +389,8 @@ const filters = ref({
     search: null,
     comercial_id: null,
     company_id: null,
-    is_os: null
+    is_os: null,
+    application_id: null
 })
 
 const loading = ref(false)

@@ -26,6 +26,42 @@ use Illuminate\Support\Facades\Http;
 
 class ListApiController extends Controller
 {
+    public function ordersOptimizate(Request $request): JsonResponse
+    {
+        try {
+            $search = trim((string) $request->input('search'));
+
+            $data = OrderService::query()
+                ->select([
+                    'id',
+                    'code',
+                    'company_id',
+                    'application_id',
+                ])
+                ->with([
+                    'company:id,business_name',
+                    'application:id,business_name',
+                ])
+                ->when($search !== '', function ($query) use ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('code', 'like', "%{$search}%")
+                            ->orWhereHas('company', function ($companyQuery) use ($search) {
+                                $companyQuery->where('business_name', 'like', "%{$search}%");
+                            })
+                            ->orWhereHas('application', function ($applicationQuery) use ($search) {
+                                $applicationQuery->where('business_name', 'like', "%{$search}%");
+                            });
+                    });
+                })
+                ->orderByDesc('id')
+                ->paginate(15);
+
+            return $this->sendResponse($data, 'Enviando os');
+        } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
     public function matrizDescription(): JsonResponse
     {
         $data = Matriz::query()

@@ -50,6 +50,30 @@
                                     :value="row.id" />
                             </el-select>
                         </div>
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="mb-1.5 block text-xs font-medium text-slate-500">
+                                Solicitante
+                            </label>
+
+                            <el-select :remote-method="listStore.getCompanies" filterable remote reserve-keyword
+                                clearable v-model="filters.application_id" placeholder="Seleccionar empresa"
+                                class="!w-full">
+                                <el-option v-for="row in companies" :key="row.id" :label="row.business_name"
+                                    :value="row.id" />
+                            </el-select>
+                        </div>
+                        <div class="col-span-12 md:col-span-4">
+                            <label class="mb-1.5 block text-xs font-medium text-slate-500">
+                                OS
+                            </label>
+
+                            <el-select v-model="filters.order_id" clearable filterable
+                                :remote-method="listStore.getOrdersOptimizate" class="w-full"
+                                placeholder="Selecciona una orden" size="large">
+                                <el-option v-for="order in ordersOptimizate" :key="order.id" :label="order.code"
+                                    :value="order.id" />
+                            </el-select>
+                        </div>
                     </div>
                 </template>
             </el-collapse-item>
@@ -74,10 +98,10 @@
                 <el-table-column width="300">
                     <template #header>Solicitante</template>
                     <template #default="{ row }">
-                        <p class="truncate font-semibold" v-tippy="row?.company?.business_name">{{
-                            row?.company?.business_name }}</p>
+                        <p class="truncate font-semibold" v-tippy="row?.application?.business_name">{{
+                            row?.application?.business_name }}</p>
                         <p>
-                            RUC: {{ row?.company?.ruc }}
+                            RUC: {{ row?.application?.ruc }}
                         </p>
                     </template>
                 </el-table-column>
@@ -311,6 +335,8 @@ const visible = ref(false)
 const orderId = ref(null)
 const order = ref(null)
 
+const ordersOptimizate = computed(() => listStore.ordersOptimizate)
+
 const activeNames = ref(['1'])
 
 watch(() => orderId.value, (newVal) => {
@@ -342,7 +368,9 @@ const getInformationOrder = async () => {
 const activeName = ref(['1'])
 const filters = reactive({
     search: '',
-    company_id: null
+    application_id: null,
+    company_id: null,
+    order_id: null
 })
 
 const companies = computed(() => listStore.companies)
@@ -421,9 +449,14 @@ const downloadTest = async (type, order_id, condition) => {
     }
 }
 
+watch(() => filters, () => {
+    listStore.getOrderServices(null, 1, filters)
+}, { deep: true })
+
 onMounted(() => {
-    listStore.getOrderServices()
     listStore.getCompanies()
+    listStore.getOrderServices()
+    listStore.getOrdersOptimizate()
 })
 </script>
 

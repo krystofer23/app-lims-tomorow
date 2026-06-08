@@ -169,6 +169,8 @@ Route::middleware([
 
             Route::controller(ListApiController::class)->prefix('list')->group(function () {
 
+                Route::get('orders-optimizate', 'ordersOptimizate');
+
                 Route::get('types', 'types');
                 Route::get('matrixs', 'matrixs');
                 Route::get('matriz-description', 'matrizDescription');

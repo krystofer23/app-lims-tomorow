@@ -8,6 +8,7 @@ use App\Models\tenant\OrderService;
 use App\Models\tenant\OtsGenerate;
 use App\Models\tenant\TypeOfAnalysis;
 use App\Models\tenant\LaboratoryResults;
+use App\Models\tenant\ProceduresToParameter;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -184,7 +185,6 @@ class InformReportApiController extends Controller
     private function buildInformDesignData(int $orderId, Request $request)
     {
         $type = $request->input('type');
-        $condition = $request->input('condition');
 
         $order = OrderService::with([
             'items',
@@ -448,6 +448,32 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
+        $analysisGroupsProcedures = $parameters->map(function ($parameter) {
+            $item = data_get($parameter, 'item', []);
+
+            if (is_string($item)) {
+                $item = json_decode($item, true) ?: [];
+            }
+
+            $parameterId = data_get($item, 'parameter.id');
+
+            if (!$parameterId) {
+                return null;
+            }
+
+            $procedure = ProceduresToParameter::with('procedure')
+                ->where('parameter_id', $parameterId)
+                ->first();
+
+            return [
+                'procedure' => $procedure?->procedure?->description ?? '-',
+            ];
+        })
+            ->filter()
+            ->unique('procedure')
+            ->values()
+            ->toArray();
+
         $legend = $this->legends[$type]['legend'] ?? '';
 
         $mapData = [
@@ -476,7 +502,9 @@ class InformReportApiController extends Controller
             'analysis_groups' => $analysisGroups,
             'analysis_groups_methodology' => $analysisGroupsMethodology,
 
-            'legend' => $legend
+            'legend' => $legend,
+
+            'procedures' => $analysisGroupsProcedures
         ];
 
         return $mapData;

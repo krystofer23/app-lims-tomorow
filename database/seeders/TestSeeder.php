@@ -72,6 +72,30 @@ class TestSeeder extends Seeder
                 'PO-03 Aseguramiento de Calidad en el Muestreo',
                 'PO-26 Procedimiento para mediciones de campo magnético y eléctrico ',
 
+                // Ruido
+                'PO-01 Procedimiento General de Muestreo.',
+                'PO-02 Transporte, almacenamiento-mantenimiento de equipos y materiales',
+                'PO-03 Aseguramiento de Calidad en el Muestreo',
+                'PO-22  Determinacion del Ruido Ambiental',
+
+                // Salud Ocupacional
+                'PO-01 Procedimiento General de Muestreo.',
+                'PO-02 Transporte, almacenamiento-mantenimiento de equipos y materiales',
+                'PO-03 Aseguramiento de Calidad en el Muestreo',
+                'PO-40 Monitoreo Ocupacional – Iluminación de Lugares de Trabajo Interiores y Exteriores',
+                'PO-19 Procedimiento de Muestreo de Partículas Respirables e Inhalables',
+
+                // Suelo
+                'PO-01 Procedimiento General de Muestreo.',
+                'PO-02 Transporte, almacenamiento-mantenimiento de equipos y materiales',
+                'PO-03 Aseguramiento de Calidad en el Muestreo',
+                'PO-09 Muestreo de Suelos y Sedimentos',
+
+                // Vibración
+                'PO-01 Procedimiento General de Muestreo.',
+                'PO-02 Transporte, almacenamiento-mantenimiento de equipos y materiales',
+                'PO-03 Aseguramiento de Calidad en el Muestreo',
+                'PO-25 Procedimiento para el Muestreo de Vibraciones',
             ];
 
             foreach ($procedures as $key => $value) {

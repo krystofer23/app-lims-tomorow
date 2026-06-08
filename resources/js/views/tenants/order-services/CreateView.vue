@@ -957,6 +957,7 @@ const getQuote = async (quoteId) => {
         if (data.data) {
             form.quote_id = data.data.id
             form.company_id = data.data.company_id
+            form.application_id = data.data.applicant_id
             form.direction = data.data.direction
             form.contact_company = data.data.contact_id
             form.items = normalizeItems(data.data.items)

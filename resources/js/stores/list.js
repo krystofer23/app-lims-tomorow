@@ -240,13 +240,14 @@ export const useListStore = defineStore("listStore", () => {
         }
     }
 
-    const getOrderServices = async (q = null, page = 1) => {
+    const getOrderServices = async (q = null, page = 1, filters = {}) => {
         loadingOrderService.value = true
 
         try {
             const { data } = await tenant.get(`order-service?page=${page}`, {
                 params: {
-                    search: q
+                    search: q,
+                    ...filters
                 }
             })
 
@@ -395,11 +396,28 @@ export const useListStore = defineStore("listStore", () => {
         }
     }
 
+    const ordersOptimizate = ref([])
+
+    const getOrdersOptimizate = async (q = '') => {
+        try {
+            const { data } = await tenant.get(`list/orders-optimizate`, {
+                search: q
+            })
+
+            if (data.data) {
+                ordersOptimizate.value = data.data.data
+            }
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+    }
+
     return {
         conditions, unitsMeasurement, methodologies, essays, paginationEssays, companies, getMatrizDescription, services, loadingService, paginationService, comerciales,
         getConditions, getUnitsMeasurement, getMethodologies, getEssays, getCompanies, matrizDescription, getServices, contacts, loadingContacts, getContacts, loadingTeam,
         teams, paginationTeam, getTeams, loadingOrderService, ordersServices, paginationOrderService, getOrderServices, getParameters, parameters,
         getUsers, users, types, matrixs, getTypes, getMatrixs, typesSampling, getTypesSampling, paginationParameter, loadingParameter,
-        typesAnalysis, getTypesAnalysis, typesItems, getTypesItems
+        typesAnalysis, getTypesAnalysis, typesItems, getTypesItems, ordersOptimizate, getOrdersOptimizate
     }
 })

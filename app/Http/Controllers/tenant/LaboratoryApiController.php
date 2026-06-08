@@ -19,6 +19,10 @@ class LaboratoryApiController extends Controller
     public function orders(Request $request): JsonResponse
     {
         try {
+            $application_id = $request->input('application_id');
+            $company_id = $request->input('company_id');
+            $order_id = $request->input('order_id');
+
             $query = OrderService::query()
                 ->with([
                     'company',
@@ -35,6 +39,11 @@ class LaboratoryApiController extends Controller
                     $query->doesntHave('results');
                 }
             }
+
+            $query
+                ->when($application_id, fn($q) => $q->where('application_id', $application_id))
+                ->when($company_id, fn($q) => $q->where('company_id', $company_id))
+                ->when($order_id, fn($q) => $q->where('id', $order_id));
 
             $data = $query->paginate(15);
 

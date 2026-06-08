@@ -163,7 +163,7 @@
                 <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
             </p>
 
-            <el-pagination background layout="prev, pager, next, sizes" :total="items.total"
+            <el-pagination layout="prev, pager, next, sizes" :total="items.total"
                 v-model:page-size="pagination.per_page" v-model:current-page="pagination.current_page"
                 :page-sizes="[10, 20, 50, 100]" @change="getItems" />
         </div>
@@ -176,6 +176,7 @@ import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 import { handleCurrentChange } from 'element-plus/es/components/tree/src/model/util.mjs';
 import tenant from '../../../stores/tenant.js';
 import { useListStore } from '../../../stores/list.js';
+import { Search } from '@element-plus/icons-vue';
 
 const visible = ref(false)
 

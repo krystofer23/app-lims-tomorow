@@ -29,6 +29,7 @@ class QuotesApiController extends Controller
             $comercialId = $request->input('comercial_id');
             $companyId = $request->input('company_id');
             $isOs = $request->boolean('is_os');
+            $application_id = $request->input('application_id');
 
             $data = Quotes::query()
                 ->with([
@@ -52,6 +53,7 @@ class QuotesApiController extends Controller
                 ->when($comercialId, fn($q) => $q->where('user_id', $comercialId))
                 ->when($companyId, fn($q) => $q->where('company_id', $companyId))
                 ->when($isOs, fn($q) => $q->whereHas('orderService'))
+                ->when($application_id, fn($q) => $q->where('applicant_id', $application_id))
                 ->latest()
                 ->paginate(15);
 

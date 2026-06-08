@@ -70,24 +70,15 @@
 
                         <div class="col-span-12 md:col-span-4">
                             <label class="mb-1.5 block text-xs font-medium text-slate-500">
-                                Orden de servicio
+                                Solicitante
                             </label>
 
-                            <div
-                                class="flex h-10 items-center justify-between rounded-xl border border-slate-200 bg-white px-3">
-                                <div class="flex items-center gap-2">
-                                    <span
-                                        class="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
-                                        <i class="fa-solid fa-flask-vial text-xs"></i>
-                                    </span>
-
-                                    <span class="text-sm font-medium text-slate-600">
-                                        OS generada
-                                    </span>
-                                </div>
-
-                                <el-switch v-model="filters.is_os" />
-                            </div>
+                            <el-select :remote-method="listStore.getCompanies" filterable remote reserve-keyword
+                                clearable v-model="filters.application_id" placeholder="Seleccionar empresa"
+                                class="!w-full">
+                                <el-option v-for="row in companies" :key="row.id" :label="row.business_name"
+                                    :value="row.id" />
+                            </el-select>
                         </div>
                     </div>
                 </template>
@@ -300,7 +291,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import tenant from '../../../stores/tenant';
@@ -311,7 +302,8 @@ import { useListStore } from '../../../stores/list';
 import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
 
 const activeNames = ref(['1'])
-
+const companies = computed(() => listStore.companies)
+const users = computed(() => listStore.users)
 const listStore = useListStore()
 const router = useRouter()
 const orders = ref([])
@@ -337,6 +329,9 @@ const formatTime = (iso) => {
 
 const filters = reactive({
     q: null,
+    application_id: null,
+    company_id: null,
+    comercial_id: null
 });
 
 const headerStyle = () => ({
@@ -437,7 +432,11 @@ const getOrders = async () => {
     loading.value = true
 
     try {
-        const { data } = await tenant.get(`order-service`)
+        const { data } = await tenant.get(`order-service`, {
+            params: {
+                ...filters
+            }
+        })
 
         if (data.data) {
             orders.value = data.data.data
@@ -457,8 +456,13 @@ const getOrders = async () => {
     }
 }
 
-onMounted(() => {
+watch(() => filters, () => {
     getOrders()
+}, { deep: true })
+
+onMounted(async () => {
+    await getOrders()
+    await listStore.getCompanies()
 })
 </script>
 

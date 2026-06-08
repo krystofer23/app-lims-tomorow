@@ -26,12 +26,22 @@ class OrderServiceApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            $order_id = $request->input('order_id');
+            $company_id = $request->input('company_id');
+            $application_id = $request->input('application_id');
+            $comercial_id = $request->input('comercial_id');
+
             $data = OrderService::query()
                 ->with([
                     'user',
-                    'company',
+                    'company:id,ruc,business_name',
+                    'application:id,ruc,business_name',
                     'contactCompany.user'
                 ])
+                ->when($order_id, fn($q) => $q->where('id', $order_id))
+                ->when($company_id, fn($q) => $q->where('company_id', $company_id))
+                ->when($application_id, fn($q) => $q->where('application_id', $application_id))
+                ->when($comercial_id, fn($q) => $q->where('user_id', $comercial_id))
                 ->paginate(15);
 
             return $this->sendResponse($data, 'Enviando ordenes de servicio');

@@ -158,12 +158,10 @@
         }
 
         .result-label {
-            width: 25%;
             font-weight: bold;
         }
 
         .result-colon {
-            width: 3%;
             text-align: center;
             font-weight: bold;
         }
@@ -178,7 +176,7 @@
             font-size: 8.5px;
         }
 
-        .result-main-table th {
+       .result-main-table th {
             padding: 1.4mm .8mm;
             text-align: center;
             font-weight: bold;
@@ -189,6 +187,11 @@
         .result-main-table td {
             padding: 1mm .8mm;
             line-height: 1.15;
+        } 
+        
+        .result-info-table td {
+            overflow-wrap: break-word;
+            word-break: break-word;
         }
 
         .group-row td {
@@ -267,6 +270,11 @@
             font-size: 10px;
             font-weight: bold;
         }
+        
+        .result-info-table,
+        .result-main-table {
+            table-layout: fixed;
+        }
     </style>
 </head>
 
@@ -274,12 +282,26 @@
 
 @php
     $samples = $data['samples'] ?? [];
-    $sampleCount = max(count($samples), 1);
+
+    $maxResultsPerPage = 4;
+
+    $sampleChunks = collect($samples)
+        ->chunk($maxResultsPerPage)
+        ->map(fn ($chunk) => $chunk->values()->toArray())
+        ->values()
+        ->toArray();
+
+    if (empty($sampleChunks)) {
+        $sampleChunks = [[]];
+    }
+
+    $resultsPagesCount = count($sampleChunks);
+
+    // 1 página inicial + páginas dinámicas de resultados + 1 página final
+    $totalPages = 1 + $resultsPagesCount + 1;
 
     $category = $data['category'] ?? $data['product'] ?? '-';
     $subCategory = $data['sub_category'] ?? $data['product'] ?? '-';
-
-    $resultColumnWidth = 46 / $sampleCount;
 
     if (!function_exists('pdfParseCoordinate')) {
         function pdfParseCoordinate($coordinate) {
@@ -419,175 +441,210 @@
         Informe Autorizado por:
     </div>
 
-    <div class="page-number">1 de 3</div>
+    <div class="page-number">1 de {{ $totalPages }}</div>
 </div>
 
-<div class="page">
-    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
-    <p class="subtitle">CON VALOR OFICIAL</p>
+@foreach($sampleChunks as $chunkIndex => $sampleChunk)
+    @php
+        $currentSampleCount = max(count($sampleChunk), 1);
 
-    <div class="section-title">
-        I. RESULTADOS DE ANÁLISIS
-    </div>
+        $parameterWidth = 27;
+        $unitWidth = 13;
+        $lcmWidth = 12;
+        $resultsTotalWidth = 48;
 
-    <table class="result-info-table">
-        <tr>
-            <td class="result-label">Código del Laboratorio</td>
-            <td class="result-colon">:</td>
+        $resultColumnWidth = $resultsTotalWidth / $currentSampleCount;
 
-            @forelse($samples as $sample)
-                <td class="result-value" style="width: {{ $resultColumnWidth }}%;">
-                    {{ $sample['code_lab'] ?? '-' }}
-                </td>
-            @empty
-                <td class="result-value">-</td>
-            @endforelse
-        </tr>
+        $currentPage = 2 + $chunkIndex;
+    @endphp
 
-        <tr>
-            <td class="result-label">Código de la muestra ¤</td>
-            <td class="result-colon">:</td>
+    <div class="page">
+        <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
+        <p class="subtitle">CON VALOR OFICIAL</p>
 
-            @forelse($samples as $sample)
-                <td class="result-value">{{ $sample['code_sample'] ?? '-' }}</td>
-            @empty
-                <td class="result-value">-</td>
-            @endforelse
-        </tr>
+        <div class="section-title">
+            I. RESULTADOS DE ANÁLISIS
+        </div>
 
-        <tr>
-            <td class="result-label">Fecha muestreo ¤</td>
-            <td class="result-colon">:</td>
+        <table class="result-info-table">
+            <colgroup>
+                <col style="width: {{ $parameterWidth }}%;">
+                <col style="width: {{ $unitWidth }}%;">
+                <col style="width: {{ $lcmWidth }}%;">
 
-            @forelse($samples as $sample)
-                <td class="result-value">{{ $sample['date_sample'] ?? '-' }}</td>
-            @empty
-                <td class="result-value">-</td>
-            @endforelse
-        </tr>
+                @for($i = 0; $i < $currentSampleCount; $i++)
+                    <col style="width: {{ $resultColumnWidth }}%;">
+                @endfor
+            </colgroup>
 
-        <tr>
-            <td class="result-label">Hora muestreo ¤</td>
-            <td class="result-colon">:</td>
-
-            @forelse($samples as $sample)
-                <td class="result-value">{{ $sample['hour_sample'] ?? '-' }}</td>
-            @empty
-                <td class="result-value">-</td>
-            @endforelse
-        </tr>
-
-        <tr>
-            <td class="result-label">Categoría ¤</td>
-            <td class="result-colon">:</td>
-
-            @forelse($samples as $sample)
-                <td class="result-value">{{ $category }}</td>
-            @empty
-                <td class="result-value">-</td>
-            @endforelse
-        </tr>
-
-        <tr>
-            <td class="result-label">Sub categoría</td>
-            <td class="result-colon">:</td>
-
-            @forelse($samples as $sample)
-                <td class="result-value">{{ $subCategory }}</td>
-            @empty
-                <td class="result-value">-</td>
-            @endforelse
-        </tr>
-
-        <tr>
-            <td class="result-label">Coordenadas (WGS-84) ¤</td>
-            <td class="result-colon">:</td>
-
-            @forelse($samples as $sample)
-                @php
-                    $coord = pdfParseCoordinate($sample['coordinate'] ?? '-');
-                @endphp
-
-                <td class="result-value">
-                    E: {{ $coord['east'] }}
-                </td>
-            @empty
-                <td class="result-value">E: -</td>
-            @endforelse
-        </tr>
-
-        <tr>
-            <td></td>
-            <td></td>
-
-            @forelse($samples as $sample)
-                @php
-                    $coord = pdfParseCoordinate($sample['coordinate'] ?? '-');
-                @endphp
-
-                <td class="result-value">
-                    N: {{ $coord['north'] }}
-                </td>
-            @empty
-                <td class="result-value">N: -</td>
-            @endforelse
-        </tr>
-    </table>
-
-    <table class="result-main-table">
-        <thead>
             <tr>
-                <th style="width: 29%;">Parámetros</th>
-                <th style="width: 13%;">Unidad</th>
-                <th style="width: 12%;">L.C.M.</th>
+                <td class="result-label" colspan="2">Código del Laboratorio</td>
+                <td class="result-colon">:</td>
 
-                @forelse($samples as $index => $sample)
-                    <th style="width: {{ $resultColumnWidth }}%;">
-                        {{ $index === 0 ? 'Resultados' : '' }}
-                    </th>
+                @forelse($sampleChunk as $sample)
+                    <td class="result-value">{{ $sample['code_lab'] ?? '-' }}</td>
                 @empty
-                    <th style="width: 46%;">Resultados</th>
+                    <td class="result-value">-</td>
                 @endforelse
             </tr>
-        </thead>
 
-        <tbody>
-            @foreach(($data['analysis_groups'] ?? []) as $group)
-                <tr class="group-row">
-                    <td colspan="{{ 3 + $sampleCount }}">
-                        {{ $group['type_of_analysis'] ?? 'SIN TIPO DE ENSAYO' }}
-                    </td>
-                </tr>
+            <tr>
+                <td class="result-label" colspan="2">Código de la muestra ¤</td>
+                <td class="result-colon">:</td>
 
-                @foreach(($group['parameters'] ?? []) as $parameter)
-                    <tr>
-                        <td>{{ $parameter['parameter'] ?? '-' }}</td>
-                        <td class="center">{{ $parameter['unit'] ?? '-' }}</td>
-                        <td class="center">{{ $parameter['lcm'] ?? '-' }}</td>
-
-                        @forelse($samples as $sampleIndex => $sample)
-                            <td class="center">
-                                {{ pdfResultByIndex($parameter, $sampleIndex) }}
-                            </td>
-                        @empty
-                            <td class="center"></td>
-                        @endforelse
-                    </tr>
-                @endforeach
-            @endforeach
-
-            <tr class="result-end-line">
-                <td colspan="{{ 3 + $sampleCount }}"></td>
+                @forelse($sampleChunk as $sample)
+                    <td class="result-value">{{ $sample['code_sample'] ?? '-' }}</td>
+                @empty
+                    <td class="result-value">-</td>
+                @endforelse
             </tr>
-        </tbody>
-    </table>
 
-    <div class="legend">
-        {{ $data['legend'] }}
+            <tr>
+                <td class="result-label" colspan="2">Fecha muestreo ¤</td>
+                <td class="result-colon">:</td>
+
+                @forelse($sampleChunk as $sample)
+                    <td class="result-value">{{ $sample['date_sample'] ?? '-' }}</td>
+                @empty
+                    <td class="result-value">-</td>
+                @endforelse
+            </tr>
+
+            <tr>
+                <td class="result-label" colspan="2">Hora muestreo ¤</td>
+                <td class="result-colon">:</td>
+
+                @forelse($sampleChunk as $sample)
+                    <td class="result-value">{{ $sample['hour_sample'] ?? '-' }}</td>
+                @empty
+                    <td class="result-value">-</td>
+                @endforelse
+            </tr>
+
+            <tr>
+                <td class="result-label" colspan="2">Categoría ¤</td>
+                <td class="result-colon">:</td>
+
+                @forelse($sampleChunk as $sample)
+                    <td class="result-value">{{ $category }}</td>
+                @empty
+                    <td class="result-value">-</td>
+                @endforelse
+            </tr>
+
+            <tr>
+                <td class="result-label" colspan="2">Sub categoría</td>
+                <td class="result-colon">:</td>
+
+                @forelse($sampleChunk as $sample)
+                    <td class="result-value">{{ $subCategory }}</td>
+                @empty
+                    <td class="result-value">-</td>
+                @endforelse
+            </tr>
+
+            <tr>
+                <td class="result-label" colspan="2">Coordenadas (WGS-84) ¤</td>
+                <td class="result-colon">:</td>
+
+                @forelse($sampleChunk as $sample)
+                    @php
+                        $coord = pdfParseCoordinate($sample['coordinate'] ?? '-');
+                    @endphp
+
+                    <td class="result-value">E: {{ $coord['east'] }}</td>
+                @empty
+                    <td class="result-value">E: -</td>
+                @endforelse
+            </tr>
+
+            <tr>
+                <td colspan="2"></td>
+                <td></td>
+
+                @forelse($sampleChunk as $sample)
+                    @php
+                        $coord = pdfParseCoordinate($sample['coordinate'] ?? '-');
+                    @endphp
+
+                    <td class="result-value">N: {{ $coord['north'] }}</td>
+                @empty
+                    <td class="result-value">N: -</td>
+                @endforelse
+            </tr>
+        </table>
+
+        <table class="result-main-table">
+            <colgroup>
+                <col style="width: {{ $parameterWidth }}%;">
+                <col style="width: {{ $unitWidth }}%;">
+                <col style="width: {{ $lcmWidth }}%;">
+
+                @for($i = 0; $i < $currentSampleCount; $i++)
+                    <col style="width: {{ $resultColumnWidth }}%;">
+                @endfor
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th>Parámetros</th>
+                    <th>Unidad</th>
+                    <th>L.C.M.</th>
+
+                    @forelse($sampleChunk as $index => $sample)
+                        <th>
+                            {{ $index === 0 ? 'Resultados' : '' }}
+                        </th>
+                    @empty
+                        <th>Resultados</th>
+                    @endforelse
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach(($data['analysis_groups'] ?? []) as $group)
+                    <tr class="group-row">
+                        <td colspan="{{ 3 + $currentSampleCount }}">
+                            {{ $group['type_of_analysis'] ?? 'SIN TIPO DE ENSAYO' }}
+                        </td>
+                    </tr>
+
+                    @foreach(($group['parameters'] ?? []) as $parameter)
+                        <tr>
+                            <td>{{ $parameter['parameter'] ?? '-' }}</td>
+                            <td class="center">{{ $parameter['unit'] ?? '-' }}</td>
+                            <td class="center">{{ $parameter['lcm'] ?? '-' }}</td>
+
+                            @forelse($sampleChunk as $localSampleIndex => $sample)
+                                @php
+                                    $globalSampleIndex = ($chunkIndex * $maxResultsPerPage) + $localSampleIndex;
+                                @endphp
+
+                                <td class="center">
+                                    {{ pdfResultByIndex($parameter, $globalSampleIndex) }}
+                                </td>
+                            @empty
+                                <td class="center"></td>
+                            @endforelse
+                        </tr>
+                    @endforeach
+                @endforeach
+
+                <tr class="result-end-line">
+                    <td colspan="{{ 3 + $currentSampleCount }}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        @if($loop->last)
+            <div class="legend">
+                {{ $data['legend'] }}
+            </div>
+        @endif
+
+        <div class="page-number">{{ $currentPage }} de {{ $totalPages }}</div>
     </div>
-
-    <div class="page-number">2 de 3</div>
-</div>
+@endforeach
 
 <div class="page">
     <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
@@ -623,8 +680,20 @@
         </tbody>
     </table>
 
+    @if($data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.')
+        <div class="observations-title">
+            III. PROCEDIMIENTOS DE MUESTREO
+        </div>
+
+        <div class="procedures">
+            @foreach($data['procedures'] ?? [] as $row)
+                <div>{{ $row['procedure'] ?? '-' }}</div>
+            @endforeach
+        </div>
+    @endif
+
     <div class="observations-title">
-        III. OBSERVACIONES
+        {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? 'IV.' : 'III.' }} OBSERVACIONES
     </div>
 
     <div class="observations-box">
@@ -639,7 +708,7 @@
         ***FIN DEL INFORME***
     </div>
 
-    <div class="page-number">3 de 3</div>
+    <div class="page-number">{{ $totalPages }} de {{ $totalPages }}</div>
 </div>
 
 </body>
