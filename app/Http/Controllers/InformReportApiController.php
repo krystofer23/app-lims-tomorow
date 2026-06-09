@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\InformDesignExport;
 use App\Models\tenant\ChainCustody;
+use App\Models\tenant\Conditions;
 use App\Models\tenant\OrderService;
 use App\Models\tenant\OtsGenerate;
 use App\Models\tenant\TypeOfAnalysis;
@@ -196,6 +197,13 @@ class InformReportApiController extends Controller
             ->filter(fn($row) => data_get($row, 'item.type') === $type)
             ->values();
 
+        $conditions = $parameters
+            ->pluck('item.condition_id')
+            ->unique()
+            ->values();
+
+        $condition = Conditions::findOrFail($conditions[0])?->description;
+
         $matrixIds = $parameters
             ->map(function ($parameter) {
                 $item = data_get($parameter, 'item', []);
@@ -288,7 +296,7 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
-        $typeAnalysisMap = TypeOfAnalysis::whereIn('id', $typeAnalysisIds)
+        $typeAnalysisMap = TypeOfAnalysis::query()->whereIn('id', $typeAnalysisIds)
             ->pluck('description', 'id')
             ->toArray();
 
@@ -474,7 +482,13 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
-        $legend = $this->legends[$type]['legend'] ?? '';
+        $legend = $this->getLegend($type, $samplingPerformedBy);
+
+        $code = $order?->code ?? '';
+
+        $cleanCode = str_starts_with($code, 'OS-')
+            ? substr($code, 3)
+            : $code;
 
         $mapData = [
             'report_number' => $chainCustody[0]?->number_report ?? 'XXX-XX-I',
@@ -488,7 +502,9 @@ class InformReportApiController extends Controller
             'sampling_performed_by' => $samplingPerformedBy[0] ?? '-',
             'sample_quantity' => $sampleQuantity,
             'product' => $type,
-            'sampling_plan' => 'NO APLICA',
+            'sampling_plan' => ($samplingPerformedBy[0] ?? null) === 'GREENLAB PERÚ S.A.C.'
+                ? 'PM N° ' . $cleanCode
+                : 'NO APLICA',
             'date_of_receipt' => $dateOfReceipt,
             'time_of_receipt' => $timeOfReceipt,
             'test_period' => '-',
@@ -504,9 +520,23 @@ class InformReportApiController extends Controller
 
             'legend' => $legend,
 
-            'procedures' => $analysisGroupsProcedures
+            'procedures' => $analysisGroupsProcedures,
+            'condition' => $condition
         ];
 
         return $mapData;
+    }
+
+    private function getLegend(string $type, array $samplingPerformedBy): string
+    {
+        $legend = $this->legends[$type]['legend'] ?? '';
+
+        $isGreenlab = ($samplingPerformedBy[0] ?? null) === 'GREENLAB PERÚ S.A.C.';
+
+        if ($isGreenlab) {
+            $legend = preg_replace('/^\s*¤:.*\R?/m', '', $legend);
+        }
+
+        return $legend;
     }
 };

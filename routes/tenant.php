@@ -92,6 +92,7 @@ Route::middleware([
             Route::controller(ItemsApiController::class)->prefix('items')->group(function ($q) {
 
                 Route::get('', 'index');
+                Route::put('update-unit-price/{id}', 'updateUnitPrice');
             });
 
             Route::controller(TestImportApiController::class)->prefix('import')->group(function () {

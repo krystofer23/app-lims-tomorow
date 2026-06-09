@@ -80,10 +80,27 @@
                     <template #header>N°</template>
                 </el-table-column>
 
-                <el-table-column width="200" label="Precio Unitario">
+                <el-table-column width="230" label="Precio Unitario">
                     <template #default="{ row }">
                         <p class="truncate font-semibold">
-                            S/ {{ row.unit_price }}
+                            <span v-if="!row.is_edit">S/ {{ row.unit_price }}</span>
+                            <el-input-number v-model="unit_price" class="max-w-[120px]" v-else size="small"
+                                :precision="2" :step="0.1"></el-input-number>
+                            <el-button-group class="ms-1.5">
+                                <el-button @click="() => {
+                                    handleEditUnitPrice(row)
+                                }" v-if="!row.is_edit" size="small" type="warning" plain>
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </el-button>
+                                <el-button :loading="row.loading" @click="handleSaveUnitPrice(row)" v-if="row.is_edit"
+                                    size="small" type="success" plain>
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                </el-button>
+                                <el-button @click="handleCancelUnitPrice(row)" v-if="row.is_edit" size="small"
+                                    type="danger" plain>
+                                    <i class="fa-solid fa-xmark"></i>
+                                </el-button>
+                            </el-button-group>
                         </p>
                     </template>
                 </el-table-column>
@@ -177,6 +194,8 @@ import { handleCurrentChange } from 'element-plus/es/components/tree/src/model/u
 import tenant from '../../../stores/tenant.js';
 import { useListStore } from '../../../stores/list.js';
 import { Search } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { handleErrorsExeption } from '../../../stores/handleErrorsExeption.js';
 
 const visible = ref(false)
 
@@ -229,6 +248,45 @@ const getItems = async (page = 1) => {
     }
 }
 
+const id = ref(null)
+const unit_price = ref(null)
+
+const handleEditUnitPrice = (row) => {
+    row.is_edit = true
+    id.value = row.id
+    unit_price.value = row.unit_price
+}
+
+const handleSaveUnitPrice = async (row) => {
+    if (!id.value) {
+        return ElMessage.warning('No se encontro el id')
+    }
+
+    row.loading = true
+
+    try {
+        const { data } = await tenant.put(`items/update-unit-price/${id.value}`, {
+            unit_price: unit_price.value
+        })
+
+        ElMessage.success(data.message)
+        handleCancelUnitPrice(row)
+        await getItems()
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        row.loading = false
+    }
+}
+
+const handleCancelUnitPrice = (row) => {
+    row.is_edit = false
+    id.value = null
+    unit_price.value = null
+}
+
 watch(() => filters.value, getItems, { deep: true })
 
 onMounted(async () => {
@@ -240,7 +298,6 @@ onMounted(async () => {
 
 <style scoped>
 :deep(.lims-table-header) {
-    /* background: #fff ; */
     color: #64748a !important;
     font-size: 12px;
     font-weight: 700;

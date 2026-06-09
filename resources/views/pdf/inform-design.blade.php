@@ -187,8 +187,8 @@
         .result-main-table td {
             padding: 1mm .8mm;
             line-height: 1.15;
-        } 
-        
+        }
+
         .result-info-table td {
             overflow-wrap: break-word;
             word-break: break-word;
@@ -206,7 +206,7 @@
         }
 
         .legend {
-            margin-top: 1.5mm;
+            margin-top: -4.5mm;
             font-family: DejaVu Serif, serif;
             white-space: pre-line;
             font-size: 7px;
@@ -270,7 +270,7 @@
             font-size: 10px;
             font-weight: bold;
         }
-        
+
         .result-info-table,
         .result-main-table {
             table-layout: fixed;
@@ -356,7 +356,7 @@
 @endphp
 
 <div class="page">
-    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
+    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}</p>
     <p class="subtitle">CON VALOR OFICIAL</p>
 
     <table class="general-table">
@@ -459,7 +459,7 @@
     @endphp
 
     <div class="page">
-        <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
+        <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}</p>
         <p class="subtitle">CON VALOR OFICIAL</p>
 
         <div class="section-title">
@@ -489,7 +489,7 @@
             </tr>
 
             <tr>
-                <td class="result-label" colspan="2">Código de la muestra ¤</td>
+                <td class="result-label" colspan="2">Código de la muestra {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
                 <td class="result-colon">:</td>
 
                 @forelse($sampleChunk as $sample)
@@ -500,7 +500,7 @@
             </tr>
 
             <tr>
-                <td class="result-label" colspan="2">Fecha muestreo ¤</td>
+                <td class="result-label" colspan="2">Fecha muestreo {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
                 <td class="result-colon">:</td>
 
                 @forelse($sampleChunk as $sample)
@@ -511,7 +511,7 @@
             </tr>
 
             <tr>
-                <td class="result-label" colspan="2">Hora muestreo ¤</td>
+                <td class="result-label" colspan="2">Hora muestreo {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
                 <td class="result-colon">:</td>
 
                 @forelse($sampleChunk as $sample)
@@ -522,7 +522,7 @@
             </tr>
 
             <tr>
-                <td class="result-label" colspan="2">Categoría ¤</td>
+                <td class="result-label" colspan="2">Categoría {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
                 <td class="result-colon">:</td>
 
                 @forelse($sampleChunk as $sample)
@@ -544,7 +544,7 @@
             </tr>
 
             <tr>
-                <td class="result-label" colspan="2">Coordenadas (WGS-84) ¤</td>
+                <td class="result-label" colspan="2">Coordenadas (WGS-84) {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
                 <td class="result-colon">:</td>
 
                 @forelse($sampleChunk as $sample)
@@ -604,7 +604,7 @@
             <tbody>
                 @foreach(($data['analysis_groups'] ?? []) as $group)
                     <tr class="group-row">
-                        <td colspan="{{ 3 + $currentSampleCount }}">
+                        <td style="border-top: 1px solid #000;" colspan="{{ 3 + $currentSampleCount }}">
                             {{ $group['type_of_analysis'] ?? 'SIN TIPO DE ENSAYO' }}
                         </td>
                     </tr>
@@ -647,7 +647,7 @@
 @endforeach
 
 <div class="page">
-    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}</p>
+    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}</p>
     <p class="subtitle">CON VALOR OFICIAL</p>
 
     <div class="section-title">

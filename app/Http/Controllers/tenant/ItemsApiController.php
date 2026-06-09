@@ -7,6 +7,7 @@ use App\Models\tenant\Item;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ItemsApiController extends Controller
 {
@@ -85,6 +86,24 @@ class ItemsApiController extends Controller
 
             return $this->sendResponse($data, 'Enviando items');
         } catch (Exception $e) {
+            return $this->sendError($e->getMessage());
+        }
+    }
+
+    public function updateUnitPrice($id, Request $request): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $item = Item::findOrFail($id);
+            $item->update([
+                'unit_price' => $request->unit_price ?? 0.0
+            ]);
+
+            DB::commit();
+            return $this->sendSuccess('Precio unitario actualizado con exito');
+        } catch (Exception $e) {
+            DB::rollBack();
             return $this->sendError($e->getMessage());
         }
     }
