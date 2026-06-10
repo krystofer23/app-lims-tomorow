@@ -307,9 +307,10 @@ class OrderServiceApiController extends Controller
         $exportData = $this->buildOrderServiceExportData($orderService);
 
         $pdf = Pdf::loadView('pdf.order-services.main', $exportData)
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'portrait')
+                ->setOption('isRemoteEnabled', true);
 
-        return $pdf->download('orden-servicio-' . ($orderService->code ?? $orderService->id) . '.pdf');
+        return $pdf->stream('orden-servicio-' . ($orderService->code ?? $orderService->id) . '.pdf');
     }
 
     public function teams($matrizId): JsonResponse
@@ -408,7 +409,7 @@ class OrderServiceApiController extends Controller
             ->with([
                 'company:id,ruc,business_name,direction,activity',
                 'user',
-                'reviwed',
+                'validator',
                 'quote',
                 'contactCompany.user',
                 'items',

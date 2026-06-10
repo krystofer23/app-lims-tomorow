@@ -281,9 +281,26 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="Acciones" width="180" align="center">
+                <el-table-column label="IAS" width="180" align="center">
                     <template #default="{ row }">
-                        <el-button-group>
+                        <el-button-group v-if="row.ias">
+                            <el-button :loading="loadingPdf === row?.type" @click="viewPdf(row?.type, orderId, 'IAS')"
+                                class="!rounded-l-lg" v-tippy="'Generar PDf'" type="primary" plain>
+                                <i class="fa-regular fa-file-pdf"></i>
+                            </el-button>
+                            <el-button :loading="loadingDownload === row?.type"
+                                @click="downloadTest(row.type, orderId, 'IAS')" class="!rounded-r-lg"
+                                v-tippy="'Generar Excel'" type="info" plain>
+                                <i class="fa-regular fa-file-excel"></i>
+                            </el-button>
+                        </el-button-group>
+                        <span v-else>-</span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="INACAL" width="180" align="center">
+                    <template #default="{ row }">
+                        <el-button-group v-if="row.inacal">
                             <el-button :loading="loadingPdf === row?.type"
                                 @click="viewPdf(row?.type, orderId, 'INACAL')" class="!rounded-l-lg"
                                 v-tippy="'Generar PDf'" type="primary" plain>
@@ -295,6 +312,7 @@
                                 <i class="fa-regular fa-file-excel"></i>
                             </el-button>
                         </el-button-group>
+                        <span v-else>-</span>
                     </template>
                 </el-table-column>
             </el-table>

@@ -186,6 +186,7 @@ class InformReportApiController extends Controller
     private function buildInformDesignData(int $orderId, Request $request)
     {
         $type = $request->input('type');
+        $condition = $request->input('condition');
 
         $order = OrderService::with([
             'items',
@@ -195,14 +196,8 @@ class InformReportApiController extends Controller
 
         $parameters = collect($order->items)
             ->filter(fn($row) => data_get($row, 'item.type') === $type)
+            ->filter(fn($row) => data_get($row, 'item.condition.description') === $condition)
             ->values();
-
-        $conditions = $parameters
-            ->pluck('item.condition_id')
-            ->unique()
-            ->values();
-
-        $condition = Conditions::findOrFail($conditions[0])?->description;
 
         $matrixIds = $parameters
             ->map(function ($parameter) {

@@ -144,7 +144,7 @@
                             Parametro
                         </label>
 
-                        <input v-model="filters.param" clearable class="w-full"
+                        <el-input v-model="filters.param" clearable class="w-full"
                             placeholder="Escribir..." />
                     </div>
 

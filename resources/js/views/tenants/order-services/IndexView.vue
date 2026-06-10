@@ -222,7 +222,7 @@
                                         <el-dropdown-item @click="downloadOrderServicePdf(row)">
                                             <div class="flex items-center gap-2 text-sm">
                                                 <i class="fa-regular fa-file-pdf"></i>
-                                                <span>Descargar PDF</span>
+                                                <span>Ver PDF</span>
                                             </div>
                                         </el-dropdown-item>
 
@@ -300,6 +300,7 @@ import { Search } from '@element-plus/icons-vue';
 import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 import { useListStore } from '../../../stores/list';
 import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
+import { usePdfViewerStore } from '../../../stores/pdf-viewer.js';
 
 const activeNames = ref(['1'])
 const companies = computed(() => listStore.companies)
@@ -377,6 +378,8 @@ const downloadOrderServiceExcel = async (row) => {
     }
 }
 
+const pdfViewerStore = usePdfViewerStore()
+
 const downloadOrderServicePdf = async (row) => {
     row.loadingPdf = true
 
@@ -385,16 +388,14 @@ const downloadOrderServicePdf = async (row) => {
             responseType: 'blob',
         })
 
-        const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
-        const link = document.createElement('a')
+        const blob = new Blob([response.data], {
+            type: 'application/pdf'
+        })
 
-        link.href = url
-        link.setAttribute('download', `orden-servicio-${row.code ?? row.id}.pdf`)
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
+        const pdfUrl = window.URL.createObjectURL(blob)
 
-        window.URL.revokeObjectURL(url)
+        pdfViewerStore.url = pdfUrl
+        pdfViewerStore.state = true
     }
     catch (e) {
         handleErrorsExeption(e)
