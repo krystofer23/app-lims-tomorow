@@ -24,6 +24,8 @@ class ItemsApiController extends Controller
             $condition_id = $request->input('condition_id');
             $type_of_sample_id = $request->input('type_of_sample_id');
 
+            $param = $request->input('param');
+
             $data = Item::query()
                 ->with([
                     'typeOfSample',
@@ -80,6 +82,11 @@ class ItemsApiController extends Controller
                 ->when($parameter, function ($query) use ($parameter) {
                     $query->whereHas('parameter', function ($query) use ($parameter) {
                         $query->where('description', 'like', "%$parameter%");
+                    });
+                })
+                ->when($param, function ($query) use ($param) {
+                    $query->whereHas('parameter', function ($query) use ($param) {
+                        $query->where('description', 'like', "%$param%");
                     });
                 })
                 ->paginate(15);

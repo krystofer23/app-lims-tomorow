@@ -137,6 +137,17 @@
                         </el-select>
                     </div>
 
+                    <div class="space-y-1.5">
+                        <label
+                            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                            <i class="fa-solid fa-microscope text-[10px] text-purple-500"></i>
+                            Parametro
+                        </label>
+
+                        <input v-model="filters.param" clearable class="w-full"
+                            placeholder="Escribir..." />
+                    </div>
+
                     <div class="flex items-end">
                         <el-button type="primary" :loading="loading"
                             class="!h-[32px] !w-full !rounded-xl !font-semibold" @click="getItem()">
@@ -366,7 +377,8 @@ const filters = reactive({
     product: null,
     condition: null,
     type_of_analysis: null,
-    type: null
+    type: null,
+    param: null
 })
 
 const pagination = ref({
@@ -423,6 +435,7 @@ const clearFilters = () => {
     filters.condition = null
     filters.type_of_analysis = null
     filters.type = null
+    filters.param = null
 
     itemsData.value = []
 }
