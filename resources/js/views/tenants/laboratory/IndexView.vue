@@ -1,5 +1,5 @@
 <template>
-    <custom-header title="Laboratorio" description="Registro y control de laboratorio." icon="fa-solid fa-flask-vial">
+    <custom-header :title="title" description="Registro y control de resultados." icon="fa-solid fa-flask-vial">
         <div class="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
             <el-input v-model="filters.search" placeholder="Buscar razón social, cadena o informe..." clearable
                 class="!w-full sm:!w-[260px]">
@@ -178,7 +178,8 @@
                 </el-table-column>
             </el-table>
 
-            <div v-if="tab === 'orders'" class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div v-if="tab === 'orders'"
+                class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-sm text-slate-500">
                     Mostrando <span class="font-semibold text-slate-700">{{ orders.length }}</span> de
                     <span class="font-semibold text-slate-700">{{ pagination.total }}</span> registros
@@ -274,7 +275,8 @@
                 </el-table-column>
             </el-table>
 
-            <div v-if="tab === 'attended'" class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div v-if="tab === 'attended'"
+                class="px-2 mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-sm text-slate-500">
                     Mostrando <span class="font-semibold text-slate-700">{{ orders_attended.length }}</span> de
                     <span class="font-semibold text-slate-700">{{ paginationAttended.total }}</span> registros
@@ -296,6 +298,7 @@ import { Search } from '@element-plus/icons-vue';
 import { handleErrorsExeption } from '../../../stores/handleErrorsExeption.js';
 import tenant from '../../../stores/tenant.js';
 import { useListStore } from '../../../stores/list.js';
+import { useRoute } from 'vue-router';
 
 const filters = ref({
     search: null,
@@ -412,6 +415,14 @@ watch(tab, async (newTab) => {
     } else {
         await getOrderAttended()
     }
+})
+
+const title = ref('')
+const route = useRoute()
+
+watch(() => route.path, (newVal) => {
+    if (route.path === '/operations') { title.value = 'Operaciones' }
+    if (route.path === '/laboratory') { title.value = 'Laboratorio' }
 })
 
 onMounted(async () => {

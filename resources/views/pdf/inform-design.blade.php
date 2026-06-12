@@ -428,7 +428,8 @@
         <tr>
             <td class="general-label">Fecha de Emisión</td>
             <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['date_of_issue'] ?? '' }}</td>
+            <td class="general-value">{{ $data['date_agreed'] ?? '' }}</td>
+            {{-- <td class="general-value">{{ $data['date_of_issue'] ?? '' }}</td> --}}
         </tr>
     </table>
 

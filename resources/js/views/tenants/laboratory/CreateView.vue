@@ -92,22 +92,35 @@
             <template v-for="group in results" :key="`table-${group.type_of_sample_id}`">
                 <div v-if="tabSample === group.type_of_sample">
                     <div class="mb-3 flex items-center justify-between">
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-800">
-                                {{ group.type_of_sample }}
-                            </h3>
+                        <div class="flex gap-3">
+                            <div class="flex gap-3 items-end bg-slate-100 border p-3 rounded-xl">
+                                <div>
+                                    <label for="" class="text-xs text-slate-600 font-medium">Periodo de ensayo</label>
+                                    <el-input class="input-custom" placeholder="Periodo de ensayo" />
+                                </div>
+                                <el-button class="rounded-lg" v-tippy="'Guardar'" type="success" plain>
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                </el-button>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">
+                                    {{ group.type_of_sample }}
+                                </h3>
 
-                            <p class="text-xs text-slate-400">
-                                Registro de resultados por parámetro y código de estación
-                            </p>
+                                <p class="text-xs text-slate-400">
+                                    Registro de resultados por parámetro y código de estación
+                                </p>
+                            </div>
                         </div>
 
-                        <div>
-                            <el-button :loading="loadingSubmit" @click="onSubmit(group.items)" class="!rounded-lg"
-                                type="primary" plain>
-                                <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
-                                Guardar
-                            </el-button>
+                        <div class="flex gap-3">
+                            <div>
+                                <el-button :loading="loadingSubmit" @click="onSubmit(group.items)" class="!rounded-lg"
+                                    type="primary" plain>
+                                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
+                                    Guardar Resultados
+                                </el-button>
+                            </div>
                         </div>
                     </div>
 

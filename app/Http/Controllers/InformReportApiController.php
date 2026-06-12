@@ -233,6 +233,28 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
+        $parameterIds = $parameters
+            ->pluck('item.parameter.id')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $dateAgreed = $chainCustody
+            ->filter(function ($chain) use ($parameterIds) {
+                $chainParameterIds = collect(data_get($chain, 'parameters', []))
+                    ->pluck('parameter.id')
+                    ->filter()
+                    ->toArray();
+
+                return !empty(array_intersect($chainParameterIds, $parameterIds));
+            })
+            ->pluck('date_agreed')
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
         $dateReception = $chainCustody
             ->pluck('date_reception')
             ->filter()
@@ -451,28 +473,15 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
-        $analysisGroupsProcedures = $parameters->map(function ($parameter) {
-            $item = data_get($parameter, 'item', []);
-
-            if (is_string($item)) {
-                $item = json_decode($item, true) ?: [];
-            }
-
-            $parameterId = data_get($item, 'parameter.id');
-
-            if (!$parameterId) {
-                return null;
-            }
-
-            $procedure = ProceduresToParameter::with('procedure')
-                ->where('parameter_id', $parameterId)
-                ->first();
-
-            return [
-                'procedure' => $procedure?->procedure?->description ?? '-',
-            ];
-        })
-            ->filter()
+        $analysisGroupsProcedures = ProceduresToParameter::with('procedure')
+            ->whereIn('parameter_id', $parameterIds)
+            ->get()
+            ->map(function ($procedure) {
+                return [
+                    'procedure' => $procedure?->procedure?->description,
+                ];
+            })
+            ->filter(fn($row) => !empty($row['procedure']))
             ->unique('procedure')
             ->values()
             ->toArray();
@@ -516,7 +525,9 @@ class InformReportApiController extends Controller
             'legend' => $legend,
 
             'procedures' => $analysisGroupsProcedures,
-            'condition' => $condition
+            'condition' => $condition,
+
+            'date_agreed' => $dateAgreed[0]
         ];
 
         return $mapData;
