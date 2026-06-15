@@ -517,7 +517,7 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
+<style>
 :deep(.lims-table-header) {
     /* background: #fff ; */
     color: #64748a !important;

@@ -30,6 +30,7 @@ class LaboratoryResults extends Model
         'code_lab',
         'code_sample',
         'result',
+        'condition_id',
     ];
 
     public function order(): BelongsTo
@@ -60,5 +61,10 @@ class LaboratoryResults extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id');
+    }
+
+    public function condition(): BelongsTo
+    {
+        return $this->belongsTo(Conditions::class, 'condition_id');
     }
 }

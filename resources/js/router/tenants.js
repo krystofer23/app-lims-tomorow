@@ -211,6 +211,25 @@ export const routesTenants = [
     {
         path: '/items',
         name: 'items',
-        component: () => import('../views/tenants/items/IndexView.vue')
-    }
+        component: () => import('../views/tenants/items/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/type-of-samples',
+        name: 'type-of-samples',
+        component: () => import('../views/tenants/type_of_sample/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/type-of-analysis',
+        name: 'type-of-analysis',
+        component: () => import('../views/tenants/type_of_analysis/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/parameters',
+        name: 'parameters',
+        component: () => import('../views/tenants/parameters/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
 ]

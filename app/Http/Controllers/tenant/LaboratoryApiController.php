@@ -267,13 +267,6 @@ class LaboratoryApiController extends Controller
                         $item = json_decode($item, true) ?: [];
                     }
 
-                    /*
-                 |--------------------------------------------------------------------------
-                 | ID real del parámetro/item
-                 |--------------------------------------------------------------------------
-                 | En chain_custody.parameters[].id se guarda el ID del item real.
-                 | En tu JSON ese ID es 226, 228, 227, etc.
-                 */
                     $realItemId = data_get($row, 'item_id')
                         ?? data_get($item, 'id');
 
@@ -370,10 +363,21 @@ class LaboratoryApiController extends Controller
                 ->map(function ($group) {
                     $first = $group->first();
 
+                    $ias = collect($group)->where('condition_id', 2)->values();
+                    $inacal = collect($group)->where('condition_id', 1)->values();
+
+                    $noCondition = collect($group)
+                        ->filter(function ($item) {
+                            return in_array($item['condition_id'], [3, null], true);
+                        })
+                        ->values();
+
                     return [
                         'type_of_sample_id' => $first['type_of_sample_id'],
                         'type_of_sample' => $first['type_of_sample'],
-                        'items' => $group->values(),
+                        'items_ias' => $ias,
+                        'items_inacal' => $inacal,
+                        'items' => $noCondition,
                     ];
                 })
                 ->values();

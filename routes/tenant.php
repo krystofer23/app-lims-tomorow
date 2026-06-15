@@ -16,11 +16,13 @@ use App\Http\Controllers\tenant\LogisticCatsApiController;
 use App\Http\Controllers\tenant\MatrizApiController;
 use App\Http\Controllers\tenant\MethodologiesApiController;
 use App\Http\Controllers\tenant\OrderServiceApiController;
+use App\Http\Controllers\tenant\ParameterApiController;
 use App\Http\Controllers\tenant\QuotesApiController;
 use App\Http\Controllers\tenant\ReceptionApiController;
 use App\Http\Controllers\tenant\ReportOtsApiController;
 use App\Http\Controllers\tenant\ServiceApiController;
 use App\Http\Controllers\tenant\TestImportApiController;
+use App\Http\Controllers\tenant\TrialPeriodApiController;
 use App\Http\Controllers\tenant\UbigeoApiController;
 use App\Http\Controllers\tenant\UnitsMeasurementApiController;
 use App\Http\Controllers\tenant\UserApiController;
@@ -70,6 +72,19 @@ Route::middleware([
         });
 
         Route::middleware([JWTMiddleware::class])->group(function () {
+
+            Route::controller(ParameterApiController::class)->prefix('parameters')->group(function () {
+
+                Route::get('', 'index');
+                Route::post('', 'store');
+                Route::put('/{id}', 'update');
+            });
+
+            Route::controller(TrialPeriodApiController::class)->prefix('trial-period')->group(function () {
+
+                Route::get('', 'show');
+                Route::post('', 'store');
+            });
 
             Route::controller(InformReportApiController::class)->prefix('information')->group(function () {
 
