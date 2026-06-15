@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 import { Search } from '@element-plus/icons-vue';
 import { handleErrorsExeption } from "../../../stores/handleErrorsExeption"
@@ -132,7 +132,7 @@ const getParameters = async (page = 1) => {
     try {
         const { data } = await tenant.get(`parameters?page=${page}`, {
             params: {
-                filters
+                ...filters
             }
         })
 
@@ -153,6 +153,10 @@ const getParameters = async (page = 1) => {
         loading.value = false
     }
 }
+
+watch(() => filters, () => {
+    getParameters()
+}, { deep: true })
 
 onMounted(() => {
     getParameters()

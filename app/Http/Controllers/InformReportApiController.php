@@ -10,6 +10,7 @@ use App\Models\tenant\OtsGenerate;
 use App\Models\tenant\TypeOfAnalysis;
 use App\Models\tenant\LaboratoryResults;
 use App\Models\tenant\ProceduresToParameter;
+use App\Models\tenant\TrialPeriod;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -199,6 +200,17 @@ class InformReportApiController extends Controller
             ->filter(fn($row) => data_get($row, 'item.condition.description') === $condition)
             ->values();
 
+        $typeOfSampleId = $parameters
+            ->map(
+                fn($row) =>
+                data_get($row, 'item.type_of_sample_id')
+                    ?? data_get($row, 'item.parameter.connections_parameter.0.type_of_samples_id')
+                    ?? data_get($row, 'item.parameter.connections_parameter.0.type_of_sample_id')
+            )
+            ->filter()
+            ->unique()
+            ->first();
+
         $matrixIds = $parameters
             ->map(function ($parameter) {
                 $item = data_get($parameter, 'item', []);
@@ -220,8 +232,12 @@ class InformReportApiController extends Controller
 
         $chainCustody = ChainCustody::query()
             ->where('order_id', $orderId)
-            ->whereIn('matrix_id', $matrixIds)
+            ->when(!empty($matrixIds), function ($query) use ($matrixIds) {
+                $query->whereIn('matrix_id', $matrixIds);
+            })
             ->get();
+
+        $firstChainCustody = $chainCustody->first();
 
         $sampleQuantity = $chainCustody
             ->sum(fn($item) => (int) ($item->number_sample ?? 0));
@@ -242,8 +258,22 @@ class InformReportApiController extends Controller
 
         $dateAgreed = $chainCustody
             ->filter(function ($chain) use ($parameterIds) {
-                $chainParameterIds = collect(data_get($chain, 'parameters', []))
-                    ->pluck('parameter.id')
+                $parametersJson = $chain->parameters ?? [];
+
+                if (is_string($parametersJson)) {
+                    $parametersJson = json_decode($parametersJson, true) ?: [];
+                }
+
+                if (!is_array($parametersJson)) {
+                    $parametersJson = [];
+                }
+
+                $chainParameterIds = collect($parametersJson)
+                    ->map(
+                        fn($parameter) =>
+                        data_get($parameter, 'parameter.id')
+                            ?? data_get($parameter, 'id')
+                    )
                     ->filter()
                     ->toArray();
 
@@ -313,7 +343,8 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
-        $typeAnalysisMap = TypeOfAnalysis::query()->whereIn('id', $typeAnalysisIds)
+        $typeAnalysisMap = TypeOfAnalysis::query()
+            ->whereIn('id', $typeAnalysisIds)
             ->pluck('description', 'id')
             ->toArray();
 
@@ -356,7 +387,9 @@ class InformReportApiController extends Controller
                     }
 
                     $existsInCustody = collect($parametersJson)->contains(function ($parameter) use ($realItemId) {
-                        return (int) data_get($parameter, 'id') === (int) $realItemId;
+                        return (int) data_get($parameter, 'id') === (int) $realItemId
+                            || (int) data_get($parameter, 'item_id') === (int) $realItemId
+                            || (int) data_get($parameter, 'parameter.id') === (int) $realItemId;
                     });
 
                     if (!$existsInCustody) {
@@ -494,21 +527,38 @@ class InformReportApiController extends Controller
             ? substr($code, 3)
             : $code;
 
+        $conditionId = Conditions::query()
+            ->where('description', 'like', "%{$condition}%")
+            ->value('id');
+
+        $trialPeriod = null;
+
+        if ($orderId && $conditionId && $typeOfSampleId) {
+            $trialPeriod = TrialPeriod::query()
+                ->where('order_id', $orderId)
+                ->where('condition_id', $conditionId)
+                ->where('type_of_sample_id', $typeOfSampleId)
+                ->first();
+        }
+
         $mapData = [
-            'report_number' => $chainCustody[0]?->number_report ?? 'XXX-XX-I',
+            'report_number' => $firstChainCustody?->number_report ?? 'XXX-XX-I',
 
             'company' => $order?->company?->business_name,
             'direction' => $order?->direction ?? $order?->company?->direction,
             'application' => $order?->application?->business_name,
-            'reference' => $order->code . ' / Cotización N° ' . $order->quote_id,
+            'reference' => ($order?->code ?? '-') . ' / Cotización N° ' . ($order?->quote_id ?? '-'),
             'project' => $order?->project,
             'origin' => $order?->origin,
+
             'sampling_performed_by' => $samplingPerformedBy[0] ?? '-',
             'sample_quantity' => $sampleQuantity,
             'product' => $type,
+
             'sampling_plan' => ($samplingPerformedBy[0] ?? null) === 'GREENLAB PERÚ S.A.C.'
                 ? 'PM N° ' . $cleanCode
                 : 'NO APLICA',
+
             'date_of_receipt' => $dateOfReceipt,
             'time_of_receipt' => $timeOfReceipt,
             'test_period' => '-',
@@ -527,7 +577,15 @@ class InformReportApiController extends Controller
             'procedures' => $analysisGroupsProcedures,
             'condition' => $condition,
 
-            'date_agreed' => $dateAgreed[0]
+            'date_agreed' => $dateAgreed[0] ?? '-',
+
+            'trial_period' => ($trialPeriod?->date_init && $trialPeriod?->date_end)
+                ? sprintf(
+                    'DEL %s AL %s',
+                    Carbon::parse($trialPeriod->date_init)->format('d/m/Y'),
+                    Carbon::parse($trialPeriod->date_end)->format('d/m/Y')
+                )
+                : null,
         ];
 
         return $mapData;

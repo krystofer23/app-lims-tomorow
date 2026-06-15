@@ -14,11 +14,14 @@ class ParameterApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            $search = $request->input('search');
+
             $data = Parameters::query()
                 ->with([
                     'typeOfAnalysis',
                     'connectionsParameter',
                 ])
+                ->when($search, fn($q) => $q->where('description', 'like', "%$search%"))
                 ->paginate(15);
 
             return $this->sendResponse($data, 'Enviando parametros');
