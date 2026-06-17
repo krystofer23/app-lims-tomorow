@@ -582,8 +582,8 @@ class InformReportApiController extends Controller
             'trial_period' => ($trialPeriod?->date_init && $trialPeriod?->date_end)
                 ? sprintf(
                     'DEL %s AL %s',
-                    Carbon::parse($trialPeriod->date_init)->format('d/m/Y'),
-                    Carbon::parse($trialPeriod->date_end)->format('d/m/Y')
+                    Carbon::parse($trialPeriod->date_init)->format('Y-m-d'),
+                    Carbon::parse($trialPeriod->date_end)->format('Y-m-d')
                 )
                 : null,
         ];

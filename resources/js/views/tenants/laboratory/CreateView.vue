@@ -54,18 +54,18 @@
                     handleTab(group)
                 }" :class="tabSample === group.type_of_sample
                     ? 'bg-teal-500 text-white shadow-sm'
-                    : isCompleted(group.items)
+                    : isCompleted(getAllItems(group))
                         ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100'
                         : 'bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-700'"
                     class="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200">
                     <i :class="[
-                        isCompleted(group.items)
+                        isCompleted(getAllItems(group))
                             ? 'fa-solid fa-circle-check'
                             : 'fa-solid fa-vial-circle-check',
 
                         tabSample === group.type_of_sample
                             ? 'text-white'
-                            : isCompleted(group.items)
+                            : isCompleted(getAllItems(group))
                                 ? 'text-emerald-600'
                                 : 'text-teal-500',
 
@@ -76,15 +76,16 @@
 
                     <span class="ml-1 rounded-full px-2 py-0.5 text-[10px] font-bold" :class="tabSample === group.type_of_sample
                         ? 'bg-white/20 text-white'
-                        : isCompleted(group.items)
+                        : isCompleted(getAllItems(group))
                             ? 'bg-emerald-100 text-emerald-700'
                             : 'bg-teal-50 text-teal-600'">
-                        {{ getTotalStations(group.items) }}
+                        {{ getTotalStations(getAllItems(group)) }}
                     </span>
 
-                    <span v-if="isCompleted(group.items)" class="rounded-full px-2 py-0.5 text-[10px] font-bold" :class="tabSample === group.type_of_sample
-                        ? 'bg-white/20 text-white'
-                        : 'bg-emerald-100 text-emerald-700'">
+                    <span v-if="isCompleted(getAllItems(group))" class="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                        :class="tabSample === group.type_of_sample
+                            ? 'bg-white/20 text-white'
+                            : 'bg-emerald-100 text-emerald-700'">
                         Completado
                     </span>
                 </button>
@@ -107,8 +108,8 @@
 
                         <div class="flex gap-3">
                             <div>
-                                <el-button :loading="loadingSubmit" @click="onSubmit(group.items)" class="!rounded-lg"
-                                    type="primary" plain>
+                                <el-button :loading="loadingSubmit" @click="onSubmit(getActiveItems(group))"
+                                    class="!rounded-lg" type="primary" plain>
                                     <i class="fa-solid fa-cloud-arrow-up mr-2"></i>
                                     Guardar Resultados
                                 </el-button>
@@ -442,6 +443,22 @@ watch(() => activeAccreditationTab.value, (newVal) => {
     if (newVal === 'no_acreditado') form.value.condition_id = 3
 })
 
+const getActiveItems = (group) => {
+    if (activeAccreditationTab.value === 'ias') return group.items_ias ?? []
+    if (activeAccreditationTab.value === 'inacal') return group.items_inacal ?? []
+    if (activeAccreditationTab.value === 'no_acreditado') return group.items ?? []
+
+    return []
+}
+
+const getAllItems = (group) => {
+    return [
+        ...(group.items_ias ?? []),
+        ...(group.items_inacal ?? []),
+        ...(group.items ?? []),
+    ]
+}
+
 const loadingForm = ref(false)
 const loadingTrialPeriod = ref(false)
 
@@ -458,8 +475,8 @@ const getTrialPeriod = async () => {
         })
 
         if (data.data) {
-            form.value.date_end = data.data?.date_init ?? null
-            form.value.date_init = data.data?.date_end ?? null
+            form.value.date_init = data.data?.date_init ?? null
+            form.value.date_end = data.data?.date_end ?? null
         }
         else {
             form.value.date_end = null
