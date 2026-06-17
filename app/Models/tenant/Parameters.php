@@ -17,6 +17,13 @@ class Parameters extends TenantModel
     protected $fillable = [
         'description',
         'type_of_analysis_id',
+        'ids_connections_parameters',
+        'is_metal'
+    ];
+
+    protected $casts = [
+        'ids_connections_parameters' => 'array',
+        'is_metal' => 'boolean'
     ];
 
     public function typeOfAnalysis(): BelongsTo

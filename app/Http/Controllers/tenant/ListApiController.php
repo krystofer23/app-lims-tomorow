@@ -357,6 +357,7 @@ class ListApiController extends Controller
             $matrix = $request->input('matrix');
             $product = $request->input('product');
             $condition = $request->input('condition');
+            $search = $request->input('search');
 
             $parametersIds = Item::query()
                 ->when($product, function ($query) use ($product) {
@@ -391,6 +392,7 @@ class ListApiController extends Controller
                 ->values();
 
             $data = TypeOfAnalysis::query()
+                ->when($search, fn($q) => $q->where('description', 'like', "%$search%"))
                 ->when($typeOfAnalysisIds->isNotEmpty(), function ($q) use ($typeOfAnalysisIds) {
                     $q->whereIn('id', $typeOfAnalysisIds);
                 })

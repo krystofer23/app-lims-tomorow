@@ -76,8 +76,10 @@ Route::middleware([
             Route::controller(ParameterApiController::class)->prefix('parameters')->group(function () {
 
                 Route::get('', 'index');
+                Route::get('list', 'list');
                 Route::post('', 'store');
                 Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
             });
 
             Route::controller(TrialPeriodApiController::class)->prefix('trial-period')->group(function () {

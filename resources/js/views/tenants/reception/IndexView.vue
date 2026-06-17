@@ -826,7 +826,8 @@
                     :row-class-name="tableRowClassName">
                     <el-table-column fixed="left" label="" width="70" align="center">
                         <template #default="{ row }">
-                            <div class="mx-auto flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200"
+                            <div v-if="!row?.parameter?.is_metal"
+                                class="mx-auto flex h-8 w-8 items-center justify-center rounded-full border transition-all duration-200"
                                 :class="isSelected(row)
                                     ? 'border-cyan-600 bg-cyan-600 text-white shadow-sm shadow-cyan-200'
                                     : 'border-slate-300 bg-white text-slate-400 hover:border-cyan-500 hover:bg-cyan-50 hover:text-cyan-600'">
@@ -971,6 +972,75 @@
                             </div>
                         </template>
                     </el-table-column>
+
+                    <el-table-column min-width="200" fixed="right">
+                        <template #header>
+                            <div class="flex items-center gap-2">
+                                <span>Ver Parámetros</span>
+                            </div>
+                        </template>
+
+                        <template #default="{ row }">
+                            <el-popover v-if="row?.parameter?.is_metal" placement="right" width="520" trigger="click"
+                                @show="getToParametersMetal(row.parameter.ids_connections_parameters ?? [])">
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between border-b pb-2">
+                                        <div>
+                                            <h4 class="text-sm font-semibold text-slate-700">
+                                                Parámetros del metal
+                                            </h4>
+                                            <p class="text-xs text-slate-400">
+                                                Selecciona los parámetros que deseas agregar.
+                                            </p>
+                                        </div>
+
+                                        <el-tag type="primary" effect="light">
+                                            {{ parametersToMetal.length }} items
+                                        </el-tag>
+                                    </div>
+
+                                    <el-input v-model="searchMetal" placeholder="Buscar parámetro..." clearable
+                                        size="small" />
+
+                                    <el-table v-loading="loadingMetalParameters" :data="filteredParametersToMetal"
+                                        height="300" size="small" border
+                                        :row-class-name="tableRowClassName">
+                                        <el-table-column prop="description" label="Parámetro" min-width="260"
+                                            show-overflow-tooltip />
+
+                                        <el-table-column label="Acciones" width="130" align="center">
+                                            <template #default="{ row: metalRow }">
+                                                <el-button size="small" type="success" plain
+                                                    @click="toggleItem(row, metalRow)">
+                                                    Agregar
+                                                </el-button>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                                </div>
+
+                                <template #reference>
+                                    <el-button type="primary" plain size="small"
+                                        class="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold transition hover:bg-blue-100">
+                                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                                            <i class="fa-solid fa-flask-vial text-sm"></i>
+                                        </div>
+
+                                        <span>
+                                            Ver parámetros
+                                            <small class="ml-1">
+                                                ({{ row.parameter.ids_connections_parameters?.length ?? 0 }})
+                                            </small>
+                                        </span>
+                                    </el-button>
+                                </template>
+                            </el-popover>
+
+                            <span v-else class="text-xs text-slate-400">
+                                —
+                            </span>
+                        </template>
+                    </el-table-column>
                 </el-table>
             </div>
 
@@ -1032,6 +1102,45 @@ const companies = computed(() => listStore.companies)
 const conditions = computed(() => listStore.conditions)
 const typesAnalysis = computed(() => listStore.typesAnalysis)
 
+const parametersToMetal = ref([])
+const searchMetal = ref('')
+const loadingMetalParameters = ref(false)
+
+const filteredParametersToMetal = computed(() => {
+    const search = searchMetal.value.toLowerCase().trim()
+
+    if (!search) {
+        return parametersToMetal.value
+    }
+
+    return parametersToMetal.value.filter((item) => {
+        return item.description?.toLowerCase().includes(search)
+    })
+})
+
+const getToParametersMetal = async (listArray = []) => {
+    try {
+        loadingMetalParameters.value = true
+        parametersToMetal.value = []
+
+        const { data } = await tenant.get('parameters/list', {
+            params: {
+                list_array: listArray,
+            },
+        })
+
+        parametersToMetal.value = data.data ?? []
+    } catch (e) {
+        handleErrorsExeption(e)
+    } finally {
+        loadingMetalParameters.value = false
+    }
+}
+
+const addMetalParameter = (metalRow) => {
+    console.log('Metal seleccionado:', metalRow)
+}
+
 const activeName = ref(['1'])
 
 const typesSampling = ref([])
@@ -1071,6 +1180,7 @@ const getMatrix = async () => {
 const condition = ref(null)
 const type_of_analysis = ref(null)
 const loadingParameter = computed(() => listStore.loadingParameter)
+const searchFind = ref(null)
 
 const handleGenerateOT = async () => {
     const ok = await confirmRef.value?.open({
@@ -1149,12 +1259,19 @@ const emptyForm = () => ({
 const form = reactive(emptyForm())
 
 const isSelected = (row) => {
+    if (row?.parameter?.is_metal) return
+
     if (!Array.isArray(form.parameters)) return false
 
     return form.parameters.some((item) => item.id === row.id)
 }
 
-const toggleItem = (row) => {
+const toggleItem = (row, minor = null) => {
+    if (row && row?.parameter?.is_metal && minor) {
+
+    }
+    if (row?.parameter?.is_metal) return
+
     if (!Array.isArray(form.parameters)) {
         form.parameters = []
     }
@@ -1543,9 +1660,9 @@ watch(() => form.type_of_sample_id, async () => {
 })
 
 watch(
-    () => [form.matrix_id, form.type_of_sample_id, condition.value, type_of_analysis.value],
+    () => [form.matrix_id, form.type_of_sample_id, condition.value, type_of_analysis.value, searchFind.value],
     ([matrixId, typeOfSampleId, conditionId, type_of_analysisId]) => {
-        listStore.getParameters(1, matrixId, typeOfSampleId, conditionId, type_of_analysisId, form.order_id)
+        listStore.getParameters(1, matrixId, typeOfSampleId, conditionId, type_of_analysisId, form.order_id, searchFind.value)
     }
 )
 

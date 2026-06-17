@@ -10,7 +10,7 @@
                 </template>
             </el-input>
 
-            <el-button type="primary"
+            <el-button type="primary" @click="visible = true"
                 class="!h-8 !rounded-xl !border-0 !bg-gradient-to-r !from-emerald-400 !to-teal-500 !px-5 !font-medium !text-white !shadow-md !shadow-emerald-100 hover:!opacity-90">
                 Agregar Registro
             </el-button>
@@ -25,12 +25,37 @@
                 <el-table-column prop="description" label="Descripción"></el-table-column>
                 <el-table-column label="Tipo de análisis">
                     <template #default="{ row }">
-
+                        <p v-if="row.type_of_analysis">
+                            {{ row.type_of_analysis.description ?? '-' }}
+                        </p>
                     </template>
                 </el-table-column>
                 <el-table-column label="Acciones">
                     <template #default="{ row }">
+                        <el-dropdown trigger="click" placement="bottom-end">
+                            <button type="button"
+                                class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 active:scale-95">
+                                <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+                            </button>
 
+                            <template #dropdown>
+                                <el-dropdown-menu>
+                                    <el-dropdown-item @click="handleEdit(row)">
+                                        <div class="flex items-center gap-2 text-sm">
+                                            <i class="fa-regular fa-pen-to-square"></i>
+                                            <span>Editar</span>
+                                        </div>
+                                    </el-dropdown-item>
+
+                                    <el-dropdown-item divided @click="onDelete(row)">
+                                        <div class="flex items-center gap-2 text-sm">
+                                            <i class="fa-regular fa-trash-can"></i>
+                                            <span>Eliminar</span>
+                                        </div>
+                                    </el-dropdown-item>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
                     </template>
                 </el-table-column>
                 <template #empty>
@@ -68,19 +93,80 @@
         </div>
     </div>
 
-    <el-dialog v-model="visible">
+    <el-dialog v-model="visible" width="520px" align-center :show-close="false" class="custom-dialog !rounded-lg">
+        <template #header>
+            <div class="flex items-center justify-between border-b pb-3">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        Registrar parámetro
+                    </h3>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Completa los datos para asociarlo al análisis correspondiente.
+                    </p>
+                </div>
 
+                <button type="button"
+                    class="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                    @click="visible = false">
+                    ✕
+                </button>
+            </div>
+        </template>
+
+        <form class="space-y-5 pt-2" @submit.prevent="submitForm">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                    Descripción
+                </label>
+
+                <el-input v-model="form.description" size="large" placeholder="Ej. Metales Totales" clearable />
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-gray-700">
+                    Tipo de análisis
+                </label>
+
+                <el-select v-model="form.type_of_analysis_id" size="large" placeholder="Seleccione el tipo de análisis"
+                    filterable remote reserve-keyword clearable class="w-full" :remote-method="handleGetTypesAnalysis">
+                    <el-option v-for="item in typeOfAnalysis" :key="item.id" :label="item.description"
+                        :value="item.id" />
+                </el-select>
+            </div>
+
+            <div class="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                Este parámetro podrá ser usado para generar conexiones o agrupaciones dentro del sistema.
+            </div>
+
+            <div class="flex justify-end border-t pt-4">
+                <el-button @click="visible = false" class="!rounded-lg">
+                    Cancelar
+                </el-button>
+
+                <el-button @click="onSubmit" type="primary" native-type="submit" class="!rounded-lg">
+                    Guardar parámetro
+                </el-button>
+            </div>
+        </form>
     </el-dialog>
+
+    <confirm-dialog ref="confirmRef" />
 </template>
 
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import CustomHeader from '../../../components/tenants/CustomHeader.vue';
 import { Search } from '@element-plus/icons-vue';
 import { handleErrorsExeption } from "../../../stores/handleErrorsExeption"
 import tenant from "../../../stores/tenant"
-import { ElNotification } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
+import { useListStore } from '../../../stores/list'
+import ConfirmDialog from '../../../components/tenants/ConfirmDialog.vue';
 
+const listStore = useListStore()
+const typeOfAnalysis = computed(() => listStore.typesAnalysis)
+
+const confirmRef = ref(null)
 const visible = ref(false)
 
 const filters = reactive({
@@ -100,7 +186,8 @@ const loadingSubmit = ref(false)
 
 const form = ref({
     id: null,
-    description: null
+    description: null,
+    type_of_analysis_id: null,
 })
 
 const onSubmit = async () => {
@@ -116,6 +203,13 @@ const onSubmit = async () => {
             ElNotification.success(data.message)
         }
 
+        form.value = {
+            id: null,
+            description: null,
+            type_of_analysis_id: null,
+        }
+
+        visible.value = false
         getParameters()
     }
     catch (e) {
@@ -123,6 +217,41 @@ const onSubmit = async () => {
     }
     finally {
         loadingSubmit.value = false
+    }
+}
+
+const handleEdit = (row) => {
+    visible.value = true
+
+    form.value = {
+        id: row.id,
+        description: row.description,
+        type_of_analysis_id: row.type_of_analysis_id,
+    }
+}
+
+const onDelete = async (row) => {
+    const ok = await confirmRef.value?.open({
+        title: 'Eliminar parametro',
+        message: '¿Seguro que deseas eliminar el parametro?',
+        confirmText: 'Sí, aceptar',
+        cancelText: 'Cancelar',
+    })
+
+    if (ok) {
+        row.loading = true
+
+        try {
+            const { data } = await tenant.delete(`parameters/${row.id}`)
+            ElMessage.success(data.message)
+            getParameters()
+        }
+        catch (e) {
+            handleErrorsExeption(e)
+        }
+        finally {
+            row.loading = false
+        }
     }
 }
 
@@ -154,11 +283,31 @@ const getParameters = async (page = 1) => {
     }
 }
 
+const handleGetTypesAnalysis = (q) => {
+    listStore.getTypesAnalysis(null, null, null, q)
+}
+
 watch(() => filters, () => {
     getParameters()
 }, { deep: true })
 
-onMounted(() => {
-    getParameters()
+onMounted(async () => {
+    await getParameters()
+    await listStore.getTypesAnalysis()
 })
 </script>
+
+<style scoped>
+.custom-dialog :deep(.el-dialog) {
+    border-radius: 16px;
+}
+
+.custom-dialog :deep(.el-dialog__header) {
+    margin-right: 0;
+    padding-bottom: 0;
+}
+
+.custom-dialog :deep(.el-dialog__body) {
+    padding-top: 12px;
+}
+</style>

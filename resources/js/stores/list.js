@@ -284,6 +284,7 @@ export const useListStore = defineStore("listStore", () => {
         condition = null,
         type_of_analysis = null,
         order_id = null,
+        search = null
     ) => {
         loadingParameter.value = true
 
@@ -294,7 +295,8 @@ export const useListStore = defineStore("listStore", () => {
                     product: product,
                     condition: condition,
                     type_of_analysis: type_of_analysis,
-                    order_id: order_id
+                    order_id: order_id,
+                    search: search,
                 }
             })
 
@@ -367,13 +369,14 @@ export const useListStore = defineStore("listStore", () => {
 
     const typesAnalysis = ref([])
 
-    const getTypesAnalysis = async (matrix = null, product = null, condition = null) => {
+    const getTypesAnalysis = async (matrix = null, product = null, condition = null, search = null) => {
         try {
             const { data } = await tenant.get(`list/types-analysis`, {
                 params: {
                     matrix: matrix,
                     product: product,
                     condition: condition,
+                    search: search
                 }
             })
 

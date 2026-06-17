@@ -107,8 +107,9 @@
                 <el-table-column width="200" label="Tipo de Muestra">
                     <template #default="{ row }">
                         <p class="truncate font-semibold">
-                            {{ row?.type_of_sample ??
-                                row?.parameter?.connections_parameter[0]?.type_of_sample?.description ?? '-' }}
+                            <span>
+                                {{ row?.type_of_sample?.description ??  row?.parameter?.connections_parameter[0]?.type_of_sample?.description ?? '-' }}
+                            </span>
                         </p>
                     </template>
                 </el-table-column>
