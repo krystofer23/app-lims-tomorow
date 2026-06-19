@@ -446,6 +446,10 @@
                                             Ensayo
                                         </th>
                                         <th
+                                            class="px-3 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                                            Parametro
+                                        </th>
+                                        <th
                                             class="px-3 py-2 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
                                             Metodología
                                         </th>
@@ -479,6 +483,10 @@
                                                 row?.parameter?.connections_parameter?.[0]?.matrix?.description ?? '-' }}
                                         </td>
 
+                                        <td :class="row?.item?.bg" class="px-3 py-2">
+                                            {{ row.parameter.description }}
+                                        </td>
+
                                         <td :class="row?.item?.bg" class="px-3 py-2 text-slate-700">
                                             {{ row?.reference?.code }}
                                         </td>
@@ -493,8 +501,15 @@
 
                                         <td :class="row?.item?.bg" class="relative px-3 py-2 text-right">
                                             <el-button-group size="small">
+                                                <el-button @click="() => {
+                                                    visibleParameters = true
+                                                    getToParametersMetal(row?.parameter?.ids_connections_parameters ?? [])
+                                                }" v-if="row?.parameter?.is_metal" plain size="small" type="info"
+                                                    class="!rounded-l-lg" v-tippy="'Seleccionar Parametros'">
+                                                    <i class="fa-solid fa-bugs"></i>
+                                                </el-button>
                                                 <el-button @click="changeValues(row)" v-tippy="'Cambiar valores'"
-                                                    class="!rounded-l-lg">
+                                                    :class="row?.parameter?.is_metal ? '' : '!rounded-l-lg'">
                                                     <i class="fa-brands fa-unity"></i>
                                                 </el-button>
                                                 <el-button @click.stop="itemDelete(index)" type="danger" plain
@@ -700,6 +715,41 @@
             </div>
         </template>
     </el-dialog>
+
+    <el-dialog v-model="visibleParameters" class="!rounded-lg">
+        <template #header>
+            <div class="flex items-center justify-between border-b pb-2">
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-700">
+                        Parámetros del metal
+                    </h4>
+                    <p class="text-xs text-slate-400">
+                        Selecciona los parámetros que deseas agregar.
+                    </p>
+                </div>
+
+                <el-tag type="primary" effect="light">
+                    {{ parametersToMetal.length }} items
+                </el-tag>
+            </div>
+        </template>
+        <div class="space-y-3">
+            <el-input v-model="searchMetal" placeholder="Buscar parámetro..." clearable size="small" />
+
+            <el-table v-loading="loadingMetalParameters" :data="filteredParametersToMetal" height="300" size="small"
+                border :row-class-name="tableRowClassName">
+                <el-table-column prop="description" label="Parámetro" min-width="260" show-overflow-tooltip />
+
+                <el-table-column label="Acciones" width="130" align="center">
+                    <template #default="{ row: metalRow }">
+                        <el-button size="small" type="success" plain>
+                            Agregar
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+    </el-dialog>
 </template>
 
 <script setup>
@@ -723,6 +773,33 @@ const activeTab = ref('general')
 const state = ref(false)
 const matrizId = ref(null)
 const users = computed(() => listStore.users)
+
+const visibleParameters = ref(false)
+const loadingMetalParameters = ref(false)
+const parametersArrayUse = ref([])
+const parametersToMetal = ref([])
+const searchMetal = ref('')
+
+const getToParametersMetal = async (listArray = []) => {
+    try {
+        loadingMetalParameters.value = true
+        parametersToMetal.value = []
+
+        const { data } = await tenant.get('parameters/list', {
+            params: {
+                list_array: listArray,
+            },
+        })
+
+        parametersToMetal.value = data.data ?? []
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        loadingMetalParameters.value = false
+    }
+}
 
 const loadingCompany = ref(false)
 

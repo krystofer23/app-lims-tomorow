@@ -654,7 +654,7 @@
                                                             class="grid h-7 w-7 place-items-center rounded-lg bg-slate-100 text-slate-500">
                                                             <i class="fa-solid fa-ruler-combined text-xs"></i>
                                                         </span>
-
+                                                        {{row.parameter.is_metal}}
                                                         {{ row?.unit_measurement?.description }}
                                                     </div>
                                                 </template>
@@ -1003,8 +1003,7 @@
                                         size="small" />
 
                                     <el-table v-loading="loadingMetalParameters" :data="filteredParametersToMetal"
-                                        height="300" size="small" border
-                                        :row-class-name="tableRowClassName">
+                                        height="300" size="small" border :row-class-name="tableRowClassName">
                                         <el-table-column prop="description" label="Parámetro" min-width="260"
                                             show-overflow-tooltip />
 
@@ -1267,9 +1266,37 @@ const isSelected = (row) => {
 }
 
 const toggleItem = (row, minor = null) => {
-    if (row && row?.parameter?.is_metal && minor) {
+    if (row?.parameter?.is_metal && minor?.id && minor?.description) {
+        if (!Array.isArray(form.parameters)) {
+            form.parameters = []
+        }
 
+        const index = form.parameters.findIndex((item) =>
+            item.id === row.id && item.parameter_id === minor.id
+        )
+
+        if (index !== -1) {
+            form.parameters.splice(index, 1)
+            return
+        }
+
+        const newRow = {
+            ...row,
+            parameter_id: minor.id,
+            parameter: {
+                ...row.parameter,
+                id: minor.id,
+                description: minor.description,
+            },
+            parent_parameter_id: row.parameter_id ?? row.parameter?.id,
+            parent_description: row.parameter?.description,
+        }
+
+        form.parameters.push(newRow)
+
+        return
     }
+
     if (row?.parameter?.is_metal) return
 
     if (!Array.isArray(form.parameters)) {
