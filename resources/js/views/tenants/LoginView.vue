@@ -84,7 +84,8 @@
                                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2h-1V9a5 5 0 00-10 0v2H6a2 2 0 00-2 2v6a2 2 0 002 2zm3-10V9a3 3 0 016 0v2H9z" />
                             </svg>
 
-                            <input v-model="form.password" :type="type ? 'password' : 'text'" placeholder="Ingresa tu contraseña"
+                            <input v-model="form.password" :type="type ? 'password' : 'text'"
+                                placeholder="Ingresa tu contraseña"
                                 class="w-full bg-transparent px-3 py-4 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none" />
                         </div>
 
@@ -108,8 +109,8 @@
                     </div>
                 </div>
 
-                <button @click.prevent="onSubmit"
-                    class="group relative w-full overflow-hidden rounded-2xl bg-emerald-400 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition duration-300 hover:scale-[1.01] hover:bg-emerald-500 hover:shadow-xl">
+                <el-button :loading="loading" size="large" native-type="submit"
+                    class="!group !relative !w-full overflow-hidden !rounded-xl !bg-emerald-400 !px-5 text-sm font-bold !text-white shadow-lg shadow-emerald-200 transition duration-300 !hover:scale-[1.01] !hover:bg-emerald-500 !hover:shadow-xl">
                     <span class="relative z-10 flex items-center justify-center gap-2">
                         Ingresar
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition group-hover:translate-x-1"
@@ -120,37 +121,56 @@
                     </span>
 
                     <span
-                        class="absolute inset-0 -translate-x-full bg-white/20 transition duration-500 group-hover:translate-x-0"></span>
-                </button>
+                        class="absolute inset-0 -translate-x-full bg-white/20 transition duration-500 group-hover:translate-x-0">
+                    </span>
+                </el-button>
             </form>
         </div>
     </div>
 </template>
 
 <script setup>
-import { useAuthStore } from '../../stores/auth';
-import { ElNotification } from 'element-plus';
+import { useAuthStore } from '../../stores/auth'
+import { ElNotification } from 'element-plus'
 import { reactive, ref } from 'vue'
+import { handleErrorsExeption } from '../../stores/handleErrorsExeption'
 
 const authStore = useAuthStore()
 const type = ref(true)
+const loading = ref(false)
 
 const form = reactive({
-    role: null,
-    email: null,
-    password: null,
+    role: '',
+    email: '',
+    password: '',
 })
 
 const onSubmit = async () => {
-    if (!form.email) {
-        ElNotification.error('Ingrese su correo electrónico');
-    }
-    if (!form.password) {
-        ElNotification.error('Ingrese su contraseña');
+    if (!form.role) {
+        ElNotification.error('Seleccione un rol')
+        return
     }
 
-    if (form.email && form.password && form.role) {
-        authStore.login(form.email, form.password, form.role);
+    if (!form.email) {
+        ElNotification.error('Ingrese su correo electrónico')
+        return
+    }
+
+    if (!form.password) {
+        ElNotification.error('Ingrese su contraseña')
+        return
+    }
+
+    loading.value = true
+
+    try {
+        await authStore.login(form.email, form.password, form.role)
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+    finally {
+        loading.value = false
     }
 }
 </script>

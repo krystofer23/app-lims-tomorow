@@ -503,7 +503,7 @@
                                             <el-button-group size="small">
                                                 <el-button @click="() => {
                                                     visibleParameters = true
-                                                    getToParametersMetal(row?.parameter?.ids_connections_parameters ?? [])
+                                                    getToParametersMetal(row?.parameter?.ids_connections_parameters ?? [], row)
                                                 }" v-if="row?.parameter?.is_metal" plain size="small" type="info"
                                                     class="!rounded-l-lg" v-tippy="'Seleccionar Parametros'">
                                                     <i class="fa-solid fa-bugs"></i>
@@ -716,7 +716,7 @@
         </template>
     </el-dialog>
 
-    <el-dialog v-model="visibleParameters" class="!rounded-lg">
+    <el-dialog v-model="visibleParameters" class="!rounded-lg" width="700px">
         <template #header>
             <div class="flex items-center justify-between border-b pb-2">
                 <div>
@@ -729,7 +729,7 @@
                 </div>
 
                 <el-tag type="primary" effect="light">
-                    {{ parametersToMetal.length }} items
+                    {{ parametersToMetal.length }} parametros
                 </el-tag>
             </div>
         </template>
@@ -737,13 +737,30 @@
             <el-input v-model="searchMetal" placeholder="Buscar parámetro..." clearable size="small" />
 
             <el-table v-loading="loadingMetalParameters" :data="filteredParametersToMetal" height="300" size="small"
-                border :row-class-name="tableRowClassName">
-                <el-table-column prop="description" label="Parámetro" min-width="260" show-overflow-tooltip />
+                border>
+                <el-table-column prop="description" label="Parámetro" min-width="180" show-overflow-tooltip />
+
+                <el-table-column label="Unidad De Medida" show-overflow-tooltip>
+                    <template #default="{ row }">
+                        <el-select v-model="row.item[0].unit_measurement_id" size="small" placeholder="Seleccione" filterable
+                            class="w-full">
+                            <el-option v-for="unit in unitsMeasurement" :key="unit.id" :label="unit.description"
+                                :value="unit.id" />
+                        </el-select>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="LCM" show-overflow-tooltip>
+                    <template #default="{ row }">
+                        <el-input v-model="row.item[0].lcm" size="small" placeholder="LCM" />
+                    </template>
+                </el-table-column>
 
                 <el-table-column label="Acciones" width="130" align="center">
                     <template #default="{ row: metalRow }">
-                        <el-button size="small" type="success" plain>
-                            Agregar
+                        <el-button size="small" type="success" plain class="!rounded-lg"
+                            @click="addMetalParameter(metalRow)">
+                            [+] Agregar
                         </el-button>
                     </template>
                 </el-table-column>
@@ -780,18 +797,59 @@ const parametersArrayUse = ref([])
 const parametersToMetal = ref([])
 const searchMetal = ref('')
 
-const getToParametersMetal = async (listArray = []) => {
+const normalizeMetalParameters = (parameters = []) => {
+    return parameters.map((parameter) => ({
+        ...parameter,
+        item: Array.isArray(parameter.item) && parameter.item.length > 0
+            ? parameter.item
+            : [
+                {
+                    id: null,
+                    type: parameter.type ?? null,
+                    type_of_sample_id: null,
+                    condition_id: null,
+                    matrix_id: null,
+                    reference_id: null,
+                    parameter_id: parameter.id,
+                    unit_measurement_id: null,
+                    lcm: '',
+                    is_operation: false,
+                    operations: null,
+                    is_other_company: false,
+                    company_id: null,
+                    unit_price: '0.00',
+                },
+            ],
+    }))
+}
+
+const filteredParametersToMetal = computed(() => {
+    const search = searchMetal.value.toLowerCase().trim()
+
+    if (!search) {
+        return parametersToMetal.value
+    }
+
+    return parametersToMetal.value.filter((item) => {
+        return item.description?.toLowerCase().includes(search)
+    })
+})
+
+const getToParametersMetal = async (listArray = [], row = null) => {
+    loadingMetalParameters.value = true
+
     try {
-        loadingMetalParameters.value = true
         parametersToMetal.value = []
 
         const { data } = await tenant.get('parameters/list', {
             params: {
                 list_array: listArray,
+                condition_id: row?.condition_id,
+                type: row?.type,
             },
         })
 
-        parametersToMetal.value = data.data ?? []
+        parametersToMetal.value = normalizeMetalParameters(data.data ?? [])
     }
     catch (e) {
         handleErrorsExeption(e)

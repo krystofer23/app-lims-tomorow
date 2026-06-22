@@ -36,12 +36,19 @@ class ParameterApiController extends Controller
         try {
             $search = $request->input('search');
             $listArray = $request->input('list_array', []);
+            $condition_id = $request->input('condition_id');
+            $type = $request->input('type');
 
             if (!is_array($listArray)) {
                 $listArray = [];
             }
 
             $data = Parameters::query()
+                ->with([
+                    'item' => fn($q) => $q
+                        ->when($condition_id, fn($q) => $q->where('condition_id', $condition_id))
+                        ->when($type, fn($q) => $q->where('type', $type))
+                ])
                 ->when(count($listArray) !== 0, function ($query) use ($listArray) {
                     $query->whereIn('id', $listArray);
                 })
