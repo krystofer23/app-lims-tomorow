@@ -37,18 +37,18 @@
                     :row-class-name="rowClassName">
                     <el-table-column type="index" label="#" width="60" />
 
-                    <el-table-column label="Metodología" min-width="280">
+                    <el-table-column label="Codigo" min-width="280">
                         <template #default="{ row }">
                             <div class="flex items-center gap-3">
-                                {{ row?.description ?? '-' }}
+                                {{ row?.title ?? '-' }}
                             </div>
                         </template>
                     </el-table-column>
 
-                    <el-table-column label="Información" min-width="280">
+                    <el-table-column label="Titulo" min-width="280">
                         <template #default="{ row }">
                             <div class="flex items-center gap-3">
-                                {{ row?.info ?? '-' }}
+                                {{ row?.code ?? '-' }}
                             </div>
                         </template>
                     </el-table-column>

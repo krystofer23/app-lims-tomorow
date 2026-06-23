@@ -4,6 +4,7 @@ namespace App\Http\Controllers\tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\tenant\Methodologies;
+use App\Models\tenant\ReferencesStandard;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class MethodologiesApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $data = Methodologies::query()
+            $data = ReferencesStandard::query()
                 ->paginate(15);
 
             return $this->sendResponse($data, 'Enviando metodologias');
