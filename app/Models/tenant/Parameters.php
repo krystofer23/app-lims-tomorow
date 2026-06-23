@@ -3,6 +3,7 @@
 namespace App\Models\tenant;
 
 use App\Models\TenantModel;
+use App\Models\tenatn\SelectToMetals;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -39,5 +40,10 @@ class Parameters extends TenantModel
     public function connectionsParameter(): HasMany
     {
         return $this->hasMany(ConnectionParameter::class, 'parameter_id', 'id');
+    }
+
+    public function toMetal(): BelongsTo
+    {
+        return $this->belongsTo(SelectToMetals::class, 'to_metal_id');
     }
 }

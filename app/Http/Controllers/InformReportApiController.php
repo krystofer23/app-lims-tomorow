@@ -11,6 +11,7 @@ use App\Models\tenant\TypeOfAnalysis;
 use App\Models\tenant\LaboratoryResults;
 use App\Models\tenant\ProceduresToParameter;
 use App\Models\tenant\TrialPeriod;
+use App\Models\tenatn\SelectToMetals;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -195,35 +196,174 @@ class InformReportApiController extends Controller
             'application:id,ruc,business_name,direction'
         ])->findOrFail($orderId);
 
-        $parameters = collect($order->items)
-            ->filter(fn($row) => data_get($row, 'item.type') === $type)
-            ->filter(fn($row) => data_get($row, 'item.condition.description') === $condition)
+        $normalizeItem = function ($item): array {
+            if (is_string($item)) {
+                $item = json_decode($item, true) ?: [];
+            }
+
+            return is_array($item) ? $item : [];
+        };
+
+        /*
+     * Primero filtramos los items originales de la orden.
+     */
+        $baseParameters = collect($order->items)
+            ->filter(function ($row) use ($type, $normalizeItem) {
+                $item = $normalizeItem(data_get($row, 'item', []));
+
+                return data_get($item, 'type') === $type;
+            })
+            ->filter(function ($row) use ($condition, $normalizeItem) {
+                $item = $normalizeItem(data_get($row, 'item', []));
+
+                return data_get($item, 'condition.description') === $condition;
+            })
+            ->values();
+
+        /*
+     * Metales seleccionados por orden.
+     *
+     * to_metal_id  = parámetro padre, ejemplo: Metales
+     * parameter_id = parámetro hijo, ejemplo: Boro, Zinc, Vanadio
+     */
+        $selectedMetalsByToMetalId = SelectToMetals::query()
+            ->where('order_id', $orderId)
+            ->get()
+            ->groupBy(function ($row) {
+                return (int) $row->to_metal_id;
+            });
+
+        /*
+     * Guardamos los items padres de metal.
+     *
+     * Esto sirve para que en II. MÉTODOS Y REFERENCIAS,
+     * cuando el parámetro sea un metal hijo, se use el padre to_metal.
+     */
+        $metalParentItemsByToMetalId = $baseParameters
+            ->mapWithKeys(function ($row) use ($normalizeItem, $selectedMetalsByToMetalId) {
+                $item = $normalizeItem(data_get($row, 'item', []));
+
+                $parameterId = data_get($item, 'parameter_id')
+                    ?? data_get($item, 'parameter.id');
+
+                $parameterId = $parameterId !== null ? (int) $parameterId : null;
+
+                if (!$parameterId || !$selectedMetalsByToMetalId->has($parameterId)) {
+                    return [];
+                }
+
+                return [
+                    $parameterId => $item,
+                ];
+            });
+
+        /*
+     * Para resultados:
+     *
+     * Si el parámetro NO tiene hijos metálicos, se mantiene normal.
+     * Si el parámetro SÍ tiene hijos metálicos, NO se muestra el padre;
+     * se muestran solo sus hijos.
+     */
+        $parameters = $baseParameters
+            ->flatMap(function ($row) use ($selectedMetalsByToMetalId, $normalizeItem) {
+                $item = $normalizeItem(data_get($row, 'item', []));
+
+                $realItemId = data_get($row, 'item_id')
+                    ?? data_get($item, 'id');
+
+                $realItemId = $realItemId !== null ? (int) $realItemId : null;
+
+                $parameterId = data_get($item, 'parameter_id')
+                    ?? data_get($item, 'parameter.id');
+
+                $parameterId = $parameterId !== null ? (int) $parameterId : null;
+
+                /*
+             * Caso normal: no tiene metales hijos.
+             */
+                if (!$parameterId || !$selectedMetalsByToMetalId->has($parameterId)) {
+                    return collect([
+                        [
+                            'id' => data_get($row, 'id'),
+                            'item_id' => $realItemId,
+                            'order_item_id' => $realItemId,
+                            'item' => $item,
+
+                            'is_metal_child' => false,
+                            'select_to_metal_id' => null,
+                            'to_metal_id' => null,
+                            'parent_item_id' => null,
+                            'parent_parameter_id' => null,
+                        ]
+                    ]);
+                }
+
+                /*
+             * Caso metal:
+             * No devolvemos el padre para resultados.
+             * Devolvemos solo los hijos de select_to_metals.
+             */
+                return $selectedMetalsByToMetalId
+                    ->get($parameterId)
+                    ->map(function ($metal) use ($realItemId, $parameterId, $normalizeItem) {
+                        $metalItem = $normalizeItem($metal->item ?? []);
+
+                        return [
+                            'id' => null,
+
+                            /*
+                         * Para resultados de laboratorio:
+                         * item_id será el parameter_id del metal hijo.
+                         *
+                         * Ejemplo:
+                         * Boro    => 45
+                         * Vanadio => 118
+                         */
+                            'item_id' => (int) $metal->parameter_id,
+
+                            /*
+                         * Item padre original de la orden.
+                         */
+                            'order_item_id' => $realItemId,
+
+                            /*
+                         * JSON completo del hijo.
+                         */
+                            'item' => $metalItem,
+
+                            'is_metal_child' => true,
+                            'select_to_metal_id' => (int) $metal->id,
+                            'to_metal_id' => (int) $metal->to_metal_id,
+                            'parent_item_id' => $realItemId,
+                            'parent_parameter_id' => $parameterId,
+                        ];
+                    })
+                    ->values();
+            })
             ->values();
 
         $typeOfSampleId = $parameters
-            ->map(
-                fn($row) =>
-                data_get($row, 'item.type_of_sample_id')
-                    ?? data_get($row, 'item.parameter.connections_parameter.0.type_of_samples_id')
-                    ?? data_get($row, 'item.parameter.connections_parameter.0.type_of_sample_id')
-            )
+            ->map(function ($row) use ($normalizeItem) {
+                $item = $normalizeItem(data_get($row, 'item', []));
+
+                return data_get($item, 'type_of_sample_id')
+                    ?? data_get($item, 'type_of_sample_filter')
+                    ?? data_get($item, 'parameter.connections_parameter.0.type_of_samples_id')
+                    ?? data_get($item, 'parameter.connections_parameter.0.type_of_sample_id')
+                    ?? data_get($item, 'parameter.connections_parameter.0.type_of_sample.id');
+            })
             ->filter()
             ->unique()
             ->first();
 
         $matrixIds = $parameters
-            ->map(function ($parameter) {
-                $item = data_get($parameter, 'item', []);
+            ->map(function ($parameter) use ($normalizeItem) {
+                $item = $normalizeItem(data_get($parameter, 'item', []));
 
-                if (is_string($item)) {
-                    $item = json_decode($item, true) ?: [];
-                }
-
-                if (!empty($item['matrix_id'])) {
-                    return $item['matrix_id'];
-                }
-
-                return data_get($item, 'parameter.connections_parameter.0.matrix_id');
+                return data_get($item, 'matrix_id')
+                    ?? data_get($item, 'matrix_filter')
+                    ?? data_get($item, 'parameter.connections_parameter.0.matrix_id')
+                    ?? data_get($item, 'parameter.connections_parameter.0.matrix.id');
             })
             ->filter()
             ->unique()
@@ -249,8 +389,18 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
+        /*
+     * IDs reales de parámetros para resultados/procedimientos.
+     * En metales serán los hijos: Boro, Zinc, Vanadio, etc.
+     */
         $parameterIds = $parameters
-            ->pluck('item.parameter.id')
+            ->map(function ($row) use ($normalizeItem) {
+                $item = $normalizeItem(data_get($row, 'item', []));
+
+                return data_get($item, 'parameter_id')
+                    ?? data_get($item, 'parameter.id')
+                    ?? data_get($row, 'item_id');
+            })
             ->filter()
             ->unique()
             ->values()
@@ -269,11 +419,12 @@ class InformReportApiController extends Controller
                 }
 
                 $chainParameterIds = collect($parametersJson)
-                    ->map(
-                        fn($parameter) =>
-                        data_get($parameter, 'parameter.id')
+                    ->map(function ($parameter) {
+                        return data_get($parameter, 'parameter_id')
+                            ?? data_get($parameter, 'parameter.id')
                             ?? data_get($parameter, 'id')
-                    )
+                            ?? data_get($parameter, 'item_id');
+                    })
                     ->filter()
                     ->toArray();
 
@@ -327,26 +478,40 @@ class InformReportApiController extends Controller
             })
             ->toArray();
 
-        $typeAnalysisIds = $parameters
-            ->map(function ($row) {
-                $item = data_get($row, 'item', []);
-
-                if (is_string($item)) {
-                    $item = json_decode($item, true) ?: [];
-                }
+        /*
+     * TypeAnalysis para hijos normales/metálicos.
+     */
+        $typeAnalysisIdsFromParameters = $parameters
+            ->map(function ($row) use ($normalizeItem) {
+                $item = $normalizeItem(data_get($row, 'item', []));
 
                 return data_get($item, 'parameter.type_of_analysis_id')
                     ?? data_get($item, 'type_of_analysis_id');
-            })
+            });
+
+        /*
+     * TypeAnalysis de padres metálicos.
+     * Necesario para II. MÉTODOS Y REFERENCIAS.
+     */
+        $typeAnalysisIdsFromMetalParents = $metalParentItemsByToMetalId
+            ->map(function ($item) {
+                return data_get($item, 'parameter.type_of_analysis_id')
+                    ?? data_get($item, 'type_of_analysis_id');
+            });
+
+        $typeAnalysisIds = $typeAnalysisIdsFromParameters
+            ->merge($typeAnalysisIdsFromMetalParents)
             ->filter()
             ->unique()
             ->values()
             ->toArray();
 
-        $typeAnalysisMap = TypeOfAnalysis::query()
+        $typeAnalysisMap = !empty($typeAnalysisIds)
+            ? TypeOfAnalysis::query()
             ->whereIn('id', $typeAnalysisIds)
             ->pluck('description', 'id')
-            ->toArray();
+            ->toArray()
+            : [];
 
         $laboratoryResults = LaboratoryResults::query()
             ->where('order_id', $orderId)
@@ -355,20 +520,33 @@ class InformReportApiController extends Controller
                 return $row->item_id . '_' . $row->chain_custody_id;
             });
 
+        /*
+     * I. RESULTADOS:
+     * Aquí sí se muestran los hijos metálicos.
+     */
         $analysisGroups = $parameters
             ->map(function ($row) use (
                 $typeAnalysisMap,
                 $laboratoryResults,
                 $chainCustody,
+                $normalizeItem
             ) {
-                $item = data_get($row, 'item', []);
+                $item = $normalizeItem(data_get($row, 'item', []));
 
-                if (is_string($item)) {
-                    $item = json_decode($item, true) ?: [];
-                }
-
+                /*
+             * En normal: item_id del item.
+             * En metal: parameter_id del hijo.
+             */
                 $realItemId = data_get($row, 'item_id')
                     ?? data_get($item, 'id');
+
+                $realItemId = $realItemId !== null ? (int) $realItemId : null;
+
+                $parameterId = data_get($item, 'parameter_id')
+                    ?? data_get($item, 'parameter.id')
+                    ?? $realItemId;
+
+                $parameterId = $parameterId !== null ? (int) $parameterId : null;
 
                 $typeAnalysisId = data_get($item, 'parameter.type_of_analysis_id')
                     ?? data_get($item, 'type_of_analysis_id');
@@ -386,16 +564,47 @@ class InformReportApiController extends Controller
                         $parametersJson = [];
                     }
 
-                    $existsInCustody = collect($parametersJson)->contains(function ($parameter) use ($realItemId) {
-                        return (int) data_get($parameter, 'id') === (int) $realItemId
-                            || (int) data_get($parameter, 'item_id') === (int) $realItemId
-                            || (int) data_get($parameter, 'parameter.id') === (int) $realItemId;
+                    $existsInCustody = collect($parametersJson)->contains(function ($parameter) use ($realItemId, $parameterId) {
+                        $chainItemId = data_get($parameter, 'id')
+                            ?? data_get($parameter, 'item_id');
+
+                        $chainParameterId = data_get($parameter, 'parameter_id')
+                            ?? data_get($parameter, 'parameter.id');
+
+                        /*
+                     * Para metales:
+                     * chain_custody.parameters.parameter_id debe coincidir
+                     * con el parameter_id del metal hijo.
+                     */
+                        if ($parameterId && $chainParameterId && (int) $chainParameterId === (int) $parameterId) {
+                            return true;
+                        }
+
+                        /*
+                     * Para items normales.
+                     */
+                        if ($realItemId && $chainItemId && (int) $chainItemId === (int) $realItemId) {
+                            return true;
+                        }
+
+                        /*
+                     * Fallback para cuando item_id coincide con parameter_id.
+                     */
+                        if ($realItemId && $chainParameterId && (int) $chainParameterId === (int) $realItemId) {
+                            return true;
+                        }
+
+                        return false;
                     });
 
                     if (!$existsInCustody) {
                         continue;
                     }
 
+                    /*
+                 * En metales, LaboratoryResults.item_id debe ser el parameter_id del hijo.
+                 * Ejemplo: Vanadio => 118
+                 */
                     $key = $realItemId . '_' . $custody->id;
 
                     $savedResult = $laboratoryResults->get($key);
@@ -453,43 +662,87 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
+        /*
+     * II. MÉTODOS Y REFERENCIAS:
+     *
+     * Aquí está el cambio importante:
+     * - Si es parámetro normal, usa su propio item.
+     * - Si es metal hijo, usa el padre to_metal.
+     */
         $analysisGroupsMethodology = $parameters
-            ->map(function ($row) use ($typeAnalysisMap) {
-                $item = data_get($row, 'item', []);
+            ->map(function ($row) use (
+                $typeAnalysisMap,
+                $normalizeItem,
+                $metalParentItemsByToMetalId
+            ) {
+                $item = $normalizeItem(data_get($row, 'item', []));
 
-                if (is_string($item)) {
-                    $item = json_decode($item, true) ?: [];
+                $isMetalChild = (bool) data_get($row, 'is_metal_child', false);
+
+                if ($isMetalChild) {
+                    $toMetalId = data_get($row, 'to_metal_id')
+                        ?? data_get($row, 'parent_parameter_id');
+
+                    $toMetalId = $toMetalId !== null ? (int) $toMetalId : null;
+
+                    /*
+                 * Para metal hijo, usamos el item padre.
+                 */
+                    $methodItem = $toMetalId
+                        ? ($metalParentItemsByToMetalId->get($toMetalId) ?? $item)
+                        : $item;
+
+                    /*
+                 * Esta key permite que todos los hijos metálicos
+                 * se agrupen como una sola fila del padre.
+                 */
+                    $methodParameterId = $toMetalId;
+                } else {
+                    $methodItem = $item;
+
+                    $methodParameterId = data_get($methodItem, 'parameter_id')
+                        ?? data_get($methodItem, 'parameter.id');
+
+                    $methodParameterId = $methodParameterId !== null ? (int) $methodParameterId : null;
                 }
 
-                $typeAnalysisId = data_get($item, 'parameter.type_of_analysis_id')
-                    ?? data_get($item, 'type_of_analysis_id');
+                $typeAnalysisId = data_get($methodItem, 'parameter.type_of_analysis_id')
+                    ?? data_get($methodItem, 'type_of_analysis_id');
+
+                $parameterName = data_get($methodItem, 'parameter.description')
+                    ?? data_get($methodItem, 'description')
+                    ?? data_get($methodItem, 'name')
+                    ?? '-';
+
+                $code = data_get($methodItem, 'parameter.reference.code')
+                    ?? data_get($methodItem, 'reference.code')
+                    ?? '-';
+
+                $title = data_get($methodItem, 'parameter.reference.title')
+                    ?? data_get($methodItem, 'reference.title')
+                    ?? '-';
 
                 return [
+                    '_method_key' => ($methodParameterId ?? $parameterName) . '|' . $code . '|' . $title,
+
                     'type_of_analysis' =>
-                    data_get($item, 'parameter.type_of_analysis.description')
-                        ?? data_get($item, 'type_of_analysis.description')
+                    data_get($methodItem, 'parameter.type_of_analysis.description')
+                        ?? data_get($methodItem, 'type_of_analysis.description')
                         ?? ($typeAnalysisMap[$typeAnalysisId] ?? 'SIN TIPO DE ENSAYO'),
 
-                    'parameter' =>
-                    data_get($item, 'parameter.description')
-                        ?? data_get($item, 'description')
-                        ?? data_get($item, 'name')
-                        ?? '-',
+                    /*
+                 * Si era metal hijo, aquí saldrá el padre to_metal.
+                 */
+                    'parameter' => $parameterName,
 
-                    'code' =>
-                    data_get($item, 'parameter.reference.code')
-                        ?? data_get($item, 'reference.code')
-                        ?? '-',
-
-                    'title' =>
-                    data_get($item, 'parameter.reference.title')
-                        ?? data_get($item, 'reference.title')
-                        ?? '-',
+                    /*
+                 * Código y título también salen del padre.
+                 */
+                    'code' => $code,
+                    'title' => $title,
                 ];
             })
-            ->unique(function ($item) {
-                return $item['parameter'] . '|' . $item['code'] . '|' . $item['title'];
-            })
+            ->unique('_method_key')
             ->groupBy('type_of_analysis')
             ->map(function ($items, $typeOfAnalysis) {
                 return [
@@ -506,7 +759,8 @@ class InformReportApiController extends Controller
             ->values()
             ->toArray();
 
-        $analysisGroupsProcedures = ProceduresToParameter::with('procedure')
+        $analysisGroupsProcedures = !empty($parameterIds)
+            ? ProceduresToParameter::with('procedure')
             ->whereIn('parameter_id', $parameterIds)
             ->get()
             ->map(function ($procedure) {
@@ -517,7 +771,8 @@ class InformReportApiController extends Controller
             ->filter(fn($row) => !empty($row['procedure']))
             ->unique('procedure')
             ->values()
-            ->toArray();
+            ->toArray()
+            : [];
 
         $legend = $this->getLegend($type, $samplingPerformedBy);
 

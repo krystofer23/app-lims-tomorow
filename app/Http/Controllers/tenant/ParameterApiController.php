@@ -4,10 +4,12 @@ namespace App\Http\Controllers\tenant;
 
 use App\Http\Controllers\Controller;
 use App\Models\tenant\Parameters;
+use App\Models\tenatn\SelectToMetals;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ParameterApiController extends Controller
 {
@@ -36,20 +38,25 @@ class ParameterApiController extends Controller
         try {
             $search = $request->input('search');
             $listArray = $request->input('list_array', []);
-            $condition_id = $request->input('condition_id');
+            $conditionId = $request->input('condition_id');
             $type = $request->input('type');
+            $orderId = $request->input('order_id');
 
             if (!is_array($listArray)) {
                 $listArray = [];
             }
 
+            $selects = SelectToMetals::query()
+                ->when($orderId, fn($q) => $q->where('order_id', $orderId))
+                ->get();
+
             $data = Parameters::query()
                 ->with([
                     'item' => fn($q) => $q
-                        ->when($condition_id, fn($q) => $q->where('condition_id', $condition_id))
-                        ->when($type, fn($q) => $q->where('type', $type))
+                        ->when($conditionId, fn($q) => $q->where('condition_id', $conditionId))
+                        ->when($type, fn($q) => $q->where('type', $type)),
                 ])
-                ->when(count($listArray) !== 0, function ($query) use ($listArray) {
+                ->when(count($listArray) > 0, function ($query) use ($listArray) {
                     $query->whereIn('id', $listArray);
                 })
                 ->when($search, function ($query) use ($search) {
@@ -58,7 +65,22 @@ class ParameterApiController extends Controller
                 ->orderBy('id', 'desc')
                 ->get();
 
-            return $this->sendResponse($data, 'Enviando parametros');
+            $mapData = $data->map(function ($p) use ($selects) {
+                $select = $selects->where('parameter_id', $p->id)->first();
+
+                return [
+                    'id' => $p?->id,
+                    'description' => $p?->description,
+                    'type_of_analysis_id' => $p?->type_of_analysis_id,
+                    'is_metal' => $p?->is_metal,
+                    'ids_connections_parameters' => $p?->ids_connections_parameters,
+                    'item' => $p?->item,
+                    'is_select' => $select !== null,
+                    'select_to_metal' => $select,
+                ];
+            });
+
+            return $this->sendResponse($mapData, 'Enviando parametros');
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }

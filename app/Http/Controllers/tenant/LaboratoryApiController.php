@@ -8,6 +8,7 @@ use App\Models\tenant\OrderService;
 use App\Models\tenant\TypeOfSamples;
 use App\Models\tenant\UnitsMeasurement;
 use App\Models\tenant\LaboratoryResults;
+use App\Models\tenatn\SelectToMetals;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -254,12 +255,20 @@ class LaboratoryApiController extends Controller
                     return $row->item_id . '_' . $row->chain_custody_id;
                 });
 
+            $selectedMetalsByToMetalId = SelectToMetals::query()
+                ->where('order_id', $orderId)
+                ->get()
+                ->groupBy(function ($row) {
+                    return (int) $row->to_metal_id;
+                });
+
             $mapData = collect($items)
-                ->map(function ($row) use (
+                ->flatMap(function ($row) use (
                     $typeSamplesCache,
                     $unitMeasurementsCache,
                     $laboratoryResultsCache,
-                    $chainCustodies
+                    $chainCustodies,
+                    $selectedMetalsByToMetalId
                 ) {
                     $item = $row->item ?? [];
 
@@ -267,92 +276,234 @@ class LaboratoryApiController extends Controller
                         $item = json_decode($item, true) ?: [];
                     }
 
+                    if (!is_array($item)) {
+                        $item = [];
+                    }
+
                     $realItemId = data_get($row, 'item_id')
                         ?? data_get($item, 'id');
 
-                    $typeOfSampleId = data_get($item, 'type_of_sample_id')
-                        ?? data_get($item, 'parameter.connections_parameter.0.type_of_samples_id');
+                    $realItemId = $realItemId !== null ? (int) $realItemId : null;
 
-                    $typeOfSampleName = data_get($item, 'type_of_sample.description')
-                        ?? $typeSamplesCache->get($typeOfSampleId)
-                        ?? 'Sin tipo de muestra';
+                    $parameterId = data_get($item, 'parameter_id')
+                        ?? data_get($item, 'parameter.id');
 
-                    $unitMeasurementId = data_get($item, 'unit_measurement_id');
+                    $parameterId = $parameterId !== null ? (int) $parameterId : null;
 
-                    $unitMeasurementName = data_get($item, 'unit_measurement.description')
-                        ?? $unitMeasurementsCache->get($unitMeasurementId);
+                    $buildItem = function (
+                        array $currentItem,
+                        ?int $resultItemId = null,
+                        ?int $stationSearchItemId = null,
+                        ?int $stationSearchParameterId = null,
+                        array $extra = []
+                    ) use (
+                        $row,
+                        $realItemId,
+                        $typeSamplesCache,
+                        $unitMeasurementsCache,
+                        $laboratoryResultsCache,
+                        $chainCustodies
+                    ) {
+                        $itemIdForResult = $resultItemId
+                            ?? $realItemId
+                            ?? data_get($currentItem, 'id');
 
-                    $stations = $chainCustodies
-                        ->filter(function ($chainCustody) use ($realItemId) {
-                            if (!$realItemId) {
-                                return false;
-                            }
+                        $itemIdForResult = $itemIdForResult !== null ? (int) $itemIdForResult : null;
 
-                            $parameters = $chainCustody->parameters ?? [];
+                        $itemIdForStations = $stationSearchItemId
+                            ?? $realItemId
+                            ?? data_get($currentItem, 'id');
 
-                            if (is_string($parameters)) {
-                                $parameters = json_decode($parameters, true) ?: [];
-                            }
+                        $itemIdForStations = $itemIdForStations !== null ? (int) $itemIdForStations : null;
 
-                            if (!is_array($parameters)) {
-                                return false;
-                            }
+                        $typeOfSampleId = data_get($currentItem, 'type_of_sample_id')
+                            ?? data_get($currentItem, 'type_of_sample_filter')
+                            ?? data_get($currentItem, 'parameter.connections_parameter.0.type_of_samples_id');
 
-                            return collect($parameters)->contains(function ($parameter) use ($realItemId) {
-                                return (int) data_get($parameter, 'id') === (int) $realItemId;
-                            });
-                        })
-                        ->map(function ($chainCustody) use ($realItemId, $laboratoryResultsCache) {
-                            $key = $realItemId . '_' . $chainCustody->id;
+                        $typeOfSampleId = $typeOfSampleId !== null ? (int) $typeOfSampleId : null;
 
-                            $savedResult = $laboratoryResultsCache->get($key);
+                        $typeOfSampleName = data_get($currentItem, 'type_of_sample.description')
+                            ?? data_get($currentItem, 'parameter.connections_parameter.0.type_of_sample.description')
+                            ?? $typeSamplesCache->get($typeOfSampleId)
+                            ?? 'Sin tipo de muestra';
 
-                            return [
-                                'chain_custody_id' => $chainCustody->id,
-                                'number_chain' => $chainCustody->number_chain,
-                                'code_lab' => $chainCustody->code_lab,
-                                'code_sample' => $chainCustody->code_sample,
-                                'code_season' => $chainCustody->code_season,
-                                'coordinate' => $chainCustody->coordinate,
-                                'result' => $savedResult?->result,
-                                'laboratory_result_id' => $savedResult?->id,
-                            ];
-                        })
-                        ->values();
+                        $unitMeasurementId = data_get($currentItem, 'unit_measurement_id');
+                        $unitMeasurementId = $unitMeasurementId !== null ? (int) $unitMeasurementId : null;
 
-                    return [
-                        'id' => $row->id,
-                        'item_id' => $realItemId,
+                        $unitMeasurementName = data_get($currentItem, 'unit_measurement.description')
+                            ?? $unitMeasurementsCache->get($unitMeasurementId);
 
-                        'type_of_sample_id' => $typeOfSampleId,
-                        'type_of_sample' => $typeOfSampleName,
+                        $conditionId = data_get($currentItem, 'condition_id');
+                        $conditionId = $conditionId !== null ? (int) $conditionId : null;
 
-                        'matrix_id' => data_get($item, 'matrix_id'),
-                        'matrix' => data_get($item, 'matrix.description'),
+                        $matrixId = data_get($currentItem, 'matrix_id')
+                            ?? data_get($currentItem, 'matrix_filter')
+                            ?? data_get($currentItem, 'parameter.connections_parameter.0.matrix_id');
 
-                        'parameter_id' => data_get($item, 'parameter_id'),
-                        'parameter' => data_get($item, 'parameter.description'),
+                        $matrixId = $matrixId !== null ? (int) $matrixId : null;
 
-                        'unit_measurement_id' => $unitMeasurementId,
-                        'unit_measurement' => $unitMeasurementName,
+                        $matrixName = data_get($currentItem, 'matrix.description')
+                            ?? data_get($currentItem, 'parameter.connections_parameter.0.matrix.description');
 
-                        'lcm' => data_get($item, 'lcm'),
+                        $parameterId = data_get($currentItem, 'parameter_id')
+                            ?? data_get($currentItem, 'parameter.id');
 
-                        'reference_id' => data_get($item, 'reference_id'),
-                        'reference_code' => data_get($item, 'reference.code'),
-                        'reference_title' => data_get($item, 'reference.title'),
+                        $parameterId = $parameterId !== null ? (int) $parameterId : null;
 
-                        'condition_id' => data_get($item, 'condition_id'),
-                        'condition' => data_get($item, 'condition.description'),
+                        $stations = $chainCustodies
+                            ->filter(function ($chainCustody) use (
+                                $itemIdForStations,
+                                $stationSearchParameterId,
+                                $parameterId
+                            ) {
+                                if (!$itemIdForStations && !$stationSearchParameterId && !$parameterId) {
+                                    return false;
+                                }
 
-                        'type' => data_get($item, 'type'),
-                        'price' => data_get($item, 'price'),
-                        'number_samples' => data_get($item, 'number_samples'),
+                                $parameters = $chainCustody->parameters ?? [];
 
-                        'stations' => $stations,
-                        'stations_count' => $stations->count(),
-                        'has_chain_custody' => $stations->isNotEmpty(),
-                    ];
+                                if (is_string($parameters)) {
+                                    $parameters = json_decode($parameters, true) ?: [];
+                                }
+
+                                if (!is_array($parameters)) {
+                                    return false;
+                                }
+
+                                return collect($parameters)->contains(function ($parameter) use (
+                                    $itemIdForStations,
+                                    $stationSearchParameterId,
+                                    $parameterId
+                                ) {
+                                    $chainItemId = data_get($parameter, 'id')
+                                        ?? data_get($parameter, 'item_id');
+
+                                    $chainParameterId = data_get($parameter, 'parameter_id')
+                                        ?? data_get($parameter, 'parameter.id');
+
+                                    $matchByItemId = $itemIdForStations
+                                        && $chainItemId
+                                        && (int) $chainItemId === (int) $itemIdForStations;
+
+                                    $matchByStationParameterId = $stationSearchParameterId
+                                        && $chainParameterId
+                                        && (int) $chainParameterId === (int) $stationSearchParameterId;
+
+                                    $matchByCurrentParameterId = $parameterId
+                                        && $chainParameterId
+                                        && (int) $chainParameterId === (int) $parameterId;
+
+                                    return $matchByItemId
+                                        || $matchByStationParameterId
+                                        || $matchByCurrentParameterId;
+                                });
+                            })
+                            ->map(function ($chainCustody) use ($itemIdForResult, $laboratoryResultsCache) {
+                                $key = $itemIdForResult . '_' . $chainCustody->id;
+
+                                $savedResult = $laboratoryResultsCache->get($key);
+
+                                return [
+                                    'chain_custody_id' => $chainCustody->id,
+                                    'number_chain' => $chainCustody->number_chain,
+                                    'code_lab' => $chainCustody->code_lab,
+                                    'code_sample' => $chainCustody->code_sample,
+                                    'code_season' => $chainCustody->code_season,
+                                    'coordinate' => $chainCustody->coordinate,
+                                    'result' => $savedResult?->result,
+                                    'laboratory_result_id' => $savedResult?->id,
+                                ];
+                            })
+                            ->values();
+
+                        return array_merge([
+                            'id' => $row->id,
+
+                            'item_id' => $itemIdForResult,
+
+                            'order_item_id' => $realItemId,
+
+                            'type_of_sample_id' => $typeOfSampleId,
+                            'type_of_sample' => $typeOfSampleName,
+
+                            'matrix_id' => $matrixId,
+                            'matrix' => $matrixName,
+
+                            'parameter_id' => $parameterId,
+                            'parameter' => data_get($currentItem, 'parameter.description'),
+
+                            'unit_measurement_id' => $unitMeasurementId,
+                            'unit_measurement' => $unitMeasurementName,
+
+                            'lcm' => data_get($currentItem, 'lcm'),
+
+                            'reference_id' => data_get($currentItem, 'reference_id'),
+                            'reference_code' => data_get($currentItem, 'reference.code'),
+                            'reference_title' => data_get($currentItem, 'reference.title'),
+
+                            'condition_id' => $conditionId,
+                            'condition' => data_get($currentItem, 'condition.description'),
+
+                            'type' => data_get($currentItem, 'type'),
+                            'price' => data_get($currentItem, 'price'),
+                            'unit_price' => data_get($currentItem, 'unit_price'),
+                            'number_samples' => data_get($currentItem, 'number_samples'),
+
+                            'stations' => $stations,
+                            'stations_count' => $stations->count(),
+                            'has_chain_custody' => $stations->isNotEmpty(),
+                        ], $extra);
+                    };
+
+                    $normalItem = $buildItem(
+                        $item,
+                        $realItemId,
+                        $realItemId,
+                        $parameterId,
+                        [
+                            'is_metal_child' => false,
+                            'select_to_metal_id' => null,
+                            'to_metal_id' => null,
+                            'parent_item_id' => null,
+                            'parent_parameter_id' => null,
+                        ]
+                    );
+
+                    $metalRows = collect();
+
+                    if ($parameterId && $selectedMetalsByToMetalId->has($parameterId)) {
+                        $metalRows = $selectedMetalsByToMetalId
+                            ->get($parameterId)
+                            ->map(function ($metal) use ($buildItem, $realItemId, $parameterId) {
+                                $metalItem = $metal->item ?? [];
+
+                                if (is_string($metalItem)) {
+                                    $metalItem = json_decode($metalItem, true) ?: [];
+                                }
+
+                                if (!is_array($metalItem)) {
+                                    $metalItem = [];
+                                }
+
+                                return $buildItem(
+                                    $metalItem,
+                                    (int) $metal->id,
+                                    $realItemId,
+                                    (int) $metal->parameter_id,
+                                    [
+                                        'is_metal_child' => true,
+                                        'select_to_metal_id' => (int) $metal->id,
+                                        'to_metal_id' => (int) $metal->to_metal_id,
+                                        'parent_item_id' => $realItemId,
+                                        'parent_parameter_id' => $parameterId,
+                                    ]
+                                );
+                            })
+                            ->values();
+                    }
+
+                    return collect([$normalItem])
+                        ->merge($metalRows);
                 })
                 ->sortBy(function ($item) {
                     return $item['type_of_sample_id'] ?? 999999;
@@ -363,8 +514,13 @@ class LaboratoryApiController extends Controller
                 ->map(function ($group) {
                     $first = $group->first();
 
-                    $ias = collect($group)->where('condition_id', 2)->values();
-                    $inacal = collect($group)->where('condition_id', 1)->values();
+                    $ias = collect($group)
+                        ->where('condition_id', 2)
+                        ->values();
+
+                    $inacal = collect($group)
+                        ->where('condition_id', 1)
+                        ->values();
 
                     $noCondition = collect($group)
                         ->filter(function ($item) {
@@ -394,10 +550,19 @@ class LaboratoryApiController extends Controller
             $input = $request->validate([
                 'order_id' => ['required', 'integer'],
                 'results' => ['required', 'array'],
+
                 'results.*.item_id' => ['required', 'integer'],
                 'results.*.order_item_id' => ['nullable', 'integer'],
                 'results.*.chain_custody_id' => ['required', 'integer'],
                 'results.*.result' => ['nullable', 'string'],
+
+                // Opcionales, por si el front los manda desde el show.
+                'results.*.parameter_id' => ['nullable', 'integer'],
+                'results.*.is_metal_child' => ['nullable', 'boolean'],
+                'results.*.select_to_metal_id' => ['nullable', 'integer'],
+                'results.*.to_metal_id' => ['nullable', 'integer'],
+                'results.*.parent_item_id' => ['nullable', 'integer'],
+                'results.*.parent_parameter_id' => ['nullable', 'integer'],
             ]);
 
             if (empty($input['results'])) {
@@ -406,11 +571,26 @@ class LaboratoryApiController extends Controller
 
             DB::beginTransaction();
 
+            $chainCustodyIds = collect($input['results'])
+                ->pluck('chain_custody_id')
+                ->filter()
+                ->unique()
+                ->values();
+
+            $chainCustodies = ChainCustody::query()
+                ->where('order_id', $input['order_id'])
+                ->whereIn('id', $chainCustodyIds)
+                ->get()
+                ->keyBy('id');
+
             foreach ($input['results'] as $row) {
-                $chainCustody = ChainCustody::query()
-                    ->where('id', $row['chain_custody_id'])
-                    ->where('order_id', $input['order_id'])
-                    ->first();
+                $rowItemId = (int) $row['item_id'];
+
+                $rowParameterId = isset($row['parameter_id']) && $row['parameter_id'] !== null
+                    ? (int) $row['parameter_id']
+                    : null;
+
+                $chainCustody = $chainCustodies->get((int) $row['chain_custody_id']);
 
                 if (!$chainCustody) {
                     throw new Exception('La cadena de custodia no pertenece a esta orden.');
@@ -426,29 +606,67 @@ class LaboratoryApiController extends Controller
                     $parameters = [];
                 }
 
-                $parameterData = collect($parameters)
-                    ->first(function ($parameter) use ($row) {
-                        return (int) data_get($parameter, 'id') === (int) $row['item_id'];
-                    });
+                $parameterData = collect($parameters)->first(function ($parameter) use ($rowItemId, $rowParameterId) {
+                    $chainItemId = data_get($parameter, 'id')
+                        ?? data_get($parameter, 'item_id');
+
+                    $chainParameterId = data_get($parameter, 'parameter_id')
+                        ?? data_get($parameter, 'parameter.id');
+
+                    if ($chainItemId && (int) $chainItemId === $rowItemId) {
+                        return true;
+                    }
+
+                    if ($rowParameterId && $chainParameterId && (int) $chainParameterId === $rowParameterId) {
+                        return true;
+                    }
+
+                    if ($chainParameterId && (int) $chainParameterId === $rowItemId) {
+                        return true;
+                    }
+
+                    return false;
+                });
 
                 if (!$parameterData) {
                     throw new Exception('El parámetro no pertenece a la cadena de custodia seleccionada.');
                 }
 
+                $parameterId = data_get($parameterData, 'parameter_id')
+                    ?? data_get($parameterData, 'parameter.id')
+                    ?? $rowParameterId
+                    ?? $rowItemId;
+
+                $matrixId = data_get($parameterData, 'matrix_id')
+                    ?? data_get($parameterData, 'matrix.id')
+                    ?? data_get($parameterData, 'matrix_filter')
+                    ?? data_get($parameterData, 'parameter.connections_parameter.0.matrix_id')
+                    ?? $chainCustody->matrix_id;
+
+                $typeOfSampleId = data_get($parameterData, 'type_of_sample_id')
+                    ?? data_get($parameterData, 'type_of_sample.id')
+                    ?? data_get($parameterData, 'type_of_sample_filter')
+                    ?? data_get($parameterData, 'parameter.connections_parameter.0.type_of_samples_id')
+                    ?? data_get($parameterData, 'parameter.connections_parameter.0.type_of_sample.id')
+                    ?? $chainCustody->type_of_sample_id;
+
                 LaboratoryResults::query()->updateOrCreate(
                     [
                         'order_id' => $input['order_id'],
-                        'item_id' => $row['item_id'],
-                        'chain_custody_id' => $row['chain_custody_id'],
+                        'item_id' => $rowItemId,
+                        'chain_custody_id' => (int) $row['chain_custody_id'],
                     ],
                     [
                         'order_item_id' => $row['order_item_id'] ?? null,
-                        'parameter_id' => data_get($parameterData, 'parameter_id'),
-                        'matrix_id' => $chainCustody->matrix_id,
-                        'type_of_sample_id' => $chainCustody->type_of_sample_id,
+
+                        'parameter_id' => $parameterId,
+                        'matrix_id' => $matrixId,
+                        'type_of_sample_id' => $typeOfSampleId,
+
                         'code_season' => $chainCustody->code_season,
                         'code_lab' => $chainCustody->code_lab,
                         'code_sample' => $chainCustody->code_sample,
+
                         'result' => $row['result'] ?? null,
                     ]
                 );
@@ -457,7 +675,7 @@ class LaboratoryApiController extends Controller
             DB::commit();
 
             return $this->sendSuccess('Resultados guardados con éxito');
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
 
             return $this->sendError($e->getMessage());

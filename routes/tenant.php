@@ -20,6 +20,7 @@ use App\Http\Controllers\tenant\ParameterApiController;
 use App\Http\Controllers\tenant\QuotesApiController;
 use App\Http\Controllers\tenant\ReceptionApiController;
 use App\Http\Controllers\tenant\ReportOtsApiController;
+use App\Http\Controllers\tenant\SelectToMetalsApiController;
 use App\Http\Controllers\tenant\ServiceApiController;
 use App\Http\Controllers\tenant\TestImportApiController;
 use App\Http\Controllers\tenant\TrialPeriodApiController;
@@ -65,13 +66,13 @@ Route::middleware([
 
         Route::post('/auth', [AuthApiController::class, 'login']);
 
-        Route::get('/test-prod', function () {
-            return response()->json([
-                'Todo bien'
-            ]);
-        });
-
         Route::middleware([JWTMiddleware::class])->group(function () {
+
+            Route::controller(SelectToMetalsApiController::class)->prefix('to-metal')->group(function () {
+
+                Route::post('', 'store');
+                Route::delete('/{id}', 'destroy');
+            });
 
             Route::controller(ParameterApiController::class)->prefix('parameters')->group(function () {
 

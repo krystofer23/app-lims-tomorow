@@ -559,8 +559,10 @@ const buildPayload = (items = []) => {
         item.stations.forEach((station) => {
             if (!item.item_id || !station.chain_custody_id) return
 
+            console.log(item)
+
             payload.push({
-                item_id: item.item_id,
+                item_id: item.to_metal_id ? item.parameter_id : item.item_id,
                 order_item_id: item.id,
                 chain_custody_id: station.chain_custody_id,
                 result: station.result ?? null,

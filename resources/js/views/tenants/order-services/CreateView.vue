@@ -503,6 +503,7 @@
                                             <el-button-group size="small">
                                                 <el-button @click="() => {
                                                     visibleParameters = true
+                                                    rowSelect = row
                                                     getToParametersMetal(row?.parameter?.ids_connections_parameters ?? [], row)
                                                 }" v-if="row?.parameter?.is_metal" plain size="small" type="info"
                                                     class="!rounded-l-lg" v-tippy="'Seleccionar Parametros'">
@@ -737,12 +738,13 @@
             <el-input v-model="searchMetal" placeholder="Buscar parámetro..." clearable size="small" />
 
             <el-table v-loading="loadingMetalParameters" :data="filteredParametersToMetal" height="300" size="small"
-                border>
+                border :row-class-name="tableRowClassName">
                 <el-table-column prop="description" label="Parámetro" min-width="180" show-overflow-tooltip />
 
                 <el-table-column label="Unidad De Medida" show-overflow-tooltip>
                     <template #default="{ row }">
-                        <el-select v-model="row.item[0].unit_measurement_id" size="small" placeholder="Seleccione" filterable
+                        <el-select :remote-method="listStore.getUnitsMeasurement" filterable remote reserve-keyword
+                            v-model="row.item[0].unit_measurement_id" size="small" placeholder="Seleccione"
                             class="w-full">
                             <el-option v-for="unit in unitsMeasurement" :key="unit.id" :label="unit.description"
                                 :value="unit.id" />
@@ -758,9 +760,13 @@
 
                 <el-table-column label="Acciones" width="130" align="center">
                     <template #default="{ row: metalRow }">
-                        <el-button size="small" type="success" plain class="!rounded-lg"
+                        <el-button v-if="!metalRow.is_select" size="small" type="success" plain class="!rounded-lg"
                             @click="addMetalParameter(metalRow)">
                             [+] Agregar
+                        </el-button>
+                        <el-button v-if="metalRow.is_select" size="small" type="danger" plain class="!rounded-lg"
+                            @click="removeMetalParameter(metalRow.select_to_metal.id)">
+                            [-] Remover
                         </el-button>
                     </template>
                 </el-table-column>
@@ -777,7 +783,7 @@ import tenant from '../../../stores/tenant';
 import { useListStore } from '../../../stores/list';
 import MatrizModal from '../quotes/modal/MatrizModal.vue';
 import TeamsModal from './modals/TeamsModal.vue';
-import { ElNotification } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 import { OfficeBuilding } from '@element-plus/icons-vue';
 
 const listStore = useListStore()
@@ -796,6 +802,7 @@ const loadingMetalParameters = ref(false)
 const parametersArrayUse = ref([])
 const parametersToMetal = ref([])
 const searchMetal = ref('')
+const rowSelect = ref(null)
 
 const normalizeMetalParameters = (parameters = []) => {
     return parameters.map((parameter) => ({
@@ -846,10 +853,12 @@ const getToParametersMetal = async (listArray = [], row = null) => {
                 list_array: listArray,
                 condition_id: row?.condition_id,
                 type: row?.type,
+                order_id: route.params.id
             },
         })
 
         parametersToMetal.value = normalizeMetalParameters(data.data ?? [])
+        listStore.getUnitsMeasurement(parametersToMetal.value.map(e => e.item[0].unit_measurement_id))
     }
     catch (e) {
         handleErrorsExeption(e)
@@ -857,6 +866,75 @@ const getToParametersMetal = async (listArray = [], row = null) => {
     finally {
         loadingMetalParameters.value = false
     }
+}
+
+const addMetalParameter = async (row) => {
+    if (!row || !rowSelect.value) return
+
+    const item = row.item?.[0]
+
+    if (!item?.unit_measurement_id) {
+        return ElMessage.warning('No puedes agregar el parámetro sin unidad de medida')
+    }
+
+    if (!item?.lcm) {
+        return ElMessage.warning('No puedes agregar el parámetro sin LCM')
+    }
+
+    const originalParameterId = rowSelect.value.parameter_id
+
+    const itemPayload = {
+        ...rowSelect.value,
+        lcm: item.lcm,
+        unit_measurement_id: item.unit_measurement_id,
+        parameter_id: row.id,
+        parameter: {
+            ...(rowSelect.value.parameter ?? {}),
+            id: row.id,
+            description: row.description,
+        },
+    }
+
+    const payload = {
+        order_id: route.params.id,
+        to_metal_id: originalParameterId,
+        parameter_id: row.id,
+        item: itemPayload,
+    }
+
+    try {
+        const { data } = await tenant.post('to-metal', payload)
+
+        row.is_select = true
+        row.select_to_metal = data.data ?? null
+
+        ElMessage.success(data.message ?? 'Parámetro agregado correctamente')
+
+        getToParametersMetal(rowSelect.value?.parameter?.ids_connections_parameters ?? [], rowSelect.value)
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+const removeMetalParameter = async (id) => {
+    try {
+        const { data } = await tenant.delete(`to-metal/${id}`)
+        ElMessage.success(data.message)
+
+        getToParametersMetal(rowSelect.value?.parameter?.ids_connections_parameters ?? [], rowSelect.value)
+    }
+    catch (e) {
+        handleErrorsExeption(e)
+    }
+}
+
+const tableRowClassName = ({ row }) => {
+    if (row.is_select) {
+        return 'row-selected'
+    }
+
+    return ''
 }
 
 const loadingCompany = ref(false)
@@ -1290,5 +1368,9 @@ onMounted(async () => {
 
 :deep(.el-select__wrapper) {
     border-radius: 12px !important;
+}
+
+:deep(.row-selected td) {
+    background-color: #dcfce7 !important;
 }
 </style>

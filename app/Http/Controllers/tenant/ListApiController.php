@@ -18,11 +18,13 @@ use App\Models\tenant\TypeOfAnalysis;
 use App\Models\tenant\TypeOfSamples;
 use App\Models\tenant\UnitsMeasurement;
 use App\Models\Tenant\User;
+use App\Models\tenatn\SelectToMetals;
 use Exception;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ListApiController extends Controller
 {
@@ -104,12 +106,23 @@ class ListApiController extends Controller
 
     public function unitsMeasurement(Request $request): JsonResponse
     {
-        $query = $request->input('query', null);
+        $query = $request->input('query');
 
         $data = UnitsMeasurement::query()
             ->when($request->filled('query'), function ($q) use ($query) {
-                $q->where('description', 'like', "%$query%")
-                    ->orWhere('id', $query);
+                $q->where(function ($subQuery) use ($query) {
+
+                    if (is_array($query)) {
+                        $subQuery->whereIn('id', $query);
+                        return;
+                    }
+
+                    $subQuery->where('description', 'like', "%{$query}%");
+
+                    if (is_numeric($query)) {
+                        $subQuery->orWhere('id', $query);
+                    }
+                });
             })
             ->paginate(15);
 
@@ -225,18 +238,75 @@ class ListApiController extends Controller
             $product = $request->input('product');
             $condition = $request->input('condition');
             $typeOfAnalysis = $request->input('type_of_analysis');
-
             $orderId = $request->input('order_id');
-            $parametersIds = collect();
+            $orderFilters = collect();
 
             if ($orderId) {
                 $order = OrderService::findOrFail($orderId);
-
-                $parametersIds = $order->items()
+                $orderItems = $order->items()
                     ->where('type', 'matrix')
-                    ->get()
-                    ->pluck('item.parameter_id')
+                    ->get();
+
+                $selectsToMetals = SelectToMetals::query()
+                    ->where('order_id', $orderId)
+                    ->get();
+
+                $normalFilters = $orderItems
+                    ->map(function ($orderItem) {
+                        $parameterId = data_get($orderItem, 'item.parameter_id');
+
+                        $conditionId = data_get($orderItem, 'condition_id')
+                            ?? data_get($orderItem, 'item.condition_id');
+
+                        if (!$parameterId || !$conditionId) {
+                            return null;
+                        }
+
+                        return [
+                            'parameter_id' => $parameterId,
+                            'condition_id' => $conditionId,
+                        ];
+                    })
                     ->filter()
+                    ->values();
+
+                $metalFilters = $selectsToMetals
+                    ->map(function ($selectToMetal) use ($orderItems) {
+                        $metalChildId = $selectToMetal->parameter_id;
+                        $metalParentId = $selectToMetal->to_metal_id;
+
+                        if (!$metalChildId || !$metalParentId) {
+                            return null;
+                        }
+
+                        $parentItem = $orderItems->first(function ($orderItem) use ($metalParentId) {
+                            return (int) data_get($orderItem, 'item.parameter_id') === (int) $metalParentId;
+                        });
+
+                        if (!$parentItem) {
+                            return null;
+                        }
+
+                        $parentConditionId = data_get($parentItem, 'condition_id')
+                            ?? data_get($parentItem, 'item.condition_id');
+
+                        if (!$parentConditionId) {
+                            return null;
+                        }
+
+                        return [
+                            'parameter_id' => $metalChildId,
+                            'condition_id' => $parentConditionId,
+                        ];
+                    })
+                    ->filter()
+                    ->values();
+
+                $orderFilters = $normalFilters
+                    ->merge($metalFilters)
+                    ->unique(function ($item) {
+                        return $item['parameter_id'] . '-' . $item['condition_id'];
+                    })
                     ->values();
             }
 
@@ -281,10 +351,38 @@ class ListApiController extends Controller
                         $query->where('type_of_analysis_id', $typeOfAnalysis);
                     });
                 })
-                ->when($parametersIds->isNotEmpty(), function ($query) use ($parametersIds) {
-                    $query->whereIn('parameter_id', $parametersIds->toArray());
+                ->when($orderId, function ($query) use ($orderFilters) {
+                    if ($orderFilters->isEmpty()) {
+                        $query->whereRaw('1 = 0');
+                        return;
+                    }
+
+                    $query->where(function ($q) use ($orderFilters) {
+                        $groupedByCondition = $orderFilters->groupBy('condition_id');
+
+                        foreach ($groupedByCondition as $conditionId => $items) {
+                            $parameterIds = $items
+                                ->pluck('parameter_id')
+                                ->unique()
+                                ->values()
+                                ->toArray();
+
+                            $q->orWhere(function ($subQuery) use ($conditionId, $parameterIds) {
+                                $subQuery->where('condition_id', $conditionId)
+                                    ->whereIn('parameter_id', $parameterIds);
+                            });
+                        }
+                    });
                 })
                 ->paginate(15);
+
+            $data->setCollection(
+                $data->getCollection()
+                    ->unique(function ($item) {
+                        return $item->parameter_id . '-' . $item->condition_id;
+                    })
+                    ->values()
+            );
 
             return $this->sendResponse($data, 'Enviando items');
         } catch (Exception $e) {
