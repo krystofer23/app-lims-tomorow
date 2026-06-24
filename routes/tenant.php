@@ -24,6 +24,7 @@ use App\Http\Controllers\tenant\SelectToMetalsApiController;
 use App\Http\Controllers\tenant\ServiceApiController;
 use App\Http\Controllers\tenant\TestImportApiController;
 use App\Http\Controllers\tenant\TrialPeriodApiController;
+use App\Http\Controllers\tenant\TypeOfAnalysisApiController;
 use App\Http\Controllers\tenant\UbigeoApiController;
 use App\Http\Controllers\tenant\UnitsMeasurementApiController;
 use App\Http\Controllers\tenant\UserApiController;
@@ -67,6 +68,14 @@ Route::middleware([
         Route::post('/auth', [AuthApiController::class, 'login']);
 
         Route::middleware([JWTMiddleware::class])->group(function () {
+
+            Route::controller(TypeOfAnalysisApiController::class)->prefix('type-of-analysis')->group(function () {
+
+                Route::get('', 'index');
+                Route::post('', 'store');
+                Route::put('/{id}', 'update');
+                Route::delete('/{id}', 'destroy');
+            });
 
             Route::controller(SelectToMetalsApiController::class)->prefix('to-metal')->group(function () {
 
