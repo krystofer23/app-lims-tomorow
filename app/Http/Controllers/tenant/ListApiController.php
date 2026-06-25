@@ -9,7 +9,6 @@ use App\Models\tenant\ContactCompanies;
 use App\Models\tenant\Essays;
 use App\Models\tenant\Item;
 use App\Models\tenant\Matrix;
-use App\Models\tenant\Matriz;
 use App\Models\tenant\Methodologies;
 use App\Models\tenant\OrderService;
 use App\Models\tenant\Parameters;
@@ -20,11 +19,9 @@ use App\Models\tenant\UnitsMeasurement;
 use App\Models\Tenant\User;
 use App\Models\tenatn\SelectToMetals;
 use Exception;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class ListApiController extends Controller
 {
@@ -62,17 +59,6 @@ class ListApiController extends Controller
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
-    }
-
-    public function matrizDescription(): JsonResponse
-    {
-        $data = Matriz::query()
-            ->pluck('description')
-            ->filter()
-            ->unique()
-            ->values();
-
-        return $this->sendResponse($data, 'Enviando datos de matrices descripcion');
     }
 
     public function companies(Request $request): JsonResponse
@@ -441,6 +427,7 @@ class ListApiController extends Controller
     {
         try {
             $data = TypeOfSamples::query()
+                ->when($request->filled('search'), fn($q) => $q->where('description', 'like', "%" . $request->input('search') . "%"))
                 ->get();
 
             return $this->sendResponse($data, 'Enviando tipos de muestras');

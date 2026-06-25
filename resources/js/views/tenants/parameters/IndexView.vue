@@ -113,7 +113,7 @@
             </div>
         </template>
 
-        <form class="space-y-5 pt-2" @submit.prevent="submitForm">
+        <form class="space-y-5 pt-2" @submit.prevent="onSubmit">
             <div>
                 <label class="mb-2 block text-sm font-semibold text-gray-700">
                     Descripción
@@ -143,7 +143,8 @@
                     Cancelar
                 </el-button>
 
-                <el-button @click="onSubmit" type="primary" native-type="submit" class="!rounded-lg">
+                <el-button @click="onSubmit" :loading="loadingSubmit" type="primary" native-type="submit"
+                    class="!rounded-lg">
                     Guardar parámetro
                 </el-button>
             </div>

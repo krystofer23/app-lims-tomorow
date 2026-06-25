@@ -3,20 +3,24 @@
 namespace App\Http\Controllers\tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\tenant\TypeOfAnalysis;
+use App\Models\tenant\Matrix;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
-class TypeOfAnalysisApiController extends Controller
+class MatrixApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
         $search = $request->input('search');
 
-        $data = TypeOfAnalysis::query()
-            ->when($search, fn($q) => $q->where('description', 'like', "%$search%"))
+        $data = Matrix::query()
+            ->with(['typeOfSample'])
+            ->when($search, function ($q) use ($search) {
+                $q->where('description', 'like', "%$search%")
+                ->orWhereHas('typeOfSample', fn($q) => $q->where('description', 'like', "%$search%"));
+            })
             ->orderBy('id', 'desc')
             ->paginate(15);
 
@@ -27,9 +31,11 @@ class TypeOfAnalysisApiController extends Controller
     {
         try {
             DB::beginTransaction();
+            $input = $request->all();
 
-            TypeOfAnalysis::create([
-                'description' => $request->description ?? null
+            Matrix::create([
+                'description' => $input['description'] ?? null,
+                'type_of_sample_id' => $input['type_of_sample_id'] ?? null,
             ]);
 
             DB::commit();
@@ -45,9 +51,12 @@ class TypeOfAnalysisApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $typeOfAnalysis = TypeOfAnalysis::findOrFail($id);
-            $typeOfAnalysis->update([
-                'description' => $request->description ?? null
+            $input = $request->all();
+
+            $matrix = Matrix::findOrFail($id);
+            $matrix->update([
+                'description' => $input['description'] ?? null,
+                'type_of_sample_id' => $input['type_of_sample_id'] ?? null,
             ]);
 
             DB::commit();
@@ -63,8 +72,8 @@ class TypeOfAnalysisApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $typeOfAnalysis = TypeOfAnalysis::findOrFail($id);
-            $typeOfAnalysis->delete();
+            $matrix = Matrix::findOrFail($id);
+            $matrix->delete();
 
             DB::commit();
             return $this->sendSuccess('Tipo de analisis');

@@ -8,9 +8,7 @@ use App\Models\tenant\ConnectionParameter;
 use App\Models\tenant\Item;
 use App\Models\tenant\ItemsQuotes;
 use App\Models\tenant\LogisticCats;
-use App\Models\tenant\Matriz;
 use App\Models\tenant\Quotes;
-use App\Models\tenant\Services;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +16,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Log;
 
 class QuotesApiController extends Controller
 {

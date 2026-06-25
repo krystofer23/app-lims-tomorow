@@ -489,6 +489,7 @@ async function handleDelete(row) {
         confirmText: 'Sí, aceptar',
         cancelText: 'Cancelar',
     })
+
     if (ok) {
         row.loading = true
 

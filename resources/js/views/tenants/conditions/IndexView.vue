@@ -57,12 +57,12 @@
                                 </el-button>
                             </el-tooltip>
 
-                            <el-tooltip content="Eliminar" placement="top">
+                            <!-- <el-tooltip content="Eliminar" placement="top">
                                 <el-button circle type="danger" plain class="!rounded-xl !m-0"
                                     @click="handleDestroy(row?.id)">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </el-button>
-                            </el-tooltip>
+                            </el-tooltip> -->
                         </div>
                     </template>
                 </el-table-column>
@@ -198,7 +198,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue"
+import { onMounted, reactive, ref, watch } from "vue"
 import { ElNotification } from "element-plus";
 import tenant from "../../../stores/tenant"
 import CustomHeader from "../../../components/tenants/CustomHeader.vue";
@@ -209,6 +209,7 @@ const state = ref(false)
 const filters = reactive({
     q: null,
     status: null,
+    search: null
 });
 
 const headerStyle = () => ({
@@ -239,7 +240,11 @@ const getConditions = async (page = 1) => {
     loading.value = true
 
     try {
-        const { data } = await tenant.get(`conditions?page=${page}`)
+        const { data } = await tenant.get(`conditions?page=${page}`, {
+            params: {
+                search: filters.search
+            }
+        })
 
         if (data.data) {
             conditions.value = data.data.data
@@ -332,6 +337,10 @@ const handleDestroy = async (id) => {
         console.error(e)
     }
 }
+
+watch(() => filters.search, (newVal) => {
+    getConditions()
+})
 
 onMounted(() => {
     getConditions()

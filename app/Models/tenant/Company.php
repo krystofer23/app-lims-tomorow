@@ -21,6 +21,11 @@ class Company extends TenantModel
         'state',
         'is_supplier',
         'is_partner',
+        'name',
+        'email',
+        'phone',
+        'contact',
+        'observations',
     ];
 
     protected $casts = [

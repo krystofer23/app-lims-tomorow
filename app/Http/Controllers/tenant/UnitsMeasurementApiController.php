@@ -13,7 +13,11 @@ class UnitsMeasurementApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $data = UnitsMeasurement::paginate(50);
+            $search = $request->input('search');
+
+            $data = UnitsMeasurement::query()
+                ->when($search, fn($q) => $q->where('description', 'like', "%$search%"))
+                ->paginate(50);
 
             return $this->sendResponse($data, 'Enviando unidades de medida');
         } catch (Exception $e) {
@@ -26,7 +30,7 @@ class UnitsMeasurementApiController extends Controller
         try {
             $input = $request->all();
 
-            $find = UnitsMeasurement::where('description', $input['description'])->first();
+            $find = UnitsMeasurement::query()->where('description', $input['description'])->first();
 
             if ($find) {
                 return $this->sendError('Ya existe la unidad de medida');

@@ -14,7 +14,10 @@ class ConditionsApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
+            $search = $request->input('search');
+
             $data = Conditions::query()
+                ->when($search, fn($q) => $q->where('description', 'like', "%$search%"))
                 ->paginate(15);
 
             return $this->sendResponse($data, 'Enviando condiciones');

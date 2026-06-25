@@ -357,9 +357,13 @@ export const useListStore = defineStore("listStore", () => {
 
     const typesSampling = ref([])
 
-    const getTypesSampling = async () => {
+    const getTypesSampling = async (q = null) => {
         try {
-            const { data } = await tenant.get(`list/types-sampling`)
+            const { data } = await tenant.get(`list/types-sampling`, {
+                params: {
+                    search: q
+                }
+            })
             if (data.data) typesSampling.value = data.data
         }
         catch (e) {

@@ -3,19 +3,19 @@
 namespace App\Http\Controllers\tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\tenant\TypeOfAnalysis;
+use App\Models\tenant\TypeOfSamples;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
-class TypeOfAnalysisApiController extends Controller
+class TypeOfSamplesApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
         $search = $request->input('search');
 
-        $data = TypeOfAnalysis::query()
+        $data = TypeOfSamples::query()
             ->when($search, fn($q) => $q->where('description', 'like', "%$search%"))
             ->orderBy('id', 'desc')
             ->paginate(15);
@@ -28,7 +28,7 @@ class TypeOfAnalysisApiController extends Controller
         try {
             DB::beginTransaction();
 
-            TypeOfAnalysis::create([
+            TypeOfSamples::create([
                 'description' => $request->description ?? null
             ]);
 
@@ -45,8 +45,8 @@ class TypeOfAnalysisApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $typeOfAnalysis = TypeOfAnalysis::findOrFail($id);
-            $typeOfAnalysis->update([
+            $typeOfSamples = TypeOfSamples::findOrFail($id);
+            $typeOfSamples->update([
                 'description' => $request->description ?? null
             ]);
 
@@ -63,8 +63,8 @@ class TypeOfAnalysisApiController extends Controller
         try {
             DB::beginTransaction();
 
-            $typeOfAnalysis = TypeOfAnalysis::findOrFail($id);
-            $typeOfAnalysis->delete();
+            $typeOfSamples = TypeOfSamples::findOrFail($id);
+            $typeOfSamples->delete();
 
             DB::commit();
             return $this->sendSuccess('Tipo de analisis');
