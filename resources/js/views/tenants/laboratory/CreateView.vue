@@ -227,9 +227,57 @@
                                                     </div>
 
                                                     <div class="col-span-12 md:col-span-7">
-                                                        <el-input v-model="station.result"
+                                                        <!-- Resultado normal -->
+                                                        <el-input v-if="!row.is_vibration" v-model="station.result"
                                                             placeholder="Ingrese resultado" clearable
                                                             class="input-custom" />
+
+                                                        <div v-else class="space-y-1.5">
+                                                            <div class="grid grid-cols-12 gap-1.5 items-center">
+                                                                <span
+                                                                    class="font-medium col-span-1 bg-teal-500 text-white px-1 rounded-lg text-center">
+                                                                    X
+                                                                </span>
+
+                                                                <el-input v-model="station.result_x_ppv"
+                                                                    placeholder="PPV" clearable
+                                                                    class="input-custom col-span-5" />
+
+                                                                <el-input v-model="station.result_x_frec"
+                                                                    placeholder="FREC" clearable
+                                                                    class="input-custom col-span-6" />
+                                                            </div>
+
+                                                            <div class="grid grid-cols-12 gap-1.5 items-center">
+                                                                <span
+                                                                    class="font-medium col-span-1 bg-teal-500 text-white px-1 rounded-lg text-center">
+                                                                    Y
+                                                                </span>
+
+                                                                <el-input v-model="station.result_y_ppv"
+                                                                    placeholder="PPV" clearable
+                                                                    class="input-custom col-span-5" />
+
+                                                                <el-input v-model="station.result_y_frec"
+                                                                    placeholder="FREC" clearable
+                                                                    class="input-custom col-span-6" />
+                                                            </div>
+
+                                                            <div class="grid grid-cols-12 gap-1.5 items-center">
+                                                                <span
+                                                                    class="font-medium col-span-1 bg-teal-500 text-white px-1 rounded-lg text-center">
+                                                                    Z
+                                                                </span>
+
+                                                                <el-input v-model="station.result_z_ppv"
+                                                                    placeholder="PPV" clearable
+                                                                    class="input-custom col-span-5" />
+
+                                                                <el-input v-model="station.result_z_frec"
+                                                                    placeholder="FREC" clearable
+                                                                    class="input-custom col-span-6" />
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -559,13 +607,24 @@ const buildPayload = (items = []) => {
         item.stations.forEach((station) => {
             if (!item.item_id || !station.chain_custody_id) return
 
-            console.log(item)
+            const isVibration = item.is_vibration ?? item.item?.type === 'VIBRACION'
 
             payload.push({
                 item_id: item.to_metal_id ? item.parameter_id : item.item_id,
                 order_item_id: item.id,
+                is_vibration: isVibration,
                 chain_custody_id: station.chain_custody_id,
-                result: station.result ?? null,
+
+                result: isVibration ? null : station.result ?? null,
+
+                result_x_ppv: isVibration ? station.result_x_ppv ?? null : null,
+                result_x_frec: isVibration ? station.result_x_frec ?? null : null,
+
+                result_y_ppv: isVibration ? station.result_y_ppv ?? null : null,
+                result_y_frec: isVibration ? station.result_y_frec ?? null : null,
+
+                result_z_ppv: isVibration ? station.result_z_ppv ?? null : null,
+                result_z_frec: isVibration ? station.result_z_frec ?? null : null,
             })
         })
     })

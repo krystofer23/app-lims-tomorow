@@ -232,4 +232,16 @@ export const routesTenants = [
         component: () => import('../views/tenants/parameters/IndexView.vue'),
         meta: { scope: 'tenant' }
     },
+    {
+        path: '/teams',
+        name: 'teams',
+        component: () => import('../views/tenants/teams/IndexView.vue'),
+        meta: { scope: 'tenant' }
+    },
+    {
+        path: '/teams-create',
+        name: 'teams-create',
+        component: () => import('../views/tenants/teams/CreateView.vue'),
+        meta: { scope: 'tenant' }
+    },
 ]

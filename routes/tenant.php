@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\InformReportApiController;
+use App\Http\Controllers\backend\TeamApiController;
 use App\Http\Controllers\tenant\AuthApiController;
 use App\Http\Controllers\tenant\CompaniesApiController;
 use App\Http\Controllers\tenant\ConditionsApiController;
@@ -282,6 +283,13 @@ Route::middleware([
                 Route::post('', 'store');
                 Route::put('/{id}', 'update');
                 Route::delete('/{id}', 'destroy');
+            });
+
+            // DB -> backendgreenlab
+
+            Route::controller(TeamApiController::class)->prefix('teams')->group(function () {
+
+                Route::get('', 'index');
             });
         });
     });

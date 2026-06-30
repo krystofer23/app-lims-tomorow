@@ -31,6 +31,8 @@ class LaboratoryResults extends Model
         'code_sample',
         'result',
         'condition_id',
+        'result_axis',
+        'result_type',
     ];
 
     public function order(): BelongsTo

@@ -252,7 +252,10 @@ class LaboratoryApiController extends Controller
                 ->where('order_id', $orderId)
                 ->get()
                 ->keyBy(function ($row) {
-                    return $row->item_id . '_' . $row->chain_custody_id;
+                    $axis = strtoupper($row->result_axis ?: 'NORMAL');
+                    $type = strtoupper($row->result_type ?: 'NORMAL');
+
+                    return $row->item_id . '_' . $row->chain_custody_id . '_' . $axis . '_' . $type;
                 });
 
             $selectedMetalsByToMetalId = SelectToMetals::query()
@@ -398,21 +401,62 @@ class LaboratoryApiController extends Controller
                                         || $matchByCurrentParameterId;
                                 });
                             })
-                            ->map(function ($chainCustody) use ($itemIdForResult, $laboratoryResultsCache) {
-                                $key = $itemIdForResult . '_' . $chainCustody->id;
+                            ->map(function ($chainCustody) use ($itemIdForResult, $laboratoryResultsCache, $row) {
+                                $baseKey = $itemIdForResult . '_' . $chainCustody->id;
 
-                                $savedResult = $laboratoryResultsCache->get($key);
+                                $getSavedResult = function (string $axis = 'NORMAL', string $type = 'NORMAL') use ($laboratoryResultsCache, $baseKey) {
+                                    $axis = strtoupper($axis);
+                                    $type = strtoupper($type);
 
-                                return [
+                                    return $laboratoryResultsCache->get($baseKey . '_' . $axis . '_' . $type);
+                                };
+
+                                $baseData = [
                                     'chain_custody_id' => $chainCustody->id,
                                     'number_chain' => $chainCustody->number_chain,
                                     'code_lab' => $chainCustody->code_lab,
                                     'code_sample' => $chainCustody->code_sample,
                                     'code_season' => $chainCustody->code_season,
                                     'coordinate' => $chainCustody->coordinate,
+                                ];
+
+                                if (data_get($row, 'item.type') === 'VIBRACION') {
+                                    $savedResultXPpv = $getSavedResult('X', 'PPV');
+                                    $savedResultXFrec = $getSavedResult('X', 'FREC');
+
+                                    $savedResultYPpv = $getSavedResult('Y', 'PPV');
+                                    $savedResultYFrec = $getSavedResult('Y', 'FREC');
+
+                                    $savedResultZPpv = $getSavedResult('Z', 'PPV');
+                                    $savedResultZFrec = $getSavedResult('Z', 'FREC');
+
+                                    return array_merge($baseData, [
+                                        'result_x_ppv' => $savedResultXPpv?->result,
+                                        'result_x_frec' => $savedResultXFrec?->result,
+
+                                        'result_y_ppv' => $savedResultYPpv?->result,
+                                        'result_y_frec' => $savedResultYFrec?->result,
+
+                                        'result_z_ppv' => $savedResultZPpv?->result,
+                                        'result_z_frec' => $savedResultZFrec?->result,
+
+                                        'laboratory_result_x_ppv_id' => $savedResultXPpv?->id,
+                                        'laboratory_result_x_frec_id' => $savedResultXFrec?->id,
+
+                                        'laboratory_result_y_ppv_id' => $savedResultYPpv?->id,
+                                        'laboratory_result_y_frec_id' => $savedResultYFrec?->id,
+
+                                        'laboratory_result_z_ppv_id' => $savedResultZPpv?->id,
+                                        'laboratory_result_z_frec_id' => $savedResultZFrec?->id,
+                                    ]);
+                                }
+
+                                $savedResult = $getSavedResult();
+
+                                return array_merge($baseData, [
                                     'result' => $savedResult?->result,
                                     'laboratory_result_id' => $savedResult?->id,
-                                ];
+                                ]);
                             })
                             ->values();
 
@@ -452,6 +496,8 @@ class LaboratoryApiController extends Controller
                             'stations' => $stations,
                             'stations_count' => $stations->count(),
                             'has_chain_custody' => $stations->isNotEmpty(),
+
+                            'is_vibration' => $row->item['type'] === 'VIBRACION' ? true : false
                         ], $extra);
                     };
 
@@ -556,13 +602,17 @@ class LaboratoryApiController extends Controller
                 'results.*.chain_custody_id' => ['required', 'integer'],
                 'results.*.result' => ['nullable', 'string'],
 
-                // Opcionales, por si el front los manda desde el show.
                 'results.*.parameter_id' => ['nullable', 'integer'],
                 'results.*.is_metal_child' => ['nullable', 'boolean'],
                 'results.*.select_to_metal_id' => ['nullable', 'integer'],
                 'results.*.to_metal_id' => ['nullable', 'integer'],
                 'results.*.parent_item_id' => ['nullable', 'integer'],
                 'results.*.parent_parameter_id' => ['nullable', 'integer'],
+
+                'results.*.is_vibration' => ['nullable', 'boolean'],
+                'results.*.result_x' => ['nullable', 'string'],
+                'results.*.result_y' => ['nullable', 'string'],
+                'results.*.result_z' => ['nullable', 'string'],
             ]);
 
             if (empty($input['results'])) {
@@ -650,26 +700,68 @@ class LaboratoryApiController extends Controller
                     ?? data_get($parameterData, 'parameter.connections_parameter.0.type_of_sample.id')
                     ?? $chainCustody->type_of_sample_id;
 
-                LaboratoryResults::query()->updateOrCreate(
-                    [
-                        'order_id' => $input['order_id'],
-                        'item_id' => $rowItemId,
-                        'chain_custody_id' => (int) $row['chain_custody_id'],
-                    ],
-                    [
-                        'order_item_id' => $row['order_item_id'] ?? null,
+                $isVibration = (bool) data_get($row, 'is_vibration', false);
 
-                        'parameter_id' => $parameterId,
-                        'matrix_id' => $matrixId,
-                        'type_of_sample_id' => $typeOfSampleId,
+                if ($isVibration) {
+                    $vibrationResults = [
+                        ['axis' => 'X', 'type' => 'PPV',  'value' => $row['result_x_ppv'] ?? null],
+                        ['axis' => 'X', 'type' => 'FREC', 'value' => $row['result_x_frec'] ?? null],
 
-                        'code_season' => $chainCustody->code_season,
-                        'code_lab' => $chainCustody->code_lab,
-                        'code_sample' => $chainCustody->code_sample,
+                        ['axis' => 'Y', 'type' => 'PPV',  'value' => $row['result_y_ppv'] ?? null],
+                        ['axis' => 'Y', 'type' => 'FREC', 'value' => $row['result_y_frec'] ?? null],
 
-                        'result' => $row['result'] ?? null,
-                    ]
-                );
+                        ['axis' => 'Z', 'type' => 'PPV',  'value' => $row['result_z_ppv'] ?? null],
+                        ['axis' => 'Z', 'type' => 'FREC', 'value' => $row['result_z_frec'] ?? null],
+                    ];
+
+
+                    foreach ($vibrationResults as $vibrationResult) {
+                        LaboratoryResults::query()->updateOrCreate(
+                            [
+                                'order_id' => $input['order_id'],
+                                'item_id' => $rowItemId,
+                                'chain_custody_id' => (int) $row['chain_custody_id'],
+                                'result_axis' => $vibrationResult['axis'],
+                                'result_type' => $vibrationResult['type'],
+                            ],
+                            [
+                                'order_item_id' => $row['order_item_id'] ?? null,
+
+                                'parameter_id' => $parameterId,
+                                'matrix_id' => $matrixId,
+                                'type_of_sample_id' => $typeOfSampleId,
+
+                                'code_season' => $chainCustody->code_season,
+                                'code_lab' => $chainCustody->code_lab,
+                                'code_sample' => $chainCustody->code_sample,
+
+                                'result' => $vibrationResult['value'],
+                            ]
+                        );
+                    }
+                } else {
+                    LaboratoryResults::query()->updateOrCreate(
+                        [
+                            'order_id' => $input['order_id'],
+                            'item_id' => $rowItemId,
+                            'chain_custody_id' => (int) $row['chain_custody_id'],
+                            'result_axis' => null,
+                        ],
+                        [
+                            'order_item_id' => $row['order_item_id'] ?? null,
+
+                            'parameter_id' => $parameterId,
+                            'matrix_id' => $matrixId,
+                            'type_of_sample_id' => $typeOfSampleId,
+
+                            'code_season' => $chainCustody->code_season,
+                            'code_lab' => $chainCustody->code_lab,
+                            'code_sample' => $chainCustody->code_sample,
+
+                            'result' => $row['result'] ?? null,
+                        ]
+                    );
+                }
             }
 
             DB::commit();

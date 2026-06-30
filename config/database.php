@@ -133,7 +133,7 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
-        'system_inventory_db' => [
+        'backend_greenlab' => [
             'driver' => 'mysql',
             'host' => env('DB_EXTERNAL_HOST'),
             'port' => env('DB_EXTERNAL_PORT', '3306'),

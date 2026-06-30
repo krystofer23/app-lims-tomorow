@@ -48,6 +48,7 @@ class ReceptionApiController extends Controller
                 ->when($request->filled('number_chain'), function ($q) use ($numberChain) {
                     $q->where('number_chain', 'like', "%{$numberChain}%");
                 })
+                ->orderBy('id', 'desc')
                 ->paginate(15);
 
             return $this->sendResponse($data, 'Enviando registros');

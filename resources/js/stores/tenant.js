@@ -4,7 +4,7 @@ import { useAuthStore } from "./auth";
 import router from "@/router";
 
 const domain = window.location.hostname;
-const VITE_API_URL = `https://${domain}/tenant`;
+const VITE_API_URL = `http://${domain}/tenant`;
 
 const tenant = axios.create({
     baseURL: `${VITE_API_URL}/`,

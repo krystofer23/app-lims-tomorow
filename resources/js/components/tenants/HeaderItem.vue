@@ -600,6 +600,25 @@ const menus = computed(() => {
             ]
         },
         {
+            key: "teams",
+            label: "Equipos [+]",
+            icon: "fa-solid fa-toolbox",
+            variant: "mega",
+            footerText: "Ver equipos",
+            items: [
+                {
+                    key: "teams",
+                    title: "Equipos",
+                    desc: "Módulo de equipos",
+                    cta: "Ir →",
+                    ctaColor: "text-teal-700",
+                    iconBg: "bg-teal-50 text-teal-700",
+                    icon: "fa-solid fa-screwdriver-wrench",
+                    subtitle: "Equipos",
+                }
+            ]
+        },
+        {
             key: "settings",
             label: "Configuración",
             icon: "fa-solid fa-sliders",
