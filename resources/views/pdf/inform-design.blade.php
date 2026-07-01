@@ -176,7 +176,7 @@
             font-size: 8.5px;
         }
 
-       .result-main-table th {
+        .result-main-table th {
             padding: 1.4mm .8mm;
             text-align: center;
             font-weight: bold;
@@ -280,436 +280,459 @@
 
 <body>
 
-@php
-    $samples = $data['samples'] ?? [];
+    @php
+        $samples = $data['samples'] ?? [];
+        $isVibrationPdf = (bool) ($data['is_vibration'] ?? false);
 
-    $maxResultsPerPage = 4;
+        $maxResultsPerPage = 4;
 
-    $sampleChunks = collect($samples)
-        ->chunk($maxResultsPerPage)
-        ->map(fn ($chunk) => $chunk->values()->toArray())
-        ->values()
-        ->toArray();
+        $sampleChunks = collect($samples)
+            ->chunk($maxResultsPerPage)
+            ->map(fn($chunk) => $chunk->values()->toArray())
+            ->values()
+            ->toArray();
 
-    if (empty($sampleChunks)) {
-        $sampleChunks = [[]];
-    }
+        if (empty($sampleChunks)) {
+            $sampleChunks = [[]];
+        }
 
-    $resultsPagesCount = count($sampleChunks);
+        $resultsPagesCount = count($sampleChunks);
 
-    // 1 página inicial + páginas dinámicas de resultados + 1 página final
-    $totalPages = 1 + $resultsPagesCount + 1;
+        // 1 página inicial + páginas dinámicas de resultados + 1 página final
+        $totalPages = 1 + $resultsPagesCount + 1;
 
-    $category = $data['category'] ?? $data['product'] ?? '-';
-    $subCategory = $data['sub_category'] ?? $data['product'] ?? '-';
+        $category = $data['category'] ?? ($data['product'] ?? '-');
+        $subCategory = $data['sub_category'] ?? ($data['product'] ?? '-');
 
-    if (!function_exists('pdfParseCoordinate')) {
-        function pdfParseCoordinate($coordinate) {
-            $coordinate = trim((string) $coordinate);
+        if (!function_exists('pdfParseCoordinate')) {
+            function pdfParseCoordinate($coordinate)
+            {
+                $coordinate = trim((string) $coordinate);
 
-            if ($coordinate === '' || $coordinate === '-') {
+                if ($coordinate === '' || $coordinate === '-') {
+                    return [
+                        'east' => '-',
+                        'north' => '-',
+                    ];
+                }
+
+                $east = '-';
+                $north = '-';
+
+                if (preg_match('/E\s*:\s*([^\r\n,;]+).*?N\s*:\s*([^\r\n,;]+)/is', $coordinate, $matches)) {
+                    $east = trim($matches[1] ?? '-');
+                    $north = trim($matches[2] ?? '-');
+                } elseif (preg_match('/N\s*:\s*([^\r\n,;]+).*?E\s*:\s*([^\r\n,;]+)/is', $coordinate, $matches)) {
+                    $north = trim($matches[1] ?? '-');
+                    $east = trim($matches[2] ?? '-');
+                } elseif (str_contains($coordinate, ',')) {
+                    $parts = array_map('trim', explode(',', $coordinate));
+                    $east = $parts[0] ?? '-';
+                    $north = $parts[1] ?? '-';
+                } else {
+                    $east = $coordinate;
+                }
+
                 return [
-                    'east' => '-',
-                    'north' => '-',
+                    'east' => $east ?: '-',
+                    'north' => $north ?: '-',
                 ];
             }
+        }
 
-            $east = '-';
-            $north = '-';
+        if (!function_exists('pdfResultByIndex')) {
+            function pdfResultByIndex($parameter, $sampleIndex = 0)
+            {
+                $results = array_values($parameter['results'] ?? []);
 
-            if (preg_match('/E\s*:\s*([^\r\n,;]+).*?N\s*:\s*([^\r\n,;]+)/is', $coordinate, $matches)) {
-                $east = trim($matches[1] ?? '-');
-                $north = trim($matches[2] ?? '-');
-            } elseif (preg_match('/N\s*:\s*([^\r\n,;]+).*?E\s*:\s*([^\r\n,;]+)/is', $coordinate, $matches)) {
-                $north = trim($matches[1] ?? '-');
-                $east = trim($matches[2] ?? '-');
-            } elseif (str_contains($coordinate, ',')) {
-                $parts = array_map('trim', explode(',', $coordinate));
-                $east = $parts[0] ?? '-';
-                $north = $parts[1] ?? '-';
-            } else {
-                $east = $coordinate;
+                return $results[$sampleIndex]['result'] ?? '';
             }
-
-            return [
-                'east' => $east ?: '-',
-                'north' => $north ?: '-',
-            ];
         }
-    }
 
-    if (!function_exists('pdfResultByIndex')) {
-        function pdfResultByIndex($parameter, $sampleIndex = 0) {
-            $results = array_values($parameter['results'] ?? []);
+        $methodRows = [];
 
-            return $results[$sampleIndex]['result'] ?? '';
+        foreach ($data['analysis_groups_methodology'] ?? [] as $group) {
+            foreach ($group['parameters'] ?? [] as $parameter) {
+                $methodRows[] = $parameter;
+            }
         }
-    }
-
-    $methodRows = [];
-
-    foreach (($data['analysis_groups_methodology'] ?? []) as $group) {
-        foreach (($group['parameters'] ?? []) as $parameter) {
-            $methodRows[] = $parameter;
-        }
-    }
-@endphp
-
-<div class="page">
-    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}</p>
-    <p class="subtitle">CON VALOR OFICIAL</p>
-
-    <table class="general-table">
-        <tr>
-            <td class="general-label">Razón Social del cliente</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['company'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Dirección</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['direction'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Solicitado Por</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['application'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Referencia</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['reference'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Proyecto {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['project'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Procedencia {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['origin'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Muestreo Realizado Por</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['sampling_performed_by'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Cantidad de Muestra</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['sample_quantity'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Producto</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['product'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Plan de Muestreo</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['sampling_plan'] ?? 'NO APLICA' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Fecha de Recepción</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['date_of_receipt'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Hora de Recepción</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['time_of_receipt'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Periodo de Ensayo</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['trial_period'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td class="general-label">Fecha de Emisión</td>
-            <td class="general-colon">:</td>
-            <td class="general-value">{{ $data['date_agreed'] ?? '' }}</td>
-        </tr>
-    </table>
-
-    <div class="note">
-        Gracias por utilizar los servicios de GREENLAB PERÚ S.A.C. Póngase en contacto con el Ejecutivo de Ventas,
-        si desea información adicional o cualquier aclaración que pertenezcan a este informe.
-    </div>
-
-    <div class="authorized">
-        Informe Autorizado por:
-    </div>
-
-    <div class="page-number">1 de {{ $totalPages }}</div>
-</div>
-
-@foreach($sampleChunks as $chunkIndex => $sampleChunk)
-    @php
-        $currentSampleCount = max(count($sampleChunk), 1);
-
-        $parameterWidth = 27;
-        $unitWidth = 13;
-        $lcmWidth = 12;
-        $resultsTotalWidth = 48;
-
-        $resultColumnWidth = $resultsTotalWidth / $currentSampleCount;
-
-        $currentPage = 2 + $chunkIndex;
     @endphp
 
     <div class="page">
-        <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}</p>
+        <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}
+        </p>
         <p class="subtitle">CON VALOR OFICIAL</p>
 
-        <div class="section-title">
-            I. RESULTADOS DE ANÁLISIS
-        </div>
-
-        <table class="result-info-table">
-            <colgroup>
-                <col style="width: {{ $parameterWidth }}%;">
-                <col style="width: {{ $unitWidth }}%;">
-                <col style="width: {{ $lcmWidth }}%;">
-
-                @for($i = 0; $i < $currentSampleCount; $i++)
-                    <col style="width: {{ $resultColumnWidth }}%;">
-                @endfor
-            </colgroup>
-
+        <table class="general-table">
             <tr>
-                <td class="result-label" colspan="2">Código del Laboratorio</td>
-                <td class="result-colon">:</td>
-
-                @forelse($sampleChunk as $sample)
-                    <td class="result-value">{{ $sample['code_lab'] ?? '-' }}</td>
-                @empty
-                    <td class="result-value">-</td>
-                @endforelse
+                <td class="general-label">Razón Social del cliente</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['company'] ?? '' }}</td>
             </tr>
-
             <tr>
-                <td class="result-label" colspan="2">Código de la muestra {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
-                <td class="result-colon">:</td>
-
-                @forelse($sampleChunk as $sample)
-                    <td class="result-value">{{ $sample['code_sample'] ?? '-' }}</td>
-                @empty
-                    <td class="result-value">-</td>
-                @endforelse
+                <td class="general-label">Dirección</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['direction'] ?? '' }}</td>
             </tr>
-
             <tr>
-                <td class="result-label" colspan="2">Fecha muestreo {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
-                <td class="result-colon">:</td>
-
-                @forelse($sampleChunk as $sample)
-                    <td class="result-value">{{ $sample['date_sample'] ?? '-' }}</td>
-                @empty
-                    <td class="result-value">-</td>
-                @endforelse
+                <td class="general-label">Solicitado Por</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['application'] ?? '' }}</td>
             </tr>
-
             <tr>
-                <td class="result-label" colspan="2">Hora muestreo {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
-                <td class="result-colon">:</td>
-
-                @forelse($sampleChunk as $sample)
-                    <td class="result-value">{{ $sample['hour_sample'] ?? '-' }}</td>
-                @empty
-                    <td class="result-value">-</td>
-                @endforelse
+                <td class="general-label">Referencia</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['reference'] ?? '' }}</td>
             </tr>
-
             <tr>
-                <td class="result-label" colspan="2">Categoría {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
-                <td class="result-colon">:</td>
-
-                @forelse($sampleChunk as $sample)
-                    <td class="result-value">{{ $category }}</td>
-                @empty
-                    <td class="result-value">-</td>
-                @endforelse
+                <td class="general-label">Proyecto
+                    {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['project'] ?? '' }}</td>
             </tr>
-
             <tr>
-                <td class="result-label" colspan="2">Sub categoría</td>
-                <td class="result-colon">:</td>
-
-                @forelse($sampleChunk as $sample)
-                    <td class="result-value">{{ $subCategory }}</td>
-                @empty
-                    <td class="result-value">-</td>
-                @endforelse
+                <td class="general-label">Procedencia
+                    {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['origin'] ?? '' }}</td>
             </tr>
-
             <tr>
-                <td class="result-label" colspan="2">Coordenadas (WGS-84) {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
-                <td class="result-colon">:</td>
-
-                @forelse($sampleChunk as $sample)
-                    @php
-                        $coord = pdfParseCoordinate($sample['coordinate'] ?? '-');
-                    @endphp
-
-                    <td class="result-value">E: {{ $coord['east'] }}</td>
-                @empty
-                    <td class="result-value">E: -</td>
-                @endforelse
+                <td class="general-label">Muestreo Realizado Por</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['sampling_performed_by'] ?? '' }}</td>
             </tr>
-
             <tr>
-                <td colspan="2"></td>
-                <td></td>
-
-                @forelse($sampleChunk as $sample)
-                    @php
-                        $coord = pdfParseCoordinate($sample['coordinate'] ?? '-');
-                    @endphp
-
-                    <td class="result-value">N: {{ $coord['north'] }}</td>
-                @empty
-                    <td class="result-value">N: -</td>
-                @endforelse
+                <td class="general-label">Cantidad de Muestra</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['sample_quantity'] ?? '' }}</td>
+            </tr>
+            <tr>
+                <td class="general-label">Producto</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['product'] ?? '' }}</td>
+            </tr>
+            <tr>
+                <td class="general-label">Plan de Muestreo</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['sampling_plan'] ?? 'NO APLICA' }}</td>
+            </tr>
+            <tr>
+                <td class="general-label">Fecha de Recepción</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['date_of_receipt'] ?? '' }}</td>
+            </tr>
+            <tr>
+                <td class="general-label">Hora de Recepción</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['time_of_receipt'] ?? '' }}</td>
+            </tr>
+            <tr>
+                <td class="general-label">Periodo de Ensayo</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['trial_period'] ?? '' }}</td>
+            </tr>
+            <tr>
+                <td class="general-label">Fecha de Emisión</td>
+                <td class="general-colon">:</td>
+                <td class="general-value">{{ $data['date_agreed'] ?? '' }}</td>
             </tr>
         </table>
 
-        <table class="result-main-table">
-            <colgroup>
-                <col style="width: {{ $parameterWidth }}%;">
-                <col style="width: {{ $unitWidth }}%;">
-                <col style="width: {{ $lcmWidth }}%;">
+        <div class="note">
+            Gracias por utilizar los servicios de GREENLAB PERÚ S.A.C. Póngase en contacto con el Ejecutivo de Ventas,
+            si desea información adicional o cualquier aclaración que pertenezcan a este informe.
+        </div>
 
-                @for($i = 0; $i < $currentSampleCount; $i++)
-                    <col style="width: {{ $resultColumnWidth }}%;">
-                @endfor
-            </colgroup>
+        <div class="authorized">
+            Informe Autorizado por:
+        </div>
 
+        <div class="page-number">1 de {{ $totalPages }}</div>
+    </div>
+
+    {{-- Resultados --}}
+
+    @foreach ($sampleChunks as $chunkIndex => $sampleChunk)
+        @php
+            $currentSampleCount = max(count($sampleChunk), 1);
+
+            $parameterWidth = 27;
+            $unitWidth = 13;
+            $lcmWidth = 12;
+            $resultsTotalWidth = 48;
+
+            $resultColumnWidth = $resultsTotalWidth / $currentSampleCount;
+
+            $currentPage = 2 + $chunkIndex;
+        @endphp
+
+        <div class="page">
+            <p class="title">INFORME DE ENSAYO N°
+                {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}</p>
+            <p class="subtitle">CON VALOR OFICIAL</p>
+
+            <div class="section-title">
+                I. RESULTADOS DE ANÁLISIS
+            </div>
+
+            <table class="result-info-table">
+                <colgroup>
+                    <col style="width: {{ $parameterWidth }}%;">
+                    <col style="width: {{ $unitWidth }}%;">
+                    <col style="width: {{ $lcmWidth }}%;">
+
+                    @for ($i = 0; $i < $currentSampleCount; $i++)
+                        <col style="width: {{ $resultColumnWidth }}%;">
+                    @endfor
+                </colgroup>
+
+                <tr>
+                    <td class="result-label" colspan="2">Código del Laboratorio</td>
+                    <td class="result-colon">:</td>
+
+                    @forelse($sampleChunk as $sample)
+                        <td class="result-value">{{ $sample['code_lab'] ?? '-' }}</td>
+                    @empty
+                        <td class="result-value">-</td>
+                    @endforelse
+                </tr>
+
+                <tr>
+                    <td class="result-label" colspan="2">Código de la muestra
+                        {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
+                    <td class="result-colon">:</td>
+
+                    @forelse($sampleChunk as $sample)
+                        <td class="result-value">{{ $sample['code_sample'] ?? '-' }}</td>
+                    @empty
+                        <td class="result-value">-</td>
+                    @endforelse
+                </tr>
+
+                <tr>
+                    <td class="result-label" colspan="2">Fecha muestreo
+                        {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
+                    <td class="result-colon">:</td>
+
+                    @forelse($sampleChunk as $sample)
+                        <td class="result-value">{{ $sample['date_sample'] ?? '-' }}</td>
+                    @empty
+                        <td class="result-value">-</td>
+                    @endforelse
+                </tr>
+
+                <tr>
+                    <td class="result-label" colspan="2">Hora muestreo
+                        {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
+                    <td class="result-colon">:</td>
+
+                    @forelse($sampleChunk as $sample)
+                        <td class="result-value">{{ $sample['hour_sample'] ?? '-' }}</td>
+                    @empty
+                        <td class="result-value">-</td>
+                    @endforelse
+                </tr>
+
+                <tr>
+                    <td class="result-label" colspan="2">Categoría
+                        {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
+                    <td class="result-colon">:</td>
+
+                    @forelse($sampleChunk as $sample)
+                        <td class="result-value">{{ $category }}</td>
+                    @empty
+                        <td class="result-value">-</td>
+                    @endforelse
+                </tr>
+
+                <tr>
+                    <td class="result-label" colspan="2">Sub categoría</td>
+                    <td class="result-colon">:</td>
+
+                    @forelse($sampleChunk as $sample)
+                        <td class="result-value">{{ $subCategory }}</td>
+                    @empty
+                        <td class="result-value">-</td>
+                    @endforelse
+                </tr>
+
+                <tr>
+                    <td class="result-label" colspan="2">Coordenadas (WGS-84)
+                        {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? '' : '¤' }}</td>
+                    <td class="result-colon">:</td>
+
+                    @forelse($sampleChunk as $sample)
+                        @php
+                            $coord = pdfParseCoordinate($sample['coordinate'] ?? '-');
+                        @endphp
+
+                        <td class="result-value">E: {{ $coord['east'] }}</td>
+                    @empty
+                        <td class="result-value">E: -</td>
+                    @endforelse
+                </tr>
+
+                <tr>
+                    <td colspan="2"></td>
+                    <td></td>
+
+                    @forelse($sampleChunk as $sample)
+                        @php
+                            $coord = pdfParseCoordinate($sample['coordinate'] ?? '-');
+                        @endphp
+
+                        <td class="result-value">N: {{ $coord['north'] }}</td>
+                    @empty
+                        <td class="result-value">N: -</td>
+                    @endforelse
+                </tr>
+            </table>
+
+            <table class="result-main-table">
+                <colgroup>
+                    <col style="width: {{ $parameterWidth }}%;">
+                    <col style="width: {{ $unitWidth }}%;">
+                    <col style="width: {{ $lcmWidth }}%;">
+
+                    @for ($i = 0; $i < $currentSampleCount; $i++)
+                        <col style="width: {{ $resultColumnWidth }}%;">
+                    @endfor
+                </colgroup>
+
+                <thead>
+                    <tr>
+                        <th>Parámetros</th>
+                        <th>Unidad</th>
+                        <th>L.C.M.</th>
+
+                        @forelse($sampleChunk as $index => $sample)
+                            <th>
+                                {{ $index === 0 ? 'Resultados' : '' }}
+                            </th>
+                        @empty
+                            <th>Resultados</th>
+                        @endforelse
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach ($data['analysis_groups'] ?? [] as $group)
+                        <tr class="group-row">
+                            <td style="border-top: 1px solid #000;" colspan="{{ 3 + $currentSampleCount }}">
+                                {{ $group['type_of_analysis'] ?? 'SIN TIPO DE ENSAYO' }}
+                            </td>
+                        </tr>
+
+                        @foreach ($group['parameters'] ?? [] as $parameter)
+                            <tr>
+                                <td style="{{ !empty($parameter['is_vibration_axis']) ? 'padding-left: 7mm;' : '' }}">
+                                    {{ $parameter['parameter'] ?? '-' }}
+                                </td>
+
+                                <td class="center">{{ $parameter['unit'] ?? '' }}</td>
+                                <td class="center">{{ $parameter['lcm'] ?? '' }}</td>
+
+                                @forelse($sampleChunk as $localSampleIndex => $sample)
+                                    @php
+                                        $globalSampleIndex = $chunkIndex * $maxResultsPerPage + $localSampleIndex;
+                                    @endphp
+
+                                    <td class="center">
+                                        {{ !empty($parameter['is_vibration_section']) ? '' : pdfResultByIndex($parameter, $globalSampleIndex) }}
+                                    </td>
+                                @empty
+                                    <td class="center"></td>
+                                @endforelse
+                            </tr>
+                        @endforeach
+                    @endforeach
+
+                    <tr class="result-end-line">
+                        <td colspan="{{ 3 + $currentSampleCount }}"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            @if ($loop->last)
+                <div class="legend">
+                    {{ $data['legend'] }}
+                </div>
+            @endif
+
+            <div class="page-number">{{ $currentPage }} de {{ $totalPages }}</div>
+        </div>
+    @endforeach
+
+    {{-- Metodos --}}
+
+    <div class="page">
+        <p class="title">INFORME DE ENSAYO N°
+            {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}</p>
+        <p class="subtitle">CON VALOR OFICIAL</p>
+
+        <div class="section-title">
+            II. MÉTODOS Y REFERENCIAS
+        </div>
+
+        <table class="methods-table">
             <thead>
                 <tr>
-                    <th>Parámetros</th>
-                    <th>Unidad</th>
-                    <th>L.C.M.</th>
-
-                    @forelse($sampleChunk as $index => $sample)
-                        <th>
-                            {{ $index === 0 ? 'Resultados' : '' }}
-                        </th>
-                    @empty
-                        <th>Resultados</th>
-                    @endforelse
+                    <th style="width: 25%;">TIPO ENSAYO</th>
+                    <th style="width: 31%;">NORMA REFERENCIA</th>
+                    <th style="width: 44%;">TITULO</th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach(($data['analysis_groups'] ?? []) as $group)
-                    <tr class="group-row">
-                        <td style="border-top: 1px solid #000;" colspan="{{ 3 + $currentSampleCount }}">
-                            {{ $group['type_of_analysis'] ?? 'SIN TIPO DE ENSAYO' }}
-                        </td>
+                @forelse($methodRows as $method)
+                    <tr class="{{ $loop->last ? 'methods-bottom' : '' }}">
+                        <td>{{ $method['parameter'] ?? '-' }}</td>
+                        <td>{{ $method['code'] ?? '-' }}</td>
+                        <td>{{ $method['title'] ?? '-' }}</td>
                     </tr>
-
-                    @foreach(($group['parameters'] ?? []) as $parameter)
-                        <tr>
-                            <td>{{ $parameter['parameter'] ?? '-' }}</td>
-                            <td class="center">{{ $parameter['unit'] ?? '-' }}</td>
-                            <td class="center">{{ $parameter['lcm'] ?? '-' }}</td>
-
-                            @forelse($sampleChunk as $localSampleIndex => $sample)
-                                @php
-                                    $globalSampleIndex = ($chunkIndex * $maxResultsPerPage) + $localSampleIndex;
-                                @endphp
-
-                                <td class="center">
-                                    {{ pdfResultByIndex($parameter, $globalSampleIndex) }}
-                                </td>
-                            @empty
-                                <td class="center"></td>
-                            @endforelse
-                        </tr>
-                    @endforeach
-                @endforeach
-
-                <tr class="result-end-line">
-                    <td colspan="{{ 3 + $currentSampleCount }}"></td>
-                </tr>
+                @empty
+                    <tr class="methods-bottom">
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
 
-        @if($loop->last)
-            <div class="legend">
-                {{ $data['legend'] }}
+        @if ($data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.')
+            <div class="observations-title">
+                III. PROCEDIMIENTOS DE MUESTREO
+            </div>
+
+            <div class="procedures">
+                @foreach ($data['procedures'] ?? [] as $row)
+                    <div>{{ $row['procedure'] ?? '-' }}</div>
+                @endforeach
             </div>
         @endif
 
-        <div class="page-number">{{ $currentPage }} de {{ $totalPages }}</div>
-    </div>
-@endforeach
-
-<div class="page">
-    <p class="title">INFORME DE ENSAYO N° {{ $data['report_number'] }}{{ $data['condition'] === 'IAS' ? '-I' : '' }}</p>
-    <p class="subtitle">CON VALOR OFICIAL</p>
-
-    <div class="section-title">
-        II. MÉTODOS Y REFERENCIAS
-    </div>
-
-    <table class="methods-table">
-        <thead>
-            <tr>
-                <th style="width: 25%;">TIPO ENSAYO</th>
-                <th style="width: 31%;">NORMA REFERENCIA</th>
-                <th style="width: 44%;">TITULO</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            @forelse($methodRows as $method)
-                <tr class="{{ $loop->last ? 'methods-bottom' : '' }}">
-                    <td>{{ $method['parameter'] ?? '-' }}</td>
-                    <td>{{ $method['code'] ?? '-' }}</td>
-                    <td>{{ $method['title'] ?? '-' }}</td>
-                </tr>
-            @empty
-                <tr class="methods-bottom">
-                    <td>-</td>
-                    <td>-</td>
-                    <td>-</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    @if($data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.')
         <div class="observations-title">
-            III. PROCEDIMIENTOS DE MUESTREO
+            {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? 'IV.' : 'III.' }} OBSERVACIONES
         </div>
 
-        <div class="procedures">
-            @foreach($data['procedures'] ?? [] as $row)
-                <div>{{ $row['procedure'] ?? '-' }}</div>
-            @endforeach
+        <div class="observations-box">
+            - Los resultados presentados corresponden sólo a la muestra indicada, según la cadena de custodia
+            correspondiente.<br>
+            - El tiempo custodia de la muestra es de un mes calendario desde la toma de la muestra y dependiendo del
+            parámetro a ser analizado.<br>
+            - Descripción del punto de muestreo: {{ $data['sampling_point_description'] ?? '-' }}
         </div>
-    @endif
 
-    <div class="observations-title">
-        {{ $data['sampling_performed_by'] == 'GREENLAB PERÚ S.A.C.' ? 'IV.' : 'III.' }} OBSERVACIONES
+        <div class="observations-line"></div>
+
+        <div class="final">
+            ***FIN DEL INFORME***
+        </div>
+
+        <div class="page-number">{{ $totalPages }} de {{ $totalPages }}</div>
     </div>
-
-    <div class="observations-box">
-        - Los resultados presentados corresponden sólo a la muestra indicada, según la cadena de custodia correspondiente.<br>
-        - El tiempo custodia de la muestra es de un mes calendario desde la toma de la muestra y dependiendo del parámetro a ser analizado.<br>
-        - Descripción del punto de muestreo: {{ $data['sampling_point_description'] ?? '-' }}
-    </div>
-
-    <div class="observations-line"></div>
-
-    <div class="final">
-        ***FIN DEL INFORME***
-    </div>
-
-    <div class="page-number">{{ $totalPages }} de {{ $totalPages }}</div>
-</div>
 
 </body>
+
 </html>

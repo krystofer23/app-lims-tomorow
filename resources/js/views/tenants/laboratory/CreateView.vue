@@ -232,6 +232,168 @@
                                                             placeholder="Ingrese resultado" clearable
                                                             class="input-custom" />
 
+                                                        <div v-if="row.is_rni" class="space-y-4">
+                                                            <div v-for="periodKey in ['punta', 'no_punta']"
+                                                                :key="periodKey"
+                                                                class="rounded-xl border border-slate-200 bg-white p-3">
+                                                                <p class="mb-3 text-xs font-bold text-slate-700">
+                                                                    {{ periodKey === 'punta' ?
+                                                                        'Hora punta' : 'Hora no punta' }}
+                                                                </p>
+
+                                                                <div class="grid grid-cols-1 gap-2 md:grid-cols-3">
+                                                                    <el-date-picker
+                                                                        v-model="station.rni_results[periodKey].date_monitoring"
+                                                                        type="date" format="DD/MM/YYYY"
+                                                                        value-format="YYYY-MM-DD"
+                                                                        placeholder="Fecha monitoreo"
+                                                                        class="input-custom !w-full" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].hour_sampling"
+                                                                        placeholder="Hora muestreo" clearable
+                                                                        class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].humidity_relative"
+                                                                        placeholder="Humedad relativa (%)" clearable
+                                                                        class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].ambient_temperature"
+                                                                        placeholder="Temperatura ambiental (°C)"
+                                                                        clearable class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].electric_system_type"
+                                                                        placeholder="Tipo de sistema eléctrico"
+                                                                        clearable class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].instrument"
+                                                                        placeholder="Instrumento" clearable
+                                                                        class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].brand"
+                                                                        placeholder="Marca" clearable
+                                                                        class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].model"
+                                                                        placeholder="Modelo" clearable
+                                                                        class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].serial_number"
+                                                                        placeholder="Número de serie" clearable
+                                                                        class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].probe_range"
+                                                                        placeholder="Rango sonda Hz" clearable
+                                                                        class="input-custom" />
+
+                                                                    <el-date-picker
+                                                                        v-model="station.rni_results[periodKey].calibration_date"
+                                                                        type="date" format="DD/MM/YYYY"
+                                                                        value-format="YYYY-MM-DD"
+                                                                        placeholder="Fecha calibración"
+                                                                        class="input-custom !w-full" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].certificate_number"
+                                                                        placeholder="N° certificado" clearable
+                                                                        class="input-custom" />
+                                                                </div>
+
+                                                                <div class="mt-2 grid grid-cols-1 gap-2">
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].station_description"
+                                                                        type="textarea" :rows="2"
+                                                                        placeholder="Descripción de estación"
+                                                                        class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].soil_coverage"
+                                                                        type="textarea" :rows="2"
+                                                                        placeholder="Cobertura de suelo"
+                                                                        class="input-custom" />
+
+                                                                    <el-input
+                                                                        v-model="station.rni_results[periodKey].climate_conditions"
+                                                                        type="textarea" :rows="2"
+                                                                        placeholder="Condiciones climáticas"
+                                                                        class="input-custom" />
+                                                                </div>
+
+                                                                <div class="mt-4 space-y-3">
+                                                                    <div v-for="[blockKey, block] in getRniMeasurementEntries(station.rni_results[periodKey])"
+                                                                        :key="`${periodKey}-${blockKey}`"
+                                                                        class="rounded-lg border border-slate-200">
+                                                                        <div
+                                                                            class="border-b border-slate-200 bg-slate-50 px-2 py-1 text-center text-xs font-bold text-slate-700">
+                                                                            {{ block.title }}
+                                                                        </div>
+
+                                                                        <div
+                                                                            class="grid grid-cols-6 gap-1 border-b border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-bold text-slate-600">
+                                                                            <span>Altura</span>
+                                                                            <span>RMS</span>
+                                                                            <span>X</span>
+                                                                            <span>Y</span>
+                                                                            <span>Z</span>
+                                                                            <span>PICO</span>
+                                                                        </div>
+
+                                                                        <div v-for="(measure, measureIndex) in block.rows"
+                                                                            :key="`${periodKey}-${blockKey}-${measureIndex}`"
+                                                                            class="grid grid-cols-6 gap-1 px-2 py-1">
+                                                                            <el-input v-model="measure.height"
+                                                                                size="small" placeholder="Altura" />
+                                                                            <el-input v-model="measure.rms" size="small"
+                                                                                placeholder="RMS" />
+                                                                            <el-input v-model="measure.x" size="small"
+                                                                                placeholder="X" />
+                                                                            <el-input v-model="measure.y" size="small"
+                                                                                placeholder="Y" />
+                                                                            <el-input v-model="measure.z" size="small"
+                                                                                placeholder="Z" />
+                                                                            <el-input v-model="measure.peak"
+                                                                                size="small" placeholder="PICO" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mt-4 rounded-lg border border-slate-200">
+                                                                    <div
+                                                                        class="grid grid-cols-4 gap-1 border-b border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-bold text-slate-600">
+                                                                        <span>Parámetro</span>
+                                                                        <span>L.D.M</span>
+                                                                        <span>L.C.M</span>
+                                                                        <span>Resultado</span>
+                                                                    </div>
+
+                                                                    <div v-for="(summary, summaryIndex) in station.rni_results[periodKey].summary"
+                                                                        :key="`${periodKey}-summary-${summaryIndex}`"
+                                                                        class="grid grid-cols-4 gap-1 px-2 py-1">
+                                                                        <el-input v-model="summary.parameter"
+                                                                            size="small" placeholder="Parámetro" />
+                                                                        <el-input v-model="summary.ldm" size="small"
+                                                                            placeholder="L.D.M" />
+                                                                        <el-input v-model="summary.lcm" size="small"
+                                                                            placeholder="L.C.M" />
+                                                                        <el-input v-model="summary.result" size="small"
+                                                                            placeholder="Resultado" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <el-input v-else-if="!row.is_vibration" v-model="station.result"
+                                                            placeholder="Ingrese resultado" clearable
+                                                            class="input-custom" />
+
                                                         <div v-else class="space-y-1.5">
                                                             <div class="grid grid-cols-12 gap-1.5 items-center">
                                                                 <span
@@ -242,7 +404,6 @@
                                                                 <el-input v-model="station.result_x_ppv"
                                                                     placeholder="PPV" clearable
                                                                     class="input-custom col-span-5" />
-
                                                                 <el-input v-model="station.result_x_frec"
                                                                     placeholder="FREC" clearable
                                                                     class="input-custom col-span-6" />
@@ -257,7 +418,6 @@
                                                                 <el-input v-model="station.result_y_ppv"
                                                                     placeholder="PPV" clearable
                                                                     class="input-custom col-span-5" />
-
                                                                 <el-input v-model="station.result_y_frec"
                                                                     placeholder="FREC" clearable
                                                                     class="input-custom col-span-6" />
@@ -272,7 +432,6 @@
                                                                 <el-input v-model="station.result_z_ppv"
                                                                     placeholder="PPV" clearable
                                                                     class="input-custom col-span-5" />
-
                                                                 <el-input v-model="station.result_z_frec"
                                                                     placeholder="FREC" clearable
                                                                     class="input-custom col-span-6" />
@@ -598,6 +757,63 @@ const getShow = async (orderId) => {
     }
 }
 
+const makeRows = () => {
+    return Array.from({ length: 6 }, () => ({
+        height: '1,00',
+        rms: null,
+        x: null,
+        y: null,
+        z: null,
+        peak: null,
+    }))
+}
+
+const getDefaultRniMeasurements = () => ({
+    E: {
+        title: 'E (Campo Eléctrico) V/m',
+        rows: makeRows(),
+    },
+    H: {
+        title: 'H (Campo Magnético) A/m',
+        rows: makeRows(),
+    },
+    B: {
+        title: 'B (Densidad de Flujo Magnético) µT',
+        rows: makeRows(),
+    },
+    S: {
+        title: 'S (Densidad de Potencia) W/m²',
+        rows: makeRows(),
+    },
+})
+
+const getDefaultRniSummary = () => [
+    {
+        parameter: '(E) Intensidad de campo eléctrico resultante (V/m)',
+        ldm: '0,0007 V/m',
+        lcm: '0,0035 V/m',
+        result: null,
+    },
+    {
+        parameter: '(H) Intensidad de campo magnético resultante (A/m)',
+        ldm: '0,0001 A/m',
+        lcm: '0,0005 A/m',
+        result: null,
+    },
+    {
+        parameter: '(B) Densidad de flujo magnético resultante (µT)',
+        ldm: '0,0002 µT',
+        lcm: '0,010 µT',
+        result: null,
+    },
+    {
+        parameter: '(S) Densidad de potencia resultante (W/m²)',
+        ldm: '0,002 W/m²',
+        lcm: '0,01 W/m²',
+        result: null,
+    },
+]
+
 const buildPayload = (items = []) => {
     const payload = []
 
@@ -607,12 +823,53 @@ const buildPayload = (items = []) => {
         item.stations.forEach((station) => {
             if (!item.item_id || !station.chain_custody_id) return
 
-            const isVibration = item.is_vibration ?? item.item?.type === 'VIBRACION'
+            const isRni = item.is_rni === true
+            const isVibration = item.is_vibration === true
+
+            if (isRni) {
+                ensureRniStation(station)
+
+                payload.push({
+                    item_id: item.item_id,
+                    order_item_id: item.order_item_id ?? item.id,
+                    parameter_id: item.parameter_id,
+
+                    is_rni: true,
+                    is_vibration: false,
+
+                    chain_custody_id: station.chain_custody_id,
+
+                    result: null,
+
+                    rni_results: [
+                        {
+                            ...clone(station.rni_results.punta),
+                            measurement_period: 'PUNTA',
+                        },
+                        {
+                            ...clone(station.rni_results.no_punta),
+                            measurement_period: 'NO_PUNTA',
+                        },
+                    ],
+                })
+
+                return
+            }
 
             payload.push({
                 item_id: item.to_metal_id ? item.parameter_id : item.item_id,
-                order_item_id: item.id,
+                order_item_id: item.order_item_id ?? item.id,
+
+                parameter_id: item.parameter_id,
+                is_metal_child: item.is_metal_child ?? false,
+                select_to_metal_id: item.select_to_metal_id ?? null,
+                to_metal_id: item.to_metal_id ?? null,
+                parent_item_id: item.parent_item_id ?? null,
+                parent_parameter_id: item.parent_parameter_id ?? null,
+
+                is_rni: false,
                 is_vibration: isVibration,
+
                 chain_custody_id: station.chain_custody_id,
 
                 result: isVibration ? null : station.result ?? null,

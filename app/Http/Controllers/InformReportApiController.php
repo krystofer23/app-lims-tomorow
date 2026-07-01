@@ -467,12 +467,37 @@ class InformReportApiController extends Controller
                     $hour = $carbon->format('H:i');
                 }
 
+                $dateSamplingInit = null;
+                $hourSamplingInit = null;
+
+                if (!empty($item->date_sampling_init)) {
+                    $carbonInit = Carbon::parse($item->date_sampling_init);
+                    $dateSamplingInit = $carbonInit->format('Y-m-d');
+                    $hourSamplingInit = $carbonInit->format('H:i');
+                }
+
+                $dateSamplingEnd = null;
+                $hourSamplingEnd = null;
+
+                if (!empty($item->date_sampling_end)) {
+                    $carbonEnd = Carbon::parse($item->date_sampling_end);
+                    $dateSamplingEnd = $carbonEnd->format('Y-m-d');
+                    $hourSamplingEnd = $carbonEnd->format('H:i');
+                }
+
                 return [
                     'id' => $item->id,
                     'code_lab' => $item->code_lab ?? '-',
                     'code_sample' => $item->code_sample ?? '-',
+
                     'date_sample' => $date ?? '-',
                     'hour_sample' => $hour ?? '-',
+
+                    'date_sampling_init' => $dateSamplingInit ?? '-',
+                    'hour_sampling_init' => $hourSamplingInit ?? '-',
+                    'date_sampling_end' => $dateSamplingEnd ?? '-',
+                    'hour_sampling_end' => $hourSamplingEnd ?? '-',
+
                     'coordinate' => $item->coordinate ?? '-',
                 ];
             })
@@ -513,154 +538,314 @@ class InformReportApiController extends Controller
             ->toArray()
             : [];
 
+        $isVibration = strtoupper((string) $type) === 'VIBRACION';
+        $isRni = strtoupper((string) $type) === 'RNI';
+
+        $rniResults = LaboratoryRniResult::query()
+            ->where('order_id', $orderId)
+            ->whereNull('deleted_at')
+            ->orderBy('chain_custody_id')
+            ->orderByRaw("FIELD(measurement_period, 'PUNTA', 'NO_PUNTA')")
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'chain_custody_id' => $row->chain_custody_id,
+                    'measurement_period' => $row->measurement_period,
+
+                    'date_monitoring' => optional($row->date_monitoring)->format('Y-m-d'),
+                    'hour_sampling' => $row->hour_sampling,
+                    'humidity_relative' => $row->humidity_relative,
+                    'ambient_temperature' => $row->ambient_temperature,
+                    'electric_system_type' => $row->electric_system_type,
+
+                    'instrument' => $row->instrument,
+                    'brand' => $row->brand,
+                    'model' => $row->model,
+                    'serial_number' => $row->serial_number,
+                    'probe_range' => $row->probe_range,
+                    'calibration_date' => optional($row->calibration_date)->format('Y-m-d'),
+                    'certificate_number' => $row->certificate_number,
+
+                    'station_description' => $row->station_description,
+                    'soil_coverage' => $row->soil_coverage,
+                    'climate_conditions' => $row->climate_conditions,
+
+                    'measurements' => $row->measurements ?? [],
+                    'summary' => $row->summary ?? [],
+                    'chain_custody' => [
+                        'code_lab' => $row->chainCustody?->code_lab,
+                        'code_season' => $row->chainCustody?->code_season,
+                        'coordinate' => $row->chainCustody?->coordinate,
+                    ],
+                ];
+            })
+            ->toArray();
+
         $laboratoryResults = LaboratoryResults::query()
             ->where('order_id', $orderId)
+            ->whereNull('deleted_at')
             ->get()
             ->keyBy(function ($row) {
-                return $row->item_id . '_' . $row->chain_custody_id;
+                $baseKey = $row->item_id . '_' . $row->chain_custody_id;
+
+                if ($row->result_axis && $row->result_type) {
+                    return $baseKey . '_' . strtoupper($row->result_axis) . '_' . strtoupper($row->result_type);
+                }
+
+                return $baseKey;
             });
 
         /*
      * I. RESULTADOS:
      * Aquí sí se muestran los hijos metálicos.
      */
-        $analysisGroups = $parameters
-            ->map(function ($row) use (
-                $typeAnalysisMap,
-                $laboratoryResults,
+        if ($isVibration) {
+            $firstParameterRow = $parameters->first();
+            $firstItem = $normalizeItem(data_get($firstParameterRow, 'item', []));
+
+            $realItemId = data_get($firstParameterRow, 'item_id')
+                ?? data_get($firstItem, 'id');
+
+            $realItemId = $realItemId !== null ? (int) $realItemId : null;
+
+            $unitRaw = data_get($firstItem, 'parameter.unit_measurement.description')
+                ?? data_get($firstItem, 'unit_measurement.description')
+                ?? data_get($firstItem, 'unit')
+                ?? '';
+
+            $unitParts = collect(preg_split('/\r\n|\r|\n/', (string) $unitRaw))
+                ->map(fn($value) => trim($value))
+                ->filter()
+                ->values();
+
+            $ppvUnit = $unitParts->get(0, 'mm/s');
+            $frecUnit = $unitParts->get(1, 'Hz');
+
+            $lcmRaw = data_get($firstItem, 'parameter.lcm')
+                ?? data_get($firstItem, 'lcm')
+                ?? '';
+
+            $lcmParts = collect(preg_split('/\r\n|\r|\n/', (string) $lcmRaw))
+                ->map(fn($value) => trim($value))
+                ->filter()
+                ->values();
+
+            $ppvLcm = $lcmParts->get(0, '0,027(z)');
+            $frecLcm = $lcmParts->get(1, '-');
+
+            $buildVibrationResults = function (string $axis, string $resultType) use (
                 $chainCustody,
-                $normalizeItem
+                $laboratoryResults,
+                $realItemId
             ) {
-                $item = $normalizeItem(data_get($row, 'item', []));
+                return $chainCustody
+                    ->values()
+                    ->map(function ($custody) use (
+                        $laboratoryResults,
+                        $realItemId,
+                        $axis,
+                        $resultType
+                    ) {
+                        $key = $realItemId . '_' . $custody->id . '_' . strtoupper($axis) . '_' . strtoupper($resultType);
 
-                /*
-             * En normal: item_id del item.
-             * En metal: parameter_id del hijo.
-             */
-                $realItemId = data_get($row, 'item_id')
-                    ?? data_get($item, 'id');
+                        $savedResult = $laboratoryResults->get($key);
 
-                $realItemId = $realItemId !== null ? (int) $realItemId : null;
-
-                $parameterId = data_get($item, 'parameter_id')
-                    ?? data_get($item, 'parameter.id')
-                    ?? $realItemId;
-
-                $parameterId = $parameterId !== null ? (int) $parameterId : null;
-
-                $typeAnalysisId = data_get($item, 'parameter.type_of_analysis_id')
-                    ?? data_get($item, 'type_of_analysis_id');
-
-                $results = [];
-
-                foreach ($chainCustody as $custody) {
-                    $parametersJson = $custody->parameters ?? [];
-
-                    if (is_string($parametersJson)) {
-                        $parametersJson = json_decode($parametersJson, true) ?: [];
-                    }
-
-                    if (!is_array($parametersJson)) {
-                        $parametersJson = [];
-                    }
-
-                    $existsInCustody = collect($parametersJson)->contains(function ($parameter) use ($realItemId, $parameterId) {
-                        $chainItemId = data_get($parameter, 'id')
-                            ?? data_get($parameter, 'item_id');
-
-                        $chainParameterId = data_get($parameter, 'parameter_id')
-                            ?? data_get($parameter, 'parameter.id');
-
-                        /*
-                     * Para metales:
-                     * chain_custody.parameters.parameter_id debe coincidir
-                     * con el parameter_id del metal hijo.
-                     */
-                        if ($parameterId && $chainParameterId && (int) $chainParameterId === (int) $parameterId) {
-                            return true;
-                        }
-
-                        /*
-                     * Para items normales.
-                     */
-                        if ($realItemId && $chainItemId && (int) $chainItemId === (int) $realItemId) {
-                            return true;
-                        }
-
-                        /*
-                     * Fallback para cuando item_id coincide con parameter_id.
-                     */
-                        if ($realItemId && $chainParameterId && (int) $chainParameterId === (int) $realItemId) {
-                            return true;
-                        }
-
-                        return false;
-                    });
-
-                    if (!$existsInCustody) {
-                        continue;
-                    }
-
-                    /*
-                 * En metales, LaboratoryResults.item_id debe ser el parameter_id del hijo.
-                 * Ejemplo: Vanadio => 118
-                 */
-                    $key = $realItemId . '_' . $custody->id;
-
-                    $savedResult = $laboratoryResults->get($key);
-
-                    $results[] = [
-                        'chain_custody_id' => $custody->id,
-                        'code_lab' => $custody->code_lab,
-                        'code_sample' => $custody->code_sample,
-                        'code_season' => $custody->code_season,
-                        'coordinate' => $custody->coordinate,
-                        'result' => $savedResult?->result ?? '',
-                    ];
-                }
-
-                return [
-                    'type_of_analysis' =>
-                    data_get($item, 'parameter.type_of_analysis.description')
-                        ?? data_get($item, 'type_of_analysis.description')
-                        ?? ($typeAnalysisMap[$typeAnalysisId] ?? 'SIN TIPO DE ENSAYO'),
-
-                    'parameter' =>
-                    data_get($item, 'parameter.description')
-                        ?? data_get($item, 'description')
-                        ?? data_get($item, 'name')
-                        ?? '-',
-
-                    'unit' =>
-                    data_get($item, 'parameter.unit_measurement.description')
-                        ?? data_get($item, 'unit_measurement.description')
-                        ?? data_get($item, 'unit')
-                        ?? '-',
-
-                    'lcm' =>
-                    data_get($item, 'parameter.lcm')
-                        ?? data_get($item, 'lcm')
-                        ?? '-',
-
-                    'results' => $results,
-                ];
-            })
-            ->groupBy('type_of_analysis')
-            ->map(function ($items, $typeOfAnalysis) {
-                return [
-                    'type_of_analysis' => $typeOfAnalysis,
-                    'parameters' => $items->map(function ($item) {
                         return [
-                            'parameter' => $item['parameter'],
-                            'unit' => $item['unit'],
-                            'lcm' => $item['lcm'],
-                            'results' => $item['results'] ?? [],
+                            'chain_custody_id' => $custody->id,
+                            'code_lab' => $custody->code_lab,
+                            'code_sample' => $custody->code_sample,
+                            'code_season' => $custody->code_season,
+                            'coordinate' => $custody->coordinate,
+                            'result' => $savedResult?->result ?? '',
                         ];
-                    })->values()->toArray(),
-                ];
-            })
-            ->values()
-            ->toArray();
+                    })
+                    ->toArray();
+            };
+
+            $analysisGroups = [
+                [
+                    'type_of_analysis' => 'Análisis de Campo',
+                    'parameters' => [
+                        [
+                            'parameter' => '- PPV max',
+                            'unit' => '',
+                            'lcm' => '',
+                            'results' => [],
+                            'is_vibration_section' => true,
+                        ],
+                        [
+                            'parameter' => '- Eje X',
+                            'unit' => $ppvUnit,
+                            'lcm' => $ppvLcm,
+                            'results' => $buildVibrationResults('X', 'PPV'),
+                            'is_vibration_axis' => true,
+                        ],
+                        [
+                            'parameter' => '- Eje Y',
+                            'unit' => $ppvUnit,
+                            'lcm' => $ppvLcm,
+                            'results' => $buildVibrationResults('Y', 'PPV'),
+                            'is_vibration_axis' => true,
+                        ],
+                        [
+                            'parameter' => '- Eje Z',
+                            'unit' => $ppvUnit,
+                            'lcm' => $ppvLcm,
+                            'results' => $buildVibrationResults('Z', 'PPV'),
+                            'is_vibration_axis' => true,
+                        ],
+
+                        [
+                            'parameter' => '- Nivel de Frecuencia',
+                            'unit' => '',
+                            'lcm' => '',
+                            'results' => [],
+                            'is_vibration_section' => true,
+                        ],
+                        [
+                            'parameter' => '- Eje X',
+                            'unit' => $frecUnit,
+                            'lcm' => $frecLcm,
+                            'results' => $buildVibrationResults('X', 'FREC'),
+                            'is_vibration_axis' => true,
+                        ],
+                        [
+                            'parameter' => '- Eje Y',
+                            'unit' => $frecUnit,
+                            'lcm' => $frecLcm,
+                            'results' => $buildVibrationResults('Y', 'FREC'),
+                            'is_vibration_axis' => true,
+                        ],
+                        [
+                            'parameter' => '- Eje Z',
+                            'unit' => $frecUnit,
+                            'lcm' => $frecLcm,
+                            'results' => $buildVibrationResults('Z', 'FREC'),
+                            'is_vibration_axis' => true,
+                        ],
+                    ],
+                ],
+            ];
+        } else {
+            $analysisGroups = $parameters
+                ->map(function ($row) use (
+                    $typeAnalysisMap,
+                    $laboratoryResults,
+                    $chainCustody,
+                    $normalizeItem
+                ) {
+                    $item = $normalizeItem(data_get($row, 'item', []));
+
+                    $realItemId = data_get($row, 'item_id')
+                        ?? data_get($item, 'id');
+
+                    $realItemId = $realItemId !== null ? (int) $realItemId : null;
+
+                    $parameterId = data_get($item, 'parameter_id')
+                        ?? data_get($item, 'parameter.id')
+                        ?? $realItemId;
+
+                    $parameterId = $parameterId !== null ? (int) $parameterId : null;
+
+                    $typeAnalysisId = data_get($item, 'parameter.type_of_analysis_id')
+                        ?? data_get($item, 'type_of_analysis_id');
+
+                    $results = [];
+
+                    foreach ($chainCustody as $custody) {
+                        $parametersJson = $custody->parameters ?? [];
+
+                        if (is_string($parametersJson)) {
+                            $parametersJson = json_decode($parametersJson, true) ?: [];
+                        }
+
+                        if (!is_array($parametersJson)) {
+                            $parametersJson = [];
+                        }
+
+                        $existsInCustody = collect($parametersJson)->contains(function ($parameter) use ($realItemId, $parameterId) {
+                            $chainItemId = data_get($parameter, 'id')
+                                ?? data_get($parameter, 'item_id');
+
+                            $chainParameterId = data_get($parameter, 'parameter_id')
+                                ?? data_get($parameter, 'parameter.id');
+
+                            if ($parameterId && $chainParameterId && (int) $chainParameterId === (int) $parameterId) {
+                                return true;
+                            }
+
+                            if ($realItemId && $chainItemId && (int) $chainItemId === (int) $realItemId) {
+                                return true;
+                            }
+
+                            if ($realItemId && $chainParameterId && (int) $chainParameterId === (int) $realItemId) {
+                                return true;
+                            }
+
+                            return false;
+                        });
+
+                        if (!$existsInCustody) {
+                            continue;
+                        }
+
+                        $key = $realItemId . '_' . $custody->id;
+
+                        $savedResult = $laboratoryResults->get($key);
+
+                        $results[] = [
+                            'chain_custody_id' => $custody->id,
+                            'code_lab' => $custody->code_lab,
+                            'code_sample' => $custody->code_sample,
+                            'code_season' => $custody->code_season,
+                            'coordinate' => $custody->coordinate,
+                            'result' => $savedResult?->result ?? '',
+                        ];
+                    }
+
+                    return [
+                        'type_of_analysis' =>
+                        data_get($item, 'parameter.type_of_analysis.description')
+                            ?? data_get($item, 'type_of_analysis.description')
+                            ?? ($typeAnalysisMap[$typeAnalysisId] ?? 'SIN TIPO DE ENSAYO'),
+
+                        'parameter' =>
+                        data_get($item, 'parameter.description')
+                            ?? data_get($item, 'description')
+                            ?? data_get($item, 'name')
+                            ?? '-',
+
+                        'unit' =>
+                        data_get($item, 'parameter.unit_measurement.description')
+                            ?? data_get($item, 'unit_measurement.description')
+                            ?? data_get($item, 'unit')
+                            ?? '-',
+
+                        'lcm' =>
+                        data_get($item, 'parameter.lcm')
+                            ?? data_get($item, 'lcm')
+                            ?? '-',
+
+                        'results' => $results,
+                    ];
+                })
+                ->groupBy('type_of_analysis')
+                ->map(function ($items, $typeOfAnalysis) {
+                    return [
+                        'type_of_analysis' => $typeOfAnalysis,
+                        'parameters' => $items->map(function ($item) {
+                            return [
+                                'parameter' => $item['parameter'],
+                                'unit' => $item['unit'],
+                                'lcm' => $item['lcm'],
+                                'results' => $item['results'] ?? [],
+                            ];
+                        })->values()->toArray(),
+                    ];
+                })
+                ->values()
+                ->toArray();
+        }
 
         /*
      * II. MÉTODOS Y REFERENCIAS:
@@ -797,6 +982,7 @@ class InformReportApiController extends Controller
         }
 
         $mapData = [
+            'is_vibration' => $isVibration,
             'report_number' => $firstChainCustody?->number_report ?? 'XXX-XX-I',
 
             'company' => $order?->company?->business_name,
@@ -841,6 +1027,9 @@ class InformReportApiController extends Controller
                     Carbon::parse($trialPeriod->date_end)->format('Y-m-d')
                 )
                 : null,
+
+            'is_rni' => $isRni,
+            'rni_results' => $rniResults,
         ];
 
         return $mapData;

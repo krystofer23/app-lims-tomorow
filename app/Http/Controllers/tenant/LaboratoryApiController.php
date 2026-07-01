@@ -8,6 +8,7 @@ use App\Models\tenant\OrderService;
 use App\Models\tenant\TypeOfSamples;
 use App\Models\tenant\UnitsMeasurement;
 use App\Models\tenant\LaboratoryResults;
+use App\Models\tenant\LaboratoryRniResult;
 use App\Models\tenatn\SelectToMetals;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -232,30 +233,37 @@ class LaboratoryApiController extends Controller
     public function show($orderId): JsonResponse
     {
         try {
-            $order = OrderService::query()
-                ->with('items')
-                ->findOrFail($orderId);
+            $order = OrderService::query()->with('items')->findOrFail($orderId);
 
             $items = $order->items;
 
-            $typeSamplesCache = TypeOfSamples::query()
-                ->pluck('description', 'id');
-
-            $unitMeasurementsCache = UnitsMeasurement::query()
-                ->pluck('description', 'id');
+            $typeSamplesCache = TypeOfSamples::query()->pluck('description', 'id');
+            $unitMeasurementsCache = UnitsMeasurement::query()->pluck('description', 'id');
 
             $chainCustodies = ChainCustody::query()
                 ->where('order_id', $orderId)
                 ->get();
 
             $laboratoryResultsCache = LaboratoryResults::query()
-                ->where('order_id', $orderId)
+                ->where('order_id', $order->id)
+                ->whereNull('deleted_at')
                 ->get()
-                ->keyBy(function ($row) {
-                    $axis = strtoupper($row->result_axis ?: 'NORMAL');
-                    $type = strtoupper($row->result_type ?: 'NORMAL');
+                ->keyBy(function ($result) {
+                    $baseKey = $result->item_id . '_' . $result->chain_custody_id;
 
-                    return $row->item_id . '_' . $row->chain_custody_id . '_' . $axis . '_' . $type;
+                    if ($result->result_axis && $result->result_type) {
+                        return $baseKey . '_' . strtoupper($result->result_axis) . '_' . strtoupper($result->result_type);
+                    }
+
+                    return $baseKey;
+                });
+
+            $rniResultsCache = LaboratoryRniResult::query()
+                ->where('order_id', $order->id)
+                ->whereNull('deleted_at')
+                ->get()
+                ->groupBy(function ($row) {
+                    return $row->item_id . '_' . $row->chain_custody_id;
                 });
 
             $selectedMetalsByToMetalId = SelectToMetals::query()
@@ -270,6 +278,7 @@ class LaboratoryApiController extends Controller
                     $typeSamplesCache,
                     $unitMeasurementsCache,
                     $laboratoryResultsCache,
+                    $rniResultsCache,
                     $chainCustodies,
                     $selectedMetalsByToMetalId
                 ) {
@@ -282,6 +291,9 @@ class LaboratoryApiController extends Controller
                     if (!is_array($item)) {
                         $item = [];
                     }
+
+                    $orderItemId = data_get($row, 'id');
+                    $orderItemId = $orderItemId !== null ? (int) $orderItemId : null;
 
                     $realItemId = data_get($row, 'item_id')
                         ?? data_get($item, 'id');
@@ -301,10 +313,12 @@ class LaboratoryApiController extends Controller
                         array $extra = []
                     ) use (
                         $row,
+                        $orderItemId,
                         $realItemId,
                         $typeSamplesCache,
                         $unitMeasurementsCache,
                         $laboratoryResultsCache,
+                        $rniResultsCache,
                         $chainCustodies
                     ) {
                         $itemIdForResult = $resultItemId
@@ -352,6 +366,9 @@ class LaboratoryApiController extends Controller
                             ?? data_get($currentItem, 'parameter.id');
 
                         $parameterId = $parameterId !== null ? (int) $parameterId : null;
+
+                        $isVibration = strtoupper(data_get($currentItem, 'type', '')) === 'VIBRACION';
+                        $isRni = strtoupper(data_get($currentItem, 'type', '')) === 'RNI';
 
                         $stations = $chainCustodies
                             ->filter(function ($chainCustody) use (
@@ -401,14 +418,27 @@ class LaboratoryApiController extends Controller
                                         || $matchByCurrentParameterId;
                                 });
                             })
-                            ->map(function ($chainCustody) use ($itemIdForResult, $laboratoryResultsCache, $row) {
+                            ->map(function ($chainCustody) use (
+                                $itemIdForResult,
+                                $laboratoryResultsCache,
+                                $rniResultsCache,
+                                $isVibration,
+                                $isRni
+
+                            ) {
                                 $baseKey = $itemIdForResult . '_' . $chainCustody->id;
 
-                                $getSavedResult = function (string $axis = 'NORMAL', string $type = 'NORMAL') use ($laboratoryResultsCache, $baseKey) {
-                                    $axis = strtoupper($axis);
-                                    $type = strtoupper($type);
+                                $getSavedResult = function (?string $axis = null, ?string $type = null) use (
+                                    $laboratoryResultsCache,
+                                    $baseKey
+                                ) {
+                                    if ($axis && $type) {
+                                        return $laboratoryResultsCache->get(
+                                            $baseKey . '_' . strtoupper($axis) . '_' . strtoupper($type)
+                                        );
+                                    }
 
-                                    return $laboratoryResultsCache->get($baseKey . '_' . $axis . '_' . $type);
+                                    return $laboratoryResultsCache->get($baseKey);
                                 };
 
                                 $baseData = [
@@ -420,7 +450,7 @@ class LaboratoryApiController extends Controller
                                     'coordinate' => $chainCustody->coordinate,
                                 ];
 
-                                if (data_get($row, 'item.type') === 'VIBRACION') {
+                                if ($isVibration) {
                                     $savedResultXPpv = $getSavedResult('X', 'PPV');
                                     $savedResultXFrec = $getSavedResult('X', 'FREC');
 
@@ -451,6 +481,47 @@ class LaboratoryApiController extends Controller
                                     ]);
                                 }
 
+                                if ($isRni) {
+                                    $rniResults = $rniResultsCache
+                                        ->get($baseKey, collect())
+                                        ->mapWithKeys(function ($rni) {
+                                            return [
+                                                strtolower($rni->measurement_period) => [
+                                                    'id' => $rni->id,
+                                                    'measurement_period' => $rni->measurement_period,
+
+                                                    'date_monitoring' => optional($rni->date_monitoring)->format('Y-m-d'),
+                                                    'hour_sampling' => $rni->hour_sampling,
+                                                    'humidity_relative' => $rni->humidity_relative,
+                                                    'ambient_temperature' => $rni->ambient_temperature,
+                                                    'electric_system_type' => $rni->electric_system_type,
+
+                                                    'instrument' => $rni->instrument,
+                                                    'brand' => $rni->brand,
+                                                    'model' => $rni->model,
+                                                    'serial_number' => $rni->serial_number,
+                                                    'probe_range' => $rni->probe_range,
+                                                    'calibration_date' => optional($rni->calibration_date)->format('Y-m-d'),
+                                                    'certificate_number' => $rni->certificate_number,
+
+                                                    'station_description' => $rni->station_description,
+                                                    'soil_coverage' => $rni->soil_coverage,
+                                                    'climate_conditions' => $rni->climate_conditions,
+
+                                                    'measurements' => $rni->measurements,
+                                                    'summary' => $rni->summary,
+                                                ],
+                                            ];
+                                        });
+
+                                    return array_merge($baseData, [
+                                        'rni_results' => [
+                                            'punta' => $rniResults->get('punta'),
+                                            'no_punta' => $rniResults->get('no_punta'),
+                                        ],
+                                    ]);
+                                }
+
                                 $savedResult = $getSavedResult();
 
                                 return array_merge($baseData, [
@@ -465,7 +536,7 @@ class LaboratoryApiController extends Controller
 
                             'item_id' => $itemIdForResult,
 
-                            'order_item_id' => $realItemId,
+                            'order_item_id' => $orderItemId,
 
                             'type_of_sample_id' => $typeOfSampleId,
                             'type_of_sample' => $typeOfSampleName,
@@ -497,7 +568,8 @@ class LaboratoryApiController extends Controller
                             'stations_count' => $stations->count(),
                             'has_chain_custody' => $stations->isNotEmpty(),
 
-                            'is_vibration' => $row->item['type'] === 'VIBRACION' ? true : false
+                            'is_vibration' => $isVibration,
+                            'is_rni' => $isRni,
                         ], $extra);
                     };
 
@@ -610,9 +682,39 @@ class LaboratoryApiController extends Controller
                 'results.*.parent_parameter_id' => ['nullable', 'integer'],
 
                 'results.*.is_vibration' => ['nullable', 'boolean'],
-                'results.*.result_x' => ['nullable', 'string'],
-                'results.*.result_y' => ['nullable', 'string'],
-                'results.*.result_z' => ['nullable', 'string'],
+
+                'results.*.result_x_ppv' => ['nullable', 'string'],
+                'results.*.result_x_frec' => ['nullable', 'string'],
+
+                'results.*.result_y_ppv' => ['nullable', 'string'],
+                'results.*.result_y_frec' => ['nullable', 'string'],
+
+                'results.*.result_z_ppv' => ['nullable', 'string'],
+                'results.*.result_z_frec' => ['nullable', 'string'],
+
+                'results.*.is_rni' => ['nullable', 'boolean'],
+                'results.*.rni_results' => ['nullable', 'array'],
+                'results.*.rni_results.*.measurement_period' => ['required_with:results.*.rni_results', 'string'],
+                'results.*.rni_results.*.date_monitoring' => ['nullable', 'date'],
+                'results.*.rni_results.*.hour_sampling' => ['nullable', 'string'],
+                'results.*.rni_results.*.humidity_relative' => ['nullable', 'string'],
+                'results.*.rni_results.*.ambient_temperature' => ['nullable', 'string'],
+                'results.*.rni_results.*.electric_system_type' => ['nullable', 'string'],
+
+                'results.*.rni_results.*.instrument' => ['nullable', 'string'],
+                'results.*.rni_results.*.brand' => ['nullable', 'string'],
+                'results.*.rni_results.*.model' => ['nullable', 'string'],
+                'results.*.rni_results.*.serial_number' => ['nullable', 'string'],
+                'results.*.rni_results.*.probe_range' => ['nullable', 'string'],
+                'results.*.rni_results.*.calibration_date' => ['nullable', 'date'],
+                'results.*.rni_results.*.certificate_number' => ['nullable', 'string'],
+
+                'results.*.rni_results.*.station_description' => ['nullable', 'string'],
+                'results.*.rni_results.*.soil_coverage' => ['nullable', 'string'],
+                'results.*.rni_results.*.climate_conditions' => ['nullable', 'string'],
+
+                'results.*.rni_results.*.measurements' => ['nullable', 'array'],
+                'results.*.rni_results.*.summary' => ['nullable', 'array'],
             ]);
 
             if (empty($input['results'])) {
@@ -701,6 +803,53 @@ class LaboratoryApiController extends Controller
                     ?? $chainCustody->type_of_sample_id;
 
                 $isVibration = (bool) data_get($row, 'is_vibration', false);
+
+                $isRni = (bool) data_get($row, 'is_rni', false);
+
+                if ($isRni) {
+                    foreach (($row['rni_results'] ?? []) as $rniRow) {
+                        $measurementPeriod = strtoupper($rniRow['measurement_period'] ?? 'PUNTA');
+
+                        LaboratoryRniResult::query()->updateOrCreate(
+                            [
+                                'order_id' => $input['order_id'],
+                                'item_id' => $rowItemId,
+                                'chain_custody_id' => (int) $row['chain_custody_id'],
+                                'measurement_period' => $measurementPeriod,
+                            ],
+                            [
+                                'order_item_id' => $row['order_item_id'] ?? null,
+
+                                'parameter_id' => $parameterId,
+                                'matrix_id' => $matrixId,
+                                'type_of_sample_id' => $typeOfSampleId,
+
+                                'date_monitoring' => $rniRow['date_monitoring'] ?? null,
+                                'hour_sampling' => $rniRow['hour_sampling'] ?? null,
+                                'humidity_relative' => $rniRow['humidity_relative'] ?? null,
+                                'ambient_temperature' => $rniRow['ambient_temperature'] ?? null,
+                                'electric_system_type' => $rniRow['electric_system_type'] ?? null,
+
+                                'instrument' => $rniRow['instrument'] ?? null,
+                                'brand' => $rniRow['brand'] ?? null,
+                                'model' => $rniRow['model'] ?? null,
+                                'serial_number' => $rniRow['serial_number'] ?? null,
+                                'probe_range' => $rniRow['probe_range'] ?? null,
+                                'calibration_date' => $rniRow['calibration_date'] ?? null,
+                                'certificate_number' => $rniRow['certificate_number'] ?? null,
+
+                                'station_description' => $rniRow['station_description'] ?? null,
+                                'soil_coverage' => $rniRow['soil_coverage'] ?? null,
+                                'climate_conditions' => $rniRow['climate_conditions'] ?? null,
+
+                                'measurements' => $rniRow['measurements'] ?? [],
+                                'summary' => $rniRow['summary'] ?? [],
+                            ]
+                        );
+                    }
+
+                    continue;
+                }
 
                 if ($isVibration) {
                     $vibrationResults = [
